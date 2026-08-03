@@ -66,16 +66,16 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | API Specifications (**ELU-API-***) | ⬜ Not Started | 0% | After DDD / parallel with services |
 | UI Specifications (**ELU-UI-***) | ⬜ Not Started | 0% | From EFS Flutter Mapping |
 | Test Specifications (**ELU-TST-***) | ⬜ Not Started | 0% | From RTM `TC-*` |
-| Database (PostgreSQL schema) | ⬜ Not Started | 0% | Blocked on DDD/ERD |
-| FastAPI implementation | ⬜ Not Started | 0% | Follow **ELU-DEV-001** |
-| Flutter implementation | ⬜ Not Started | 0% | Follow **ELU-DEV-001** |
+| Database (PostgreSQL schema) | 🟡 In Progress | 25% | Schemas + PF runtime models via SQLAlchemy; Alembic formal migrations later |
+| FastAPI implementation | 🟡 In Progress | 20% | Step 1–2: PF models + JWT auth + Euphoria seed |
+| Flutter implementation | 🟡 In Progress | 15% | Shell + login against local API |
 | v1.0 UAT (Euphoria happy path) | ⬜ Not Started | 0% | Lead → Payment |
 
 ### 3.1 One-Line Health
 
-> **Documentation & specification: strong (ready to build).**  
-> **Engineering build (DDD → DB → API → Flutter): not started.**  
-> **Primary risk:** starting code before **ELU-DDD-*** / REQ-linked stories (**RSK-003**, **RSK-004** in **ELU-RSK-001**).
+> **Documentation & specification: strong.**  
+> **Engineering: Step 1–2 scaffold complete (local Docker + FastAPI PF/Auth + Flutter login); runtime verify after Docker Desktop is up.**  
+> **Next:** Step 3 CRM Lead (`REQ-CRM-001`).
 
 ---
 
@@ -112,11 +112,11 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 |-----------|--------|----------|----------------|
 | ELU-DDD-PF + ELU-DDD-CRM | ⬜ Not Started | 0% | EFS/BFS Approved ✅ |
 | ELU-ERD-PF + ELU-ERD-CRM | ⬜ Not Started | 0% | DDD draft |
-| PostgreSQL migrations (Alembic) | ⬜ Not Started | 0% | ERD Approved |
-| FastAPI PF + Auth skeleton | ⬜ Not Started | 0% | **ELU-DEV-001** ✅ · ADR-002/004 |
+| PostgreSQL migrations (Alembic) | 🟠 Partial | 15% | `create_all` + seed for local; Alembic formalise later |
+| FastAPI PF + Auth skeleton | 🟡 In Progress | 80% | Scaffolded; verify after Postgres up |
 | FastAPI CRM Lead/Opportunity | ⬜ Not Started | 0% | DDD-CRM · REQ-CRM-* |
 | FastAPI Sales → Finance path | ⬜ Not Started | 0% | Upstream CRM APIs |
-| Flutter shell + auth | ⬜ Not Started | 0% | API auth ready |
+| Flutter shell + auth | 🟡 In Progress | 70% | Login + home; verify E2E after API up |
 | Flutter CRM → Finance screens | ⬜ Not Started | 0% | ELU-UI-* or EFS UI Nav |
 | Isolation test suite | ⬜ Not Started | 0% | First tenant entity API |
 | ELU-TST-CRM (sample) | ⬜ Not Started | 0% | RTM ✅ |
@@ -128,7 +128,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 
 | Release | Theme | Doc Ready | Build Status |
 |---------|-------|-----------|--------------|
-| **v1.0** | Foundation + Lead-to-Cash | ✅ Specs ready | ⬜ Not Started |
+| **v1.0** | Foundation + Lead-to-Cash | ✅ Specs ready | 🟡 Step 1–2 scaffold |
 | **v1.1** | Service + Engines | ✅ BFS/EFS described | ⬜ Not Started |
 | **v2.0** | Integration + BI + AI | ✅ Specs described | ⬜ Not Started |
 | **v3.0** | Intelligence + Ecosystem | 🟠 Directional | ⬜ Not Started |
@@ -139,11 +139,11 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 
 | # | Action | Owner | Unlocks |
 |---|--------|-------|---------|
-| 1 | Author **ELU-DDD-PF** + **ELU-DDD-CRM** | BA / Data Architect | DB + API |
-| 2 | Approve **ELU-SAD-001** (In Review → Approved) | Solution Architecture | Architecture baseline |
-| 3 | Scaffold backend per **ELU-DEV-001** | Tech Lead | FastAPI velocity |
-| 4 | Create first **ELU-TST-CRM** from RTM | QA Lead | Quality gate |
-| 5 | Draft thin **ELU-SEH-001** pointing to DF/DEV/ADR | PMO / Engineering | SEH ✅ in tracker |
+| 1 | Start Docker Desktop → `docker compose up -d postgres minio` → run API + Flutter login | Dev | Runtime verify Step 1–2 |
+| 2 | Build CRM Lead (`REQ-CRM-001`) — Step 3 | Backend + Flutter | First vertical CRM slice |
+| 3 | Author **ELU-DDD-PF** + **ELU-DDD-CRM** (parallel) | BA / Data Architect | Formal field dictionary |
+| 4 | Approve **ELU-SAD-001** (In Review → Approved) | Solution Architecture | Architecture baseline |
+| 5 | Create first **ELU-TST-CRM** from RTM | QA Lead | Quality gate |
 
 ---
 
@@ -152,6 +152,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | Date | Update | By |
 |------|--------|----|
 | 2026-07-31 | Documentation suite reached build-ready; engineering track set to Not Started | PMO |
+| 2026-08-03 | Step 1–2 scaffold: Docker Compose, FastAPI PF/Auth, Flutter login, Euphoria seed (INR / Asia/Kolkata / FY Apr) | Engineering |
 
 ---
 

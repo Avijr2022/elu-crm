@@ -1,4 +1,42 @@
-# Office Temporary Files
+# E-LinkUp local / secrets
+.env
+.env.local
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+Backend/.venv/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+
+# Flutter
+Frontend/.dart_tool/
+Frontend/.flutter-plugins
+Frontend/.flutter-plugins-dependencies
+Frontend/.packages
+Frontend/build/
+Frontend/.pub-cache/
+Frontend/.pub/
+Frontend/coverage/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
 ~$*
-~WRL*
+~$*
 *.tmp
+
+# Logs / data
+*.log
+DevOps/data/
+postgres_data/
+minio_data/

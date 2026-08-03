@@ -1,0 +1,63 @@
+# E-LinkUp — local development stack
+# Usage (from D:\CRM):
+#   docker compose up -d postgres minio
+#   docker compose up api
+# Or run API on host against postgres container (see README).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: elinkup-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-elinkup}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-elinkup_local}
+      POSTGRES_DB: ${POSTGRES_DB:-elinkup}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - elinkup_pgdata:/var/lib/postgresql/data
+      - ./Database/01_Schemas/001_CreateSchemas.sql:/docker-entrypoint-initdb.d/01_schemas.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-elinkup} -d ${POSTGRES_DB:-elinkup}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: elinkup-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-elinkup}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-elinkup_minio}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - elinkup_minio:/data
+
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: elinkup-api
+    restart: unless-stopped
+    env_file:
+      - .env.example
+    environment:
+      DATABASE_URL: postgresql+psycopg://elinkup:elinkup_local@postgres:5432/elinkup
+      APP_ENV: local
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./Backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  elinkup_pgdata:
+  elinkup_minio:
