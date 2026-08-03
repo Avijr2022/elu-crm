@@ -34,7 +34,8 @@ class Lead {
       email: json['email'] as String?,
       phone: json['phone'] as String?,
       status: json['status'] as String,
-      estimatedValue: (json['estimated_value'] as num?)?.toDouble() ?? 0,
+      estimatedValue:
+          double.tryParse(json['estimated_value']?.toString() ?? '') ?? 0,
       currencyCode: (json['currency_code'] as String?) ?? 'INR',
       notes: json['notes'] as String?,
       createdOn: json['created_on'] != null
