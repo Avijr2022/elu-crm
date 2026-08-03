@@ -37,6 +37,7 @@ Thumbs.db
 
 # Logs / data
 *.log
+Backend/uvicorn.*.log
 DevOps/data/
 postgres_data/
 minio_data/

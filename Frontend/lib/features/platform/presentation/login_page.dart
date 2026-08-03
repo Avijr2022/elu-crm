@@ -13,7 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _tenantCtrl = TextEditingController(text: 'EIIP001');
-  final _emailCtrl = TextEditingController(text: 'admin@euphoria.local');
+  final _emailCtrl = TextEditingController(text: 'admin@euphoriainfotech.com');
   final _passwordCtrl = TextEditingController(text: 'Admin@12345');
 
   @override

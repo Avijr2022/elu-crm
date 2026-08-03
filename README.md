@@ -19,10 +19,13 @@ Related: **ELU-DEV-001**, **ELU-ADR-001**, **ELU-RDM-001**, **ELU-MSL-001**
 
 ## Prerequisites
 
-- Docker Desktop running  
+- **Docker Desktop** with **WSL 2** (Ubuntu must be VERSION 2 — check with `wsl -l -v`)  
+  - If Ubuntu shows VERSION 1: `wsl --update` then `wsl --set-version Ubuntu 2`  
+  - Enable Docker Desktop → Settings → Resources → WSL Integration → Ubuntu  
 - Python 3.12+ recommended (3.14 may work; Docker API image uses 3.12)  
 - Flutter SDK (for frontend)  
-- Port **5432**, **8000**, **9000/9001** free  
+- Ports **55432** (Docker Postgres), **8000**, **9000/9001** free  
+  - Windows PostgreSQL 17/18 often occupy **5432/5433**; Docker defaults to **55432**
 
 ---
 
@@ -44,11 +47,13 @@ cd D:\CRM\Backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-set DATABASE_URL=postgresql+psycopg://elinkup:elinkup_local@localhost:5432/elinkup
+set DATABASE_URL=postgresql+psycopg://elinkup:elinkup_local@localhost:55432/elinkup
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Or double-click `Scripts\start-api-host.bat`.
+
+> Host API uses **localhost:55432** → Docker `postgres:5432`. Avoid Windows PostgreSQL on 5432/5433.
 
 On first boot the API will:
 
@@ -68,7 +73,7 @@ POST http://localhost:8000/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@euphoria.local",
+  "email": "admin@euphoriainfotech.com",
   "password": "Admin@12345",
   "tenant_code": "EIIP001"
 }
@@ -100,7 +105,7 @@ Configure API base URL in `lib/core/network/api_config.dart` (default `http://12
 | Tenant code | `EIIP001` |
 | Tenant name | Euphoria |
 | Edition | PROFESSIONAL |
-| Admin email | `admin@euphoria.local` |
+| Admin email | `admin@euphoriainfotech.com` |
 | Admin password | `Admin@12345` |
 | Currency | INR |
 | Timezone | Asia/Kolkata |

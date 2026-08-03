@@ -14,7 +14,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-elinkup_local}
       POSTGRES_DB: ${POSTGRES_DB:-elinkup}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Host 55432 avoids Windows PostgreSQL 17 (:5432) and 18 (:5433)
+      - "${POSTGRES_PORT:-55432}:5432"
     volumes:
       - elinkup_pgdata:/var/lib/postgresql/data
       - ./Database/01_Schemas/001_CreateSchemas.sql:/docker-entrypoint-initdb.d/01_schemas.sql:ro

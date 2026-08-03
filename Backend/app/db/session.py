@@ -5,10 +5,17 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
 
-settings = get_settings()
+
+def _resolve_database_url() -> str:
+    settings = get_settings()
+    # .env ships DATABASE_URL for in-compose use (@postgres). Prefer HOST URL on the Windows/macOS host.
+    if settings.database_url_host and "@postgres:" in settings.database_url:
+        return settings.database_url_host
+    return settings.database_url
+
 
 engine = create_engine(
-    settings.database_url,
+    _resolve_database_url(),
     pool_pre_ping=True,
 )
 

@@ -15,10 +15,12 @@ class Settings(BaseSettings):
     app_env: str = "local"
     api_v1_prefix: str = "/api/v1"
 
-    # Prefer host URL when running uvicorn on Windows host
+    # Host-run default (Docker maps Postgres to localhost:55432).
+    # Inside Compose, set DATABASE_URL=...@postgres:5432/elinkup.
     database_url: str = (
-        "postgresql+psycopg://elinkup:elinkup_local@localhost:5432/elinkup"
+        "postgresql+psycopg://elinkup:elinkup_local@localhost:55432/elinkup"
     )
+    database_url_host: str | None = None
 
     jwt_secret_key: str = "change-me-elinkup-dev-secret-key-min-32-chars"
     jwt_algorithm: str = "HS256"
@@ -37,7 +39,7 @@ class Settings(BaseSettings):
     default_language: str = "en"
     default_date_format: str = "dd/MM/yyyy"
 
-    seed_admin_email: str = "admin@euphoria.local"
+    seed_admin_email: str = "admin@euphoriainfotech.com"
     seed_admin_password: str = "Admin@12345"
 
     @property

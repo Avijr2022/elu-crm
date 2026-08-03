@@ -101,7 +101,7 @@ def seed_platform(db: Session) -> None:
         gstin="19AABCE1234F1Z5",
         pan="AABCE1234F",
         website="https://www.euphoriainfotech.com",
-        email="admin@euphoria.local",
+        email="admin@euphoriainfotech.com",
         mobile="+919876543210",
         status="ACTIVE",
         activation_date=date.today(),
@@ -114,7 +114,7 @@ def seed_platform(db: Session) -> None:
         organization_code="HO001",
         organization_name="Euphoria Head Office",
         organization_type="Head Office",
-        email="ho@euphoria.local",
+        email="ho@euphoriainfotech.com",
         phone="+913340000000",
         status="ACTIVE",
     )

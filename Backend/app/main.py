@@ -13,6 +13,7 @@ from app.db.seed import seed_platform
 from app.db.session import SessionLocal, engine
 from app.middleware.request_id import RequestIdMiddleware
 from app.models import pf as _pf_models  # noqa: F401 — register models
+from app.models import crm as _crm_models  # noqa: F401 — register CRM models
 from app.schemas.pf.auth import HealthResponse
 
 
@@ -48,8 +49,8 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
-        version="0.1.0",
-        description="E-LinkUp multi-tenant CRM/ERP API (Step 1–2: Platform Foundation + Auth)",
+        version="0.2.0",
+        description="E-LinkUp multi-tenant CRM/ERP API (Step 3: CRM Lead + Platform Auth)",
         lifespan=lifespan,
     )
     app.add_middleware(RequestIdMiddleware)
