@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../crm/presentation/leads_page.dart';
+import '../../crm/presentation/opportunities_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +15,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _index = 0;
 
+  static const _titles = ['E-LinkUp', 'CRM Leads', 'Opportunities'];
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -23,16 +26,27 @@ class _HomePageState extends State<HomePage> {
     final pages = [
       _DashboardView(profile: p),
       const LeadsPage(),
+      const OpportunitiesPage(),
     ];
 
     const destinations = [
-      NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
-      NavigationDestination(icon: Icon(Icons.people_outline), label: 'Leads'),
+      NavigationDestination(
+        icon: Icon(Icons.dashboard_outlined),
+        label: 'Dashboard',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.people_outline),
+        label: 'Leads',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.trending_up_outlined),
+        label: 'Pipeline',
+      ),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_index == 0 ? 'E-LinkUp' : 'CRM Leads'),
+        title: Text(_titles[_index]),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -68,6 +82,11 @@ class _HomePageState extends State<HomePage> {
                       selectedIcon: Icon(Icons.people),
                       label: Text('Leads'),
                     ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.trending_up_outlined),
+                      selectedIcon: Icon(Icons.trending_up),
+                      label: Text('Pipeline'),
+                    ),
                   ],
                 ),
                 const VerticalDivider(width: 1),
@@ -101,9 +120,14 @@ class _DashboardView extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 8),
-        const Text('Step 3 — CRM Lead module is available from the Leads tab.'),
+        const Text(
+          'Step 4 — Opportunity pipeline is available from the Pipeline tab.',
+        ),
         const SizedBox(height: 24),
-        _infoTile('Tenant', '${profile['tenant_name']} (${profile['tenant_code']})'),
+        _infoTile(
+          'Tenant',
+          '${profile['tenant_name']} (${profile['tenant_code']})',
+        ),
         _infoTile('Role', '${profile['role_name']} (${profile['role_code']})'),
         _infoTile('Organization', '${profile['organization_name']}'),
         _infoTile('Currency', '${profile['currency_code']}'),

@@ -114,10 +114,10 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | ELU-ERD-PF + ELU-ERD-CRM | ⬜ Not Started | 0% | DDD draft |
 | PostgreSQL migrations (Alembic) | 🟠 Partial | 15% | `create_all` + seed for local; Alembic formalise later |
 | FastAPI PF + Auth skeleton | 🟡 In Progress | 80% | Scaffolded; verify after Postgres up |
-| FastAPI CRM Lead/Opportunity | 🟡 In Progress | 40% | Lead CRUD (`REQ-CRM-001`) shipped; convert later |
+| FastAPI CRM Lead/Opportunity | 🟡 In Progress | 70% | Lead CRUD + Opportunity pipeline/stage/convert |
 | FastAPI Sales → Finance path | ⬜ Not Started | 0% | Upstream CRM APIs |
 | Flutter shell + auth | ✅ Done | 90% | Login + dashboard verified |
-| Flutter CRM → Finance screens | 🟡 In Progress | 25% | Leads list + create modal |
+| Flutter CRM → Finance screens | 🟡 In Progress | 45% | Leads + Opportunities pipeline UI |
 | Isolation test suite | ⬜ Not Started | 0% | First tenant entity API |
 | ELU-TST-CRM (sample) | ⬜ Not Started | 0% | RTM ✅ |
 | Euphoria UAT Lead→Payment | ⬜ Not Started | 0% | Vertical slice complete |
@@ -154,6 +154,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | 2026-07-31 | Documentation suite reached build-ready; engineering track set to Not Started | PMO |
 | 2026-08-03 | Step 1–2 scaffold: Docker Compose, FastAPI PF/Auth, Flutter login, Euphoria seed (INR / Asia/Kolkata / FY Apr) | Engineering |
 | 2026-08-03 | Step 3 CRM Lead vertical slice: `crm.lead`, `/api/v1/crm/leads` CRUD, Flutter Leads table + create modal | Engineering |
+| 2026-08-03 | Step 4 Opportunity pipeline: `crm.opportunity`, stage advance, pipeline API, convert-from-lead, Flutter Pipeline tab | Engineering |
 
 ---
 

@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../data/lead_model.dart';
 import '../data/lead_service.dart';
+import '../data/opportunity_service.dart';
 
 class LeadsController extends ChangeNotifier {
-  LeadsController({LeadService? service}) : _service = service ?? LeadService();
+  LeadsController({
+    LeadService? service,
+    OpportunityService? opportunityService,
+  })  : _service = service ?? LeadService(),
+        _opportunityService = opportunityService ?? OpportunityService();
 
   final LeadService _service;
+  final OpportunityService _opportunityService;
 
   bool loading = false;
   String? error;
@@ -19,7 +25,8 @@ class LeadsController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final result = await _service.list(search: search.isEmpty ? null : search);
+      final result =
+          await _service.list(search: search.isEmpty ? null : search);
       items = result.items;
       total = result.total;
     } catch (e) {
@@ -55,6 +62,20 @@ class LeadsController extends ChangeNotifier {
       );
       await load();
       return lead;
+    } catch (e) {
+      error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<String?> convertLead(Lead lead) async {
+    error = null;
+    notifyListeners();
+    try {
+      final opp = await _opportunityService.convertLead(lead.leadId);
+      await load();
+      return opp.opportunityNumber;
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();

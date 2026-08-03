@@ -9,6 +9,8 @@ from app.core.exceptions import AppError, http_error_from_app
 from app.db.session import get_db
 from app.schemas.crm.lead import LeadCreate, LeadListResponse, LeadResponse, LeadUpdate
 from app.services.crm.lead_service import LeadService
+from app.services.crm.opportunity_service import OpportunityService
+from app.schemas.crm.opportunity import OpportunityResponse
 
 router = APIRouter(prefix="/crm/leads", tags=["CRM Leads"])
 
@@ -80,6 +82,20 @@ def patch_lead(
 ) -> LeadResponse:
     try:
         return LeadService(db).update_lead(current.tenant_id, lead_id, payload)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post("/{lead_id}/convert", response_model=OpportunityResponse, status_code=status.HTTP_201_CREATED)
+def convert_lead(
+    lead_id: UUID,
+    current: Annotated[CurrentUser, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> OpportunityResponse:
+    try:
+        return OpportunityService(db).convert_from_lead(
+            current.tenant_id, current.user_id, lead_id
+        )
     except AppError as exc:
         raise http_error_from_app(exc) from exc
 

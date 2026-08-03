@@ -50,7 +50,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.2.0",
-        description="E-LinkUp multi-tenant CRM/ERP API (Step 3: CRM Lead + Platform Auth)",
+        description="E-LinkUp multi-tenant CRM/ERP API (Step 4: Opportunity Pipeline + Lead + Auth)",
         lifespan=lifespan,
     )
     app.add_middleware(RequestIdMiddleware)
