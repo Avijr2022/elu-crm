@@ -22,6 +22,7 @@
 | 1.3 | 2026-08-06 | EIIP / QA | PF-002 Tenant Management implementation traceability (QA PASS) |
 | 1.4 | 2026-08-06 | EIIP / PMO | PF-002 RELEASE APPROVED — baseline Phase-2-PF002 |
 | 1.5 | 2026-08-06 | EIIP / QA | PF-003 Subscription Management implementation traceability (QA PASS) |
+| 1.6 | 2026-08-06 | EIIP / PMO | PF-003 RELEASE APPROVED — baseline Phase-2-PF003 |
 
 ## 1. Requirement ID Ranges
 
@@ -167,10 +168,10 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | My subscription / usage | `subscription_usage` | `/tenant/subscription` + usage | — | `test_usage_and_export` |
 | Migration | PF-003 DDL | — | — | `test_migration_idempotent` |
 
-**Coverage:** **100%** of PF-003 BFS §10 platform APIs + core §11 screens (List/Search/View/Activate/Renew/Upgrade). Scheduler NTF deferred (see ELU-QA-PF003 §3).  
-**QA:** [ELU-QA-PF003 v2.0](../ELU-QA-PF003-Subscription-Management-Release-Audit.md) — **PASS — awaiting HUMAN RELEASE APPROVED**.  
-**Candidate notes:** [ELU-REL-PF003](../ELU-REL-PF003-Phase-2-PF003-Release-Notes.md).  
-**Rule:** Do not start PF-004 until PF-003 receives RELEASE APPROVED.
+**Coverage:** **100%** of PF-003 BFS §10 platform APIs + core §11 screens (List/Search/Create/Edit/View/Activate/Renew/Upgrade/History/My Subscription). Scheduler NTF deferred (ELU-TD-001).  
+**QA:** [ELU-QA-PF003 v2.1](../ELU-QA-PF003-Subscription-Management-Release-Audit.md) — **RELEASE APPROVED**.  
+**Baseline:** Release **Phase-2-PF003** · Git tag `Phase-2-PF003` · Notes [ELU-REL-PF003](../ELU-REL-PF003-Phase-2-PF003-Release-Notes.md) · [CHANGELOG](../CHANGELOG.md).  
+**Rule:** Do not modify PF-003 unless a documented bug, approved CR, or ADR requires it. Next module requires explicit human start + CON GAP analysis.
 
 **Code:** `Backend/app/api/v1/pf/subscriptions.py`, `subscription_service.py`  
 **SQL:** `011_subscription_pf003.sql`, `migrate_pf003.py`  

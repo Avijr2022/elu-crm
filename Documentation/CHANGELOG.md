@@ -2,19 +2,20 @@
 
 All notable E-LinkUp implementation milestones.
 
-## [Phase-2-PF003] — 2026-08-06 — AWAITING RELEASE APPROVED
+## [Phase-2-PF003] — 2026-08-06 — RELEASE APPROVED
 
 ### Added
 - PF-003 Subscription Management (BFS-PF-003): APIs, history/usage tables, Flutter Subscriptions UI, pytest suite
 - Expire cascade to tenant SUSPENDED (BR-PF-024); cancel cascade to OFFBOARDING
 - DB: `uk_subscription_one_current`, `fk_tenant_current_subscription`, seat CHECK, NOT NULL commercial columns
 - Flutter: Create / Edit / History / My Subscription (responsive)
-- Release audit: ELU-QA-PF003 **v2.0 PASS** (independent re-audit after blocker remediation)
+- Release audit: ELU-QA-PF003 **v2.1 PASS — RELEASE APPROVED**
 
 ### Notes
-- Candidate: ELU-REL-PF003
-- Do **not** start PF-004 until PF-003 is RELEASE APPROVED
-- PF-001 / PF-002 frozen
+- Git tag: `Phase-2-PF003`
+- PF-001 / PF-002 / PF-003 frozen — change only on bug, approved CR, or ADR
+- Execution under Enterprise Engineering Constitution (CON)
+- Next module requires explicit human start + GAP analysis
 
 ---
 
