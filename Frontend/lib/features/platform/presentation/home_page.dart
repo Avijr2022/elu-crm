@@ -6,6 +6,7 @@ import '../../crm/presentation/leads_page.dart';
 import '../../crm/presentation/opportunities_page.dart';
 import '../data/edition_service.dart';
 import 'editions_page.dart';
+import 'organizations_page.dart';
 import 'subscriptions_page.dart';
 import 'tenants_page.dart';
 
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> {
     final titles = <String>[
       'E-LinkUp',
       if (isPlatformAdmin) 'Tenants',
+      'Organizations',
       'Subscriptions',
       'Editions',
       'CRM Leads',
@@ -38,6 +40,7 @@ class _HomePageState extends State<HomePage> {
     final pages = <Widget>[
       _DashboardView(profile: p, isPlatformAdmin: isPlatformAdmin),
       if (isPlatformAdmin) const TenantsPage(),
+      const OrganizationsPage(),
       if (isPlatformAdmin) const SubscriptionsPage() else const MySubscriptionPage(),
       if (isPlatformAdmin) const EditionsPage() else const _TenantEditionView(),
       const LeadsPage(),
@@ -54,6 +57,10 @@ class _HomePageState extends State<HomePage> {
           icon: Icon(Icons.apartment_outlined),
           label: 'Tenants',
         ),
+      const NavigationDestination(
+        icon: Icon(Icons.account_balance_outlined),
+        label: 'Organizations',
+      ),
       const NavigationDestination(
         icon: Icon(Icons.card_membership_outlined),
         label: 'Subscriptions',
@@ -84,6 +91,11 @@ class _HomePageState extends State<HomePage> {
           selectedIcon: Icon(Icons.apartment),
           label: Text('Tenants'),
         ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.account_balance_outlined),
+        selectedIcon: Icon(Icons.account_balance),
+        label: Text('Organizations'),
+      ),
       const NavigationRailDestination(
         icon: Icon(Icons.card_membership_outlined),
         selectedIcon: Icon(Icons.card_membership),

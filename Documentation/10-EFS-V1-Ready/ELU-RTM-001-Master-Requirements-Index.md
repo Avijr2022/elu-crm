@@ -208,4 +208,24 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 
 ---
 
+## 10. Implementation Traceability — PF-004 Organization Management (in progress)
+
+| Requirement | Artefact | API | Test |
+|-------------|----------|-----|------|
+| BR-PF-028 one ROOT | `uk_organization_one_root` | `GET /org/organizations/root` | `test_ac_pf_004_01_one_root` |
+| BR-PF-029 code UK | `uk_org_tenant_code` | POST create | create child test |
+| BR-PF-030 GSTIN | schema validator | PATCH | `test_ac_pf_004_02_invalid_gstin` |
+| BR-PF-031 no delete ROOT | service | DELETE | `test_ac_pf_004_03_root_cannot_delete` |
+| BR-PF-033 FY month | CHECK + schema | PATCH | profile update test |
+| List/Search/Export/Hierarchy | BFS §10 | `/api/v1/org/organizations*` | list + hierarchy tests |
+| Flutter §11 | Organizations tab | — | manual / analyze |
+
+**Status:** Implementation started after Phase-2-PF003A RELEASE APPROVED.  
+**Code:** `organizations.py`, `organization_service.py`, `migrate_pf004.py`  
+**SQL:** `013_organization_pf004.sql`  
+**Flutter:** `organizations_page.dart`  
+**Tests:** `tests/test_pf004_organizations.py`
+
+---
+
 *© Euphoria Infotech (I) Limited — ELU-RTM-001*

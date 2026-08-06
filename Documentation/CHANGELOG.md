@@ -2,6 +2,32 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-004 Mid-Phase] — 2026-08-06 — REVIEW COMPLETE
+
+### Added
+- ELU-MPR-PF004 Mid-Phase Architecture & Quality Review (CONDITIONAL PASS, grade B+)
+- ELU-EHC-003 Executive Health Card; ELU-GAP-PF004; ELU-TD-003
+- Risk RSK-024 / RSK-025; PF-004 corrections (soft UK, Tenant Admin write, sort, UI a11y)
+
+### Notes
+- **No QA Release Audit** yet — close High gaps first
+- Baselined PF-001…PF-003A untouched
+
+---
+
+## [PF-004] — 2026-08-06 — IN PROGRESS
+
+### Added
+- PF-004 Organization Management (BFS-PF-004): org profile fields, ROOT UK, GSTIN/PAN validation, hierarchy API, Flutter Organizations tab
+- SQL: `013_organization_pf004.sql` / `migrate_pf004.py`
+- Tests: `tests/test_pf004_organizations.py` (AC-PF-004-01…03)
+
+### Notes
+- Started after **Phase-2-PF003A** RELEASE APPROVED
+- PF-001…PF-003A remain frozen
+
+---
+
 ## [Phase-2-PF003A] — 2026-08-06 — RELEASE APPROVED
 
 ### Added

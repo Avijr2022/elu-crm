@@ -1886,7 +1886,7 @@ Department deactivated when function is outsourced: status INACTIVE, users reass
 **Sub Module:** PF-007-001 — Business Unit  
 **Feature:** PF-007-001-001 — Business Unit Profile  
 **Domain:** PF (Platform Foundation)  
-**Priority / Phase / Release:** P1 / Phase 2 / R1.1  
+**Priority / Phase / Release:** P1 / Phase 2 / R1.0  
 **Example Tenant:** Euphoria  
 **Stack:** Flutter · FastAPI · PostgreSQL · JWT+Refresh · Docker · VPS/Azure
 
@@ -1931,7 +1931,7 @@ Tenant Admin, Sales Manager, Finance User, Project Manager.
 | Feature ID | PF-007-001-001 |
 | Priority | P1 |
 | Phase | 2 |
-| Release | R1.1 |
+| Release | R1.0 |
 | Minimum Edition | Professional |
 
 ---

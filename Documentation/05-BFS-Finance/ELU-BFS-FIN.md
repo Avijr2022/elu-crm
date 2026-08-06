@@ -66,8 +66,8 @@
 | Credit Notes | — | ✓ | ✓ |
 | Dunning automation | — | Basic | Full configurable |
 | Bank reconciliation | — | Manual | Manual + import |
-| Vendor Settlement | — | — | ✓ |
-| GST & TDS Processing | — | GST only | GST + TDS |
+| Vendor Settlement | — | ✓ | ✓ |
+| GST & TDS Processing | — | ✓ | ✓ |
 | Multi-level invoice approval | — | 1 level | Multi-level |
 
 ---
@@ -863,7 +863,7 @@ flowchart TD
 **Sub Module:** FIN-003-001 — Settlement  
 **Feature:** FIN-003-001-001 — Vendor Payment  
 **Domain:** FIN  
-**Priority / Phase / Release:** High · Phase 2 · v1.0 (Enterprise)  
+**Priority / Phase / Release:** High · Phase 2 · v1.0 · Professional+  
 **Example Tenant:** Euphoria  
 **Workflow:** WF-FIN-002
 
@@ -1143,7 +1143,7 @@ Full audit on create, update, approvals, disbursement, reconciliation, reversal;
 | AC-FIN-003-05 | Disbursement records bank reference; status becomes Paid |
 | AC-FIN-003-06 | Project actual vendor cost updates on Paid |
 | AC-FIN-003-07 | Duplicate vendor invoice number rejected |
-| AC-FIN-003-08 | Enterprise edition gate: Professional tenant cannot access settlements |
+| AC-FIN-003-08 | Professional+ edition: Community tenant receives 403 on vendor settlement APIs |
 
 ---
 

@@ -43,6 +43,7 @@ async def lifespan(_: FastAPI):
         from app.db.migrate_pf002 import apply_pf002_ddl
         from app.db.migrate_pf003 import apply_pf003_ddl
         from app.db.migrate_pf003a import apply_pf003a_ddl
+        from app.db.migrate_pf004 import apply_pf004_ddl
         from app.db.rls_context import bind_rls_context, clear_rls_context, set_app_role_enabled
 
         # Bootstrap DDL + seed as owner/superuser; request sessions use elu_app.
@@ -52,6 +53,7 @@ async def lifespan(_: FastAPI):
         apply_pf002_ddl(db)
         apply_pf003_ddl(db)
         apply_pf003a_ddl(db)
+        apply_pf004_ddl(db)
         seed_platform(db)
         clear_rls_context(db)
     finally:
@@ -63,10 +65,10 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
-        version="0.6.0",
+        version="0.7.0",
         description=(
-            "E-LinkUp multi-tenant CRM/ERP API — PF-001 Editions + PF-002 Tenants "
-            "+ PF-003 Subscriptions + PF-003A Tenant Isolation (RLS) + Auth + CRM"
+            "E-LinkUp multi-tenant CRM/ERP API — PF-001…PF-003A + PF-004 Organizations "
+            "+ Auth + CRM"
         ),
         lifespan=lifespan,
         openapi_tags=[

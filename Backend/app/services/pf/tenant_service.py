@@ -263,10 +263,16 @@ class TenantService:
             tenant_id=tenant.tenant_id,
             organization_code="HO001",
             organization_name=f"{tenant.trade_name} Head Office",
-            organization_type="Head Office",
+            legal_name=tenant.legal_name,
+            organization_type="ROOT",
             email=tenant.email,
             phone=tenant.mobile,
             status="ACTIVE",
+            is_root=True,
+            level=0,
+            default_currency_code=settings.default_currency,
+            fiscal_year_start_month=settings.default_fy_start_month,
+            created_by=actor_id,
         )
         self.db.add(org)
 

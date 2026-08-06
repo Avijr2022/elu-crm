@@ -384,3 +384,36 @@ def test_edition_tables_have_no_rls(client: TestClient) -> None:
             ).first()
             assert row is not None
             assert row[0] is False
+
+
+def test_pf004_cross_tenant_organization_get(
+    client: TestClient, auth_header: dict
+) -> None:
+    """Tenant A cannot GET Tenant B organization by id (404)."""
+    code_a = _unique_code("oa")
+    code_b = _unique_code("ob")
+    tenant_a = _register_and_approve(client, auth_header, code_a)
+    tenant_b = _register_and_approve(client, auth_header, code_b)
+    tid_a = uuid.UUID(tenant_a["id"])
+    tid_b = uuid.UUID(tenant_b["id"])
+    pwd = "IsoTest!234"
+    email_a = f"admin-{code_a}@example.com"
+    email_b = f"admin-{code_b}@example.com"
+    _provision_tenant_admin(tid_a, email_a, pwd)
+    _provision_tenant_admin(tid_b, email_b, pwd)
+    hdr_a = {
+        "Authorization": f"Bearer {_login_tenant(client, email_a, pwd, code_a)}"
+    }
+    hdr_b = {
+        "Authorization": f"Bearer {_login_tenant(client, email_b, pwd, code_b)}"
+    }
+
+    root_b = client.get("/api/v1/org/organizations/root", headers=hdr_b)
+    assert root_b.status_code == 200, root_b.text
+    org_b_id = root_b.json()["id"]
+
+    stolen = client.get(f"/api/v1/org/organizations/{org_b_id}", headers=hdr_a)
+    assert stolen.status_code == 404, stolen.text
+
+    own = client.get(f"/api/v1/org/organizations/{org_b_id}", headers=hdr_b)
+    assert own.status_code == 200, own.text

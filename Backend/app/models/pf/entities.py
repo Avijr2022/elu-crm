@@ -397,6 +397,8 @@ class IdempotencyKey(Base):
 
 
 class Organization(Base, TimestampMixin, SoftDeleteMixin):
+    """Tenant organization profile (ELU-BFS-PF-004 / ELU-DDD-PF §5)."""
+
     __tablename__ = "organization"
     __table_args__ = (
         UniqueConstraint("tenant_id", "organization_code", name="uk_org_tenant_code"),
@@ -414,10 +416,36 @@ class Organization(Base, TimestampMixin, SoftDeleteMixin):
     )
     organization_code: Mapped[str] = mapped_column(String(30), nullable=False)
     organization_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    legal_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    short_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     organization_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    registration_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    cin: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    date_of_incorporation: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    gstin: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    pan: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    tan: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    tax_registration_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    is_root: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    level: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    default_currency_code: Mapped[str] = mapped_column(
+        String(3), nullable=False, server_default="INR"
+    )
+    fiscal_year_start_month: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("4")
+    )
     email: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    website: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    address_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant_address.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="ACTIVE")
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
 
     tenant: Mapped["Tenant"] = relationship(back_populates="organizations")
 

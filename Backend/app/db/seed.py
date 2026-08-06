@@ -40,6 +40,11 @@ PERMISSIONS = [
     ("edition.publish", "Publish edition", "PF"),
     ("edition.deprecate", "Deprecate edition", "PF"),
     ("edition.export", "Export edition matrix", "PF"),
+    ("organization.create", "Create organization", "PF"),
+    ("organization.read", "View organization", "PF"),
+    ("organization.update", "Update organization", "PF"),
+    ("organization.delete", "Delete organization", "PF"),
+    ("organization.export", "Export organizations", "PF"),
     ("lead.create", "Create lead", "CRM"),
     ("lead.read", "View lead", "CRM"),
     ("lead.update", "Update lead", "CRM"),
@@ -274,10 +279,15 @@ def seed_platform(db: Session) -> None:
         tenant_id=tenant.tenant_id,
         organization_code="HO001",
         organization_name="Euphoria Head Office",
-        organization_type="Head Office",
+        legal_name="Euphoria Infotech (I) Limited",
+        organization_type="ROOT",
         email="ho@euphoriainfotech.com",
         phone="+913340000000",
         status="ACTIVE",
+        is_root=True,
+        level=0,
+        default_currency_code="INR",
+        fiscal_year_start_month=4,
     )
     db.add(org)
     db.flush()
@@ -401,6 +411,37 @@ def _ensure_platform_admin(
                 )
             )
     db.flush()
+
+    # Grant PF-004 organization permissions to admin roles (idempotent)
+    org_perm_codes = [c for c, _, _ in PERMISSIONS if c.startswith("organization.")]
+    for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
+        role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant.tenant_id,
+                Role.role_code == role_code,
+            )
+        ).first()
+        if role is None:
+            continue
+        for pcode in org_perm_codes:
+            perm = db.scalars(
+                select(Permission).where(Permission.permission_code == pcode)
+            ).first()
+            if perm is None:
+                continue
+            linked = db.scalars(
+                select(RolePermission).where(
+                    RolePermission.role_id == role.role_id,
+                    RolePermission.permission_id == perm.permission_id,
+                )
+            ).first()
+            if linked is None:
+                db.add(
+                    RolePermission(
+                        role_id=role.role_id,
+                        permission_id=perm.permission_id,
+                    )
+                )
 
     platform_role = db.scalars(
         select(Role).where(

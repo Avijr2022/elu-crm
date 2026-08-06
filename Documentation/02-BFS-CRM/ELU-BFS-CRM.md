@@ -69,7 +69,7 @@ Lead (CRM-001) → Qualification → Opportunity (CRM-002) → Quotation (SAL-00
 **Sub Module:** CRM-001-001 — Lead  
 **Feature:** CRM-001-001-001 — Lead Capture  
 **Domain:** CRM  
-**Priority / Phase / Release:** Critical · Phase 2 · v2.0  
+**Priority / Phase / Release:** Critical · Phase 2 · v1.0  
 **Workflow Reference:** WF-CRM-001  
 **Example Tenant:** Euphoria  
 **Stack:** Flutter · FastAPI · PostgreSQL · JWT+Refresh · Docker
@@ -101,7 +101,9 @@ Euphoria sales users receive inbound interest through multiple channels — webs
 | Contact details on lead (lead_contact) | Bulk import wizard (Phase 2.1) |
 | Lead assignment and reassignment | AI lead scoring (CPS-007, v3) |
 | Qualification / Disqualification / Nurture | Legal contract management |
-| Lead → Opportunity + Customer conversion | Quotation creation (SAL-001) |
+| Lead → Opportunity + Customer conversion (Professional+) | Quotation creation (SAL-001) |
+| Community: Lead → Customer only (`convert_mode=CUSTOMER_ONLY`) | Opportunity module (Community) |  
+| **Community convert** = Customer only (no Opportunity) per **ELU-EDM-001** / **ELU-L2C-001** | |
 | Attachments via Document Engine | |
 | Activity logging (via CRM-004) | |
 | Duplicate check and merge preview | |
@@ -121,7 +123,7 @@ Sales Executive, Sales Manager, Pre-Sales, Tenant Admin, Finance (read-only advi
 | Feature | CRM-001-001-001 Lead Capture |
 | Priority | Critical |
 | Phase | Phase 2 |
-| Release | v2.0 |
+| Release | v1.0 |
 | Dependencies | PF-008 Users, PF-009 RBAC, PF-010 Audit, CRM-004 Activity Timeline |
 | Downstream | CRM-002 Opportunity, CRM-003 Customer, SAL-001 Quotation |
 
@@ -521,7 +523,7 @@ Base path: `/api/v1/crm` · Auth: Bearer JWT · Tenant: from JWT claim
 **Sub Module:** CRM-002-001 — Opportunity  
 **Feature:** CRM-002-001-001 — Opportunity Pipeline  
 **Domain:** CRM  
-**Priority / Phase / Release:** Critical · Phase 2 · v2.0  
+**Priority / Phase / Release:** Critical · Phase 2 · v1.0  
 **Workflow Reference:** WF-CRM-002  
 **Example Tenant:** Euphoria  
 **Stack:** Flutter · FastAPI · PostgreSQL · JWT+Refresh · Docker
@@ -954,7 +956,7 @@ Pipeline stages are modelled as **opportunity_stage** records; opportunity.statu
 **Sub Module:** CRM-003-001 — Customer Master  
 **Feature:** CRM-003-001-001 — Customer Profile  
 **Domain:** CRM  
-**Priority / Phase / Release:** Critical · Phase 2 · v2.0  
+**Priority / Phase / Release:** Critical · Phase 2 · v1.0  
 **Workflow Reference:** WF-CRM-003  
 **Example Tenant:** Euphoria  
 **Stack:** Flutter · FastAPI · PostgreSQL · JWT+Refresh · Docker
@@ -1379,7 +1381,7 @@ flowchart TD
 **Sub Module:** CRM-004-001 — Activities  
 **Feature:** CRM-004-001-001 — Activity Timeline  
 **Domain:** CRM  
-**Priority / Phase / Release:** High · Phase 2 · v2.0  
+**Priority / Phase / Release:** High · Phase 2 · v1.0  
 **Workflow Reference:** WF-CRM-004  
 **Example Tenant:** Euphoria  
 **Stack:** Flutter · FastAPI · PostgreSQL · JWT+Refresh · Docker
