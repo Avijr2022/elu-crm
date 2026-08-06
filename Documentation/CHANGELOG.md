@@ -6,8 +6,10 @@ All notable E-LinkUp implementation milestones.
 
 ### Added
 - PF-003 Subscription Management (BFS-PF-003): APIs, history/usage tables, Flutter Subscriptions UI, pytest suite
-- Expire cascade to tenant SUSPENDED (BR-PF-024)
-- Release audit: ELU-QA-PF003 v1.0 PASS (pending human RELEASE APPROVED)
+- Expire cascade to tenant SUSPENDED (BR-PF-024); cancel cascade to OFFBOARDING
+- DB: `uk_subscription_one_current`, `fk_tenant_current_subscription`, seat CHECK, NOT NULL commercial columns
+- Flutter: Create / Edit / History / My Subscription (responsive)
+- Release audit: ELU-QA-PF003 **v2.0 PASS** (independent re-audit after blocker remediation)
 
 ### Notes
 - Candidate: ELU-REL-PF003

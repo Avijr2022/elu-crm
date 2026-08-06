@@ -13,9 +13,22 @@ def apply_pf003_ddl(db: Session) -> None:
         "ALTER TABLE core.subscription ADD COLUMN IF NOT EXISTS created_by UUID",
         "ALTER TABLE core.subscription ADD COLUMN IF NOT EXISTS modified_by UUID",
         "UPDATE core.subscription SET billing_cycle = 'MONTHLY' WHERE billing_cycle IS NULL",
-        "UPDATE core.subscription SET seat_count = 10 WHERE seat_count IS NULL",
+        "UPDATE core.subscription SET seat_count = 10 WHERE seat_count IS NULL OR seat_count < 1",
         "UPDATE core.subscription SET trial_end_date = end_date WHERE subscription_status = 'TRIAL' AND trial_end_date IS NULL",
+        "ALTER TABLE core.subscription ALTER COLUMN billing_cycle SET DEFAULT 'MONTHLY'",
+        "ALTER TABLE core.subscription ALTER COLUMN seat_count SET DEFAULT 10",
+        "ALTER TABLE core.subscription ALTER COLUMN billing_cycle SET NOT NULL",
+        "ALTER TABLE core.subscription ALTER COLUMN seat_count SET NOT NULL",
         "ALTER TABLE core.tenant ADD COLUMN IF NOT EXISTS current_subscription_id UUID",
+        """
+UPDATE core.tenant t
+SET current_subscription_id = NULL
+WHERE current_subscription_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM core.subscription s
+    WHERE s.subscription_id = t.current_subscription_id
+  )
+""",
         """
 DO $ck$
 BEGIN
@@ -39,6 +52,55 @@ BEGIN
   END IF;
 END
 $ck$;
+""",
+        """
+DO $ck$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_subscription_seat_count') THEN
+    ALTER TABLE core.subscription
+      ADD CONSTRAINT ck_subscription_seat_count
+      CHECK (seat_count >= 1);
+  END IF;
+END
+$ck$;
+""",
+        """
+DO $fk$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'fk_tenant_current_subscription'
+  ) THEN
+    ALTER TABLE core.tenant
+      ADD CONSTRAINT fk_tenant_current_subscription
+      FOREIGN KEY (current_subscription_id)
+      REFERENCES core.subscription(subscription_id)
+      ON DELETE SET NULL;
+  END IF;
+END
+$fk$;
+""",
+        """
+WITH ranked AS (
+  SELECT subscription_id,
+         ROW_NUMBER() OVER (
+           PARTITION BY tenant_id ORDER BY created_on DESC
+         ) AS rn
+  FROM core.subscription
+  WHERE is_deleted = false
+    AND subscription_status IN ('ACTIVE','TRIAL')
+)
+UPDATE core.subscription s
+SET subscription_status = 'EXPIRED',
+    is_active = false
+FROM ranked r
+WHERE s.subscription_id = r.subscription_id
+  AND r.rn > 1
+""",
+        """
+CREATE UNIQUE INDEX IF NOT EXISTS uk_subscription_one_current
+  ON core.subscription (tenant_id)
+  WHERE is_deleted = false
+    AND subscription_status IN ('ACTIVE','TRIAL')
 """,
         "CREATE INDEX IF NOT EXISTS idx_subscription_tenant_status ON core.subscription(tenant_id, subscription_status)",
         "CREATE INDEX IF NOT EXISTS idx_subscription_edition_id ON core.subscription(edition_id)",

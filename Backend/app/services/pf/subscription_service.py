@@ -197,9 +197,11 @@ class SubscriptionService:
             q = q.where(Subscription.subscription_status == status.upper())
         if search:
             like = f"%{search.strip()}%"
-            q = q.where(
+            q = q.join(Tenant, Tenant.tenant_id == Subscription.tenant_id).where(
                 or_(
                     Subscription.subscription_number.ilike(like),
+                    Tenant.tenant_code.ilike(like),
+                    Tenant.legal_name.ilike(like),
                 )
             )
         total = self.db.scalar(select(func.count()).select_from(q.subquery())) or 0
@@ -540,8 +542,18 @@ class SubscriptionService:
         sub.version_no += 1
         sub.modified_by = actor_id
         tenant = self.db.get(Tenant, sub.tenant_id)
-        if tenant and tenant.current_subscription_id == sub.subscription_id:
-            tenant.current_subscription_id = None
+        if tenant:
+            if tenant.current_subscription_id == sub.subscription_id:
+                tenant.current_subscription_id = None
+            # BFS §5 — CANCELLED cascades tenant to OFFBOARDING
+            if from_status in {
+                "ACTIVE",
+                "TRIAL",
+                "RENEWAL_PENDING",
+                "PAST_DUE",
+                "SUSPENDED",
+            } and tenant.status not in {"CLOSED", "ARCHIVED", "CANCELLED"}:
+                tenant.status = "OFFBOARDING"
         self._history(
             sub,
             change_type="CANCELLED",

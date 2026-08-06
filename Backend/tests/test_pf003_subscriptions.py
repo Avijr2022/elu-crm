@@ -354,3 +354,90 @@ def test_audit_on_activate(client: TestClient, auth_header: dict) -> None:
         assert len(events) >= 1
     finally:
         db.close()
+
+
+def test_schema_constraints_and_uk(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        apply_pf003_ddl(db)
+        apply_pf003_ddl(db)
+        uk = db.execute(
+            text(
+                "SELECT 1 FROM pg_indexes WHERE schemaname='core' "
+                "AND indexname='uk_subscription_one_current'"
+            )
+        ).first()
+        assert uk is not None
+        fk = db.execute(
+            text(
+                "SELECT 1 FROM pg_constraint WHERE conname='fk_tenant_current_subscription'"
+            )
+        ).first()
+        assert fk is not None
+        seat_ck = db.execute(
+            text(
+                "SELECT 1 FROM pg_constraint WHERE conname='ck_subscription_seat_count'"
+            )
+        ).first()
+        assert seat_ck is not None
+        nn = db.execute(
+            text(
+                "SELECT is_nullable FROM information_schema.columns "
+                "WHERE table_schema='core' AND table_name='subscription' "
+                "AND column_name='seat_count'"
+            )
+        ).first()
+        assert nn is not None and nn[0] == "NO"
+    finally:
+        db.close()
+
+
+def test_openapi_includes_subscriptions(client: TestClient) -> None:
+    spec = client.get("/openapi.json")
+    assert spec.status_code == 200
+    paths = spec.json()["paths"]
+    required = [
+        "/api/v1/platform/subscriptions",
+        "/api/v1/platform/subscriptions/search",
+        "/api/v1/platform/subscriptions/export",
+        "/api/v1/platform/subscriptions/{subscription_id}",
+        "/api/v1/platform/subscriptions/{subscription_id}/renew",
+        "/api/v1/platform/subscriptions/{subscription_id}/upgrade",
+        "/api/v1/platform/subscriptions/{subscription_id}/reactivate",
+        "/api/v1/platform/subscriptions/{subscription_id}/history",
+        "/api/v1/tenant/subscription",
+        "/api/v1/tenant/subscription/usage",
+    ]
+    for p in required:
+        assert p in paths, f"missing OpenAPI path {p}"
+
+
+def test_cancel_cascades_offboarding(client: TestClient, auth_header: dict) -> None:
+    tenant = _register_tenant(client, auth_header)
+    apr = client.post(
+        f"/api/v1/platform/tenants/{tenant['id']}/approve",
+        headers=auth_header,
+        json={"version_no": tenant["version_no"]},
+    )
+    assert apr.status_code == 200, apr.text
+    listed = client.get(
+        "/api/v1/platform/subscriptions",
+        headers=auth_header,
+        params={"status": "TRIAL"},
+    )
+    trial = next(
+        (i for i in listed.json()["items"] if i["tenant_id"] == tenant["id"]),
+        None,
+    )
+    assert trial is not None
+    cancel = client.delete(
+        f"/api/v1/platform/subscriptions/{trial['id']}",
+        headers=auth_header,
+        params={"version_no": trial["version_no"], "reason": "QA cancel cascade"},
+    )
+    assert cancel.status_code == 204, cancel.text
+    tget = client.get(
+        f"/api/v1/platform/tenants/{tenant['id']}", headers=auth_header
+    )
+    assert tget.status_code == 200
+    assert tget.json()["status"] == "OFFBOARDING"

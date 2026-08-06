@@ -29,7 +29,7 @@ class _HomePageState extends State<HomePage> {
     final titles = <String>[
       'E-LinkUp',
       if (isPlatformAdmin) 'Tenants',
-      if (isPlatformAdmin) 'Subscriptions',
+      'Subscriptions',
       'Editions',
       'CRM Leads',
       'Opportunities',
@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
     final pages = <Widget>[
       _DashboardView(profile: p, isPlatformAdmin: isPlatformAdmin),
       if (isPlatformAdmin) const TenantsPage(),
-      if (isPlatformAdmin) const SubscriptionsPage(),
+      if (isPlatformAdmin) const SubscriptionsPage() else const MySubscriptionPage(),
       if (isPlatformAdmin) const EditionsPage() else const _TenantEditionView(),
       const LeadsPage(),
       const OpportunitiesPage(),
@@ -54,11 +54,10 @@ class _HomePageState extends State<HomePage> {
           icon: Icon(Icons.apartment_outlined),
           label: 'Tenants',
         ),
-      if (isPlatformAdmin)
-        const NavigationDestination(
-          icon: Icon(Icons.card_membership_outlined),
-          label: 'Subscriptions',
-        ),
+      const NavigationDestination(
+        icon: Icon(Icons.card_membership_outlined),
+        label: 'Subscriptions',
+      ),
       const NavigationDestination(
         icon: Icon(Icons.layers_outlined),
         label: 'Editions',
@@ -85,12 +84,11 @@ class _HomePageState extends State<HomePage> {
           selectedIcon: Icon(Icons.apartment),
           label: Text('Tenants'),
         ),
-      if (isPlatformAdmin)
-        const NavigationRailDestination(
-          icon: Icon(Icons.card_membership_outlined),
-          selectedIcon: Icon(Icons.card_membership),
-          label: Text('Subscriptions'),
-        ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.card_membership_outlined),
+        selectedIcon: Icon(Icons.card_membership),
+        label: Text('Subscriptions'),
+      ),
       const NavigationRailDestination(
         icon: Icon(Icons.layers_outlined),
         selectedIcon: Icon(Icons.layers),

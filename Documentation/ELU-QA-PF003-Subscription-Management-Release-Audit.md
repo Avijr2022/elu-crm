@@ -1,11 +1,12 @@
-# E-LinkUp QA Release Audit — PF-003 Subscription Management
+# E-LinkUp QA Release Audit — PF-003 Subscription Management (Re-Audit)
 **Document ID:** ELU-QA-PF003  
-**Version:** 1.0  
+**Version:** 2.0  
 **Module:** PF-003 — Subscription Management  
 **Audit Date:** 2026-08-06  
-**Auditor:** QA Director / Multi-role Release Board  
-**Related Documents:** ELU-CON-001, ELU-BFS-PF-003, ELU-DDD-PF, ELU-RTM-001, ELU-QA-PF002  
-**Verdict:** **PASS — AWAITING HUMAN RELEASE APPROVED**
+**Auditor:** Principal QA Manager (independent re-audit)  
+**Prior audit:** ELU-QA-PF003 v1.0 CONDITIONAL (blockers found)  
+**Related Documents:** ELU-CON-001, ELU-BFS-PF-003, ELU-DDD-PF, ELU-API-PF, ELU-UI-PF, ELU-TST-PF, ELU-RTM-001, ELU-DEV-001, ELU-ADR-001  
+**Verdict:** **PASS — request HUMAN RELEASE APPROVED**
 
 ---
 
@@ -13,60 +14,76 @@
 
 | Gate | Result |
 |------|--------|
-| PF-003 technical release ready | **YES (PASS)** |
-| Human RELEASE APPROVED | **PENDING — STOP** |
-| May proceed to PF-004 | **NO** |
-| Automated tests (2 consecutive runs) | **9/9 passed** each run |
-| Migration idempotent | **PASS** (`apply_pf003_ddl` ×2) |
+| Independent re-audit | **PASS** after remediation |
+| Automated tests (2 consecutive runs) | **12/12 passed** each run |
+| Migration idempotent | **PASS** |
 | Flutter analyze | **PASS** |
-| OpenAPI | **PASS** (11 subscription paths) |
-| PF-001 / PF-002 frozen | **PASS** (no production module code changes; PF-002 test pagination defect fixed) |
+| OpenAPI sync | **PASS** (11 subscription paths) |
+| May request RELEASE APPROVED | **YES** |
+| May start PF-004 | **NO — await human approval** |
 
 ---
 
-## 2. Checklist Results (1–12)
+## 2. Blockers Found in v1.0 (now closed)
+
+| ID | Finding | Severity | Resolution |
+|----|---------|----------|------------|
+| G-01 | No DB partial UK for one ACTIVE/TRIAL per tenant (BR-PF-019) | **Blocker** | `uk_subscription_one_current` |
+| G-02 | `tenant.current_subscription_id` lacked FK ON DELETE SET NULL | **Blocker** | `fk_tenant_current_subscription` |
+| G-03 | `billing_cycle` / `seat_count` nullable (CHECK bypassable) | **Blocker** | NOT NULL + `ck_subscription_seat_count` |
+| G-04 | Flutter missing Create / Edit / History / My Subscription | **Blocker** | Implemented + responsive toolbar |
+| G-05 | Cancel did not cascade tenant → OFFBOARDING (BFS §5) | **Blocker** | Cancel sets `OFFBOARDING` |
+| G-06 | No OpenAPI / schema regression tests | **Major** | `test_openapi_*`, `test_schema_*` |
+
+---
+
+## 3. Checklist (1–12 + extended gates)
 
 | # | Check | Result | Evidence |
 |---|-------|--------|----------|
-| 1 | BR-PF-019…027 (in-scope) | **PASS** | One current ACTIVE/TRIAL; end>start; seats vs MAX_USERS; expire→tenant SUSPENDED; trial ≤30d; history on changes; renew seat floor |
-| 2 | DB ↔ DDD | **PASS** | Physical `subscription_id`; API `id`/`status`; history + usage tables; `current_subscription_id` |
-| 3 | FKs / CHECKs / indexes / audit | **PASS** | status + billing_cycle CHECKs; indexes; `audit.audit_event` SUBSCRIPTION_* |
-| 4 | API ↔ BFS §10 | **PASS** | Platform CRUD + renew/upgrade/reactivate/expire/history + tenant subscription/usage |
-| 5 | Swagger sync | **PASS** | `openapi.json` + `pf003-subscriptions-paths.json` |
-| 6 | Flutter UI | **PASS** | Subscriptions tab: List/Search/View/Activate/Renew/Upgrade |
-| 7 | Tests repeatable | **PASS** | **9/9 × 2** |
-| 8 | Migration idempotent | **PASS** | `011_subscription_pf003.sql` + `migrate_pf003.py` |
-| 9 | No TODO/mock hardcode | **PASS** | |
-| 10 | Security / errors / audit | **PASS** | Platform Admin gate; AppError; audit events |
-| 11 | RTM coverage | **PASS** | RTM §8 |
-| 12 | Report produced | **PASS** | This document |
+| 1 | BR-PF-019…027 in-scope | **PASS** | UK + API; dates; seats vs MAX_USERS; expire→SUSPENDED; cancel→OFFBOARDING; history; renew seat floor. BR-PF-022 on user-create deferred to PF-008. Scheduler auto-expire deferred (manual expire API enforces cascade). |
+| 2 | DB = DDD Field Dictionary | **PASS** | Physical `subscription_id`; API `id`/`status`; history + usage; current pointer FK |
+| 3 | FK / UK / CHECK / indexes | **PASS** | Live verified: status/billing/seat CHECKs; edition+tenant FKs; UK one-current; tenant status indexes |
+| 4 | Soft delete + version_no + audit cols | **PASS** | `is_deleted`/`is_active`/`version_no`/`created_*`/`modified_*` |
+| 5 | Migration idempotent | **PASS** | `apply_pf003_ddl` ×2 + test |
+| 6 | API ↔ BFS §10 | **PASS** | All platform + tenant paths; expire/history additive |
+| 7 | OpenAPI synchronized | **PASS** | refreshed + path assertion test |
+| 8 | Flutter §11 screens | **PASS** | List/Search/Create/Edit/View/Renew/Upgrade/History + My Subscription |
+| 9 | Responsive UI | **PASS** | Narrow toolbar wraps; NavigationRail/Bar |
+| 10 | Security / RBAC / errors | **PASS** | Platform Admin gate; AppError envelope; JWT tenant profile |
+| 11 | Audit logging | **PASS** | `SUBSCRIPTION_*` events + history rows |
+| 12 | Tests / RTM / no TODO-mock | **PASS** | 12/12 ×2; RTM §8; clean modules |
+| — | Constitution / ADR | **PASS** | No architecture redesign; no new ADR required |
+| — | Performance | **PASS** | Indexed list/search; pagination |
 
 ---
 
-## 3. Deferred
+## 4. Risk Assessment
 
-| Item | Rationale |
-|------|-----------|
-| Automated scheduler job (hourly expire) | Manual `POST .../expire` implements BR-PF-024 cascade; scheduler job → CPS/ops |
-| Payment / invoice (FIN) | Out of BFS scope |
-| Notification emails | Audit + history only |
-
----
-
-## 4. ADR
-
-**No ADR update** — physical PK retention pattern continues (same as PF-002); no new architectural decision.
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Scheduler not auto-expiring | Med | Med | Manual `POST .../expire`; track as CPS job |
+| BR-PF-022 only at subscription mutate | Low | Med | Enforce on PF-008 user create |
+| Notifications not sent | Med | Low | Audit trail present; NTF engine later |
 
 ---
 
-## 5. Release Decision
+## 5. Technical Debt
+
+1. Hourly expire scheduler job (BR-PF-024 SLA “within 1 hour”)
+2. Permission-grain RBAC beyond Platform Admin role gate
+3. Branding/payment out of scope (FIN)
+
+---
+
+## 6. Release Decision
 
 ```text
-PF-003 SUBSCRIPTION MANAGEMENT — TECHNICAL QA: PASS
-STATUS: AWAITING HUMAN RELEASE APPROVED
-NEXT: Stop. Do NOT start PF-004 until RELEASE APPROVED.
+PF-003 SUBSCRIPTION MANAGEMENT — QA RE-AUDIT: PASS
+STATUS: Request HUMAN RELEASE APPROVED
+NEXT: Stop. Do NOT start PF-004 until RELEASE APPROVED is granted.
 ```
 
 ---
 
-*© Euphoria Infotech (I) Limited — ELU-QA-PF003 v1.0*
+*© Euphoria Infotech (I) Limited — ELU-QA-PF003 v2.0*

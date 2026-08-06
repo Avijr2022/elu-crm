@@ -168,7 +168,7 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | Migration | PF-003 DDL | — | — | `test_migration_idempotent` |
 
 **Coverage:** **100%** of PF-003 BFS §10 platform APIs + core §11 screens (List/Search/View/Activate/Renew/Upgrade). Scheduler NTF deferred (see ELU-QA-PF003 §3).  
-**QA:** [ELU-QA-PF003 v1.0](../ELU-QA-PF003-Subscription-Management-Release-Audit.md) — **PASS — AWAITING RELEASE APPROVED**.  
+**QA:** [ELU-QA-PF003 v2.0](../ELU-QA-PF003-Subscription-Management-Release-Audit.md) — **PASS — awaiting HUMAN RELEASE APPROVED**.  
 **Candidate notes:** [ELU-REL-PF003](../ELU-REL-PF003-Phase-2-PF003-Release-Notes.md).  
 **Rule:** Do not start PF-004 until PF-003 receives RELEASE APPROVED.
 
