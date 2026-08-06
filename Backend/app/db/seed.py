@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.migrate_pf001 import apply_pf001_ddl
+from app.db.migrate_pf002 import apply_pf002_ddl
 from app.models.pf import (
     Edition,
     EditionFeature,
@@ -235,6 +236,7 @@ def seed_platform(db: Session) -> None:
     settings = get_settings()
     ensure_schemas(db)
     apply_pf001_ddl(db)
+    apply_pf002_ddl(db)
     _ensure_feature_catalogue(db)
     editions = _ensure_editions(db)
 

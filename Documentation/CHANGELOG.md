@@ -2,6 +2,20 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [Phase-2-PF002] — 2026-08-06 — RELEASE APPROVED
+
+### Added
+- PF-002 Tenant Management (BFS-PF-002): platform tenant APIs, child tables, Flutter Tenants UI, audit, pytest suite
+- Auth: BR-PF-014 suspended-tenant login/refresh block; case-insensitive tenant code lookup
+- Release audit: ELU-QA-PF002 v1.1 PASS — RELEASE APPROVED
+
+### Notes
+- Git tag: `Phase-2-PF002`
+- PF-002 frozen — change only on defect or approved CR
+- Next module: PF-003 Subscription Management
+
+---
+
 ## [Phase-2-PF001] — 2026-08-06 — RELEASE APPROVED
 
 ### Added

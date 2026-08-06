@@ -42,6 +42,11 @@ class AuthService:
             raise ForbiddenError("User account is not active", req_id="REQ-PF-051")
 
         if user.tenant.status not in {"ACTIVE", "TRIAL"}:
+            if user.tenant.status == "SUSPENDED":
+                raise ForbiddenError(
+                    "Tenant is suspended; login is blocked",
+                    req_id="BR-PF-014",
+                )
             raise ForbiddenError("Tenant is not active", req_id="REQ-PF-006")
 
         user.last_login = datetime.now(timezone.utc)
@@ -75,6 +80,14 @@ class AuthService:
         user = self.users.get_by_id(user_id, tenant_id)
         if user is None or user.account_status != "ACTIVE":
             raise UnauthorizedError("User not found or inactive", req_id="REQ-PF-051")
+
+        if user.tenant.status not in {"ACTIVE", "TRIAL"}:
+            if user.tenant.status == "SUSPENDED":
+                raise ForbiddenError(
+                    "Tenant is suspended; login is blocked",
+                    req_id="BR-PF-014",
+                )
+            raise ForbiddenError("Tenant is not active", req_id="REQ-PF-006")
 
         access = create_access_token(
             user_id=user.user_id,

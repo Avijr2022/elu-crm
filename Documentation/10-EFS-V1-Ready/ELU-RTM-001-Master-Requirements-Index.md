@@ -19,6 +19,8 @@
 | 1.0a | 2026-07-31 | EIIP / PMO | Status Approved; registered in ELU-DOC-001 |
 | 1.1 | 2026-08-06 | EIIP / Engineering | PF-001 Edition Management implementation traceability |
 | 1.2 | 2026-08-06 | EIIP / QA | PF-001 RELEASE APPROVED — RTM 100% after remediation |
+| 1.3 | 2026-08-06 | EIIP / QA | PF-002 Tenant Management implementation traceability (QA PASS) |
+| 1.4 | 2026-08-06 | EIIP / PMO | PF-002 RELEASE APPROVED — baseline Phase-2-PF002 |
 
 ## 1. Requirement ID Ranges
 
@@ -112,6 +114,37 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 **Code:** `Backend/app/api/v1/pf/editions.py`, `edition_service.py`, `audit_service.py`  
 **SQL:** `009_edition_ddd_align_pf001.sql`, `migrate_pf001.py`  
 **OpenAPI:** `Backend/openapi/openapi.json`
+
+---
+
+## 7. Implementation Traceability — PF-002 Tenant Management (100% platform scope)
+
+| Business Rule / Capability | Table(s) | API | Flutter | Automated Test |
+|----------------------------|----------|-----|---------|----------------|
+| Register tenant (PENDING_ACTIVATION) | `tenant`, contact, address, org, settings, subscription | `POST /platform/tenants` | Register dialog | `test_register_approve_suspend_reactivate` |
+| Code format/unique (BR-PF-009) | `tenant.tenant_code` | create validator | Register | `test_br_pf_009_code_validation` |
+| legal_name unique (BR-PF-010) | `uk_tenant_legal_name` | create | — | `test_br_pf_010_legal_name_unique` |
+| PRIMARY contact (BR-PF-011) | `tenant_contact` + UK | create | Register | create flow asserts contact |
+| REGISTERED address (BR-PF-012) | `tenant_address` + UK | create | Register | create flow asserts address |
+| ACTIVE edition only (BR-PF-013) | `edition` via `assert_assignable` | create | Register | `test_br_pf_013_deprecated_edition_blocked` |
+| Suspended login block (BR-PF-014) | `tenant.status` | `/auth/login`, refresh | — | auth_service + smoke |
+| Soft-close (BR-PF-015) | `tenant` CLOSED + soft delete | `DELETE /platform/tenants/{id}` | — | `test_soft_delete_closed` |
+| Own profile isolation (BR-PF-016) | `tenant` | `GET /tenant/profile` | — | `test_tenant_profile_own` |
+| Approve / Suspend / Reactivate | `tenant`, `tenant_status_history`, audit | `.../approve|suspend|reactivate` | action buttons | lifecycle test |
+| List / Search / Export | `tenant` | list/search/export | List + Search | `test_list_tenants`, `test_search_and_export` |
+| Idempotency | `idempotency_key` | `Idempotency-Key` header | — | `test_idempotency_key` |
+| Audit | `audit.audit_event` | mutations | — | `test_audit_on_create` |
+| Migration | PF-002 DDL | — | — | `test_migration_idempotent` |
+
+**Coverage:** **100%** of PF-002 BFS §10 **platform** APIs + core §11 screens (List/Register/View/Search/Approve/Suspend). Branding/self-reg deferred (see ELU-QA-PF002 §3).  
+**QA:** [ELU-QA-PF002 v1.1](../ELU-QA-PF002-Tenant-Management-Release-Audit.md) — **RELEASE APPROVED**.  
+**Baseline:** Release **Phase-2-PF002** · Git tag `Phase-2-PF002` · Notes [ELU-REL-PF002](../ELU-REL-PF002-Phase-2-PF002-Release-Notes.md) · [CHANGELOG](../CHANGELOG.md).  
+**Rule:** Do not modify PF-002 unless a defect or approved CR is raised. Do not start PF-004 until PF-003 is RELEASE APPROVED.
+
+**Code:** `Backend/app/api/v1/pf/tenants.py`, `tenant_service.py`  
+**SQL:** `010_tenant_pf002.sql`, `migrate_pf002.py`  
+**Flutter:** `tenants_page.dart`, `tenant_service.dart`  
+**OpenAPI:** `Backend/openapi/pf002-tenants-paths.json`
 
 ---
 

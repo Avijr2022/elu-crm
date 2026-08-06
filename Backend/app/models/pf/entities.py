@@ -234,15 +234,18 @@ class AuditEvent(Base):
 
 
 class Tenant(Base, TimestampMixin, SoftDeleteMixin):
+    """Tenant root. Physical PK `tenant_id` retained for child FK graph; API exposes DDD `id`/`code`."""
+
     __tablename__ = "tenant"
     __table_args__ = {"schema": "core"}
 
     tenant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    tenant_code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    tenant_code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     tenant_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    legal_name: Mapped[str] = mapped_column(String(250), nullable=False)
+    legal_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    trade_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     edition_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("core.edition.id"), nullable=False
     )
@@ -253,8 +256,23 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     website: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     email: Mapped[str] = mapped_column(String(150), nullable=False)
     mobile: Mapped[str] = mapped_column(String(20), nullable=False)
-    status: Mapped[str] = mapped_column(String(30), nullable=False, server_default="ACTIVE")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="DRAFT")
+    industry: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    company_size: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    provision_source: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     activation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    activated_on: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    suspended_on: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
     remarks: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     edition: Mapped["Edition"] = relationship()
@@ -262,6 +280,114 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     users: Mapped[list["User"]] = relationship(back_populates="tenant")
     settings: Mapped[Optional["TenantSettings"]] = relationship(
         back_populates="tenant", uselist=False
+    )
+    contacts: Mapped[list["TenantContact"]] = relationship(
+        back_populates="tenant", cascade="all, delete-orphan"
+    )
+    addresses: Mapped[list["TenantAddress"]] = relationship(
+        back_populates="tenant", cascade="all, delete-orphan"
+    )
+
+
+class TenantContact(Base, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "tenant_contact"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    contact_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    email: Mapped[str] = mapped_column(String(150), nullable=False)
+    mobile: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    is_primary: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+
+    tenant: Mapped["Tenant"] = relationship(back_populates="contacts")
+
+
+class TenantAddress(Base, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "tenant_address"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    address_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    line1: Mapped[str] = mapped_column(String(255), nullable=False)
+    line2: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    city: Mapped[str] = mapped_column(String(100), nullable=False)
+    state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    country: Mapped[str] = mapped_column(
+        String(100), nullable=False, server_default="India"
+    )
+    postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+
+    tenant: Mapped["Tenant"] = relationship(back_populates="addresses")
+
+
+class TenantStatusHistory(Base):
+    __tablename__ = "tenant_status_history"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    from_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    to_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    actor_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    changed_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class IdempotencyKey(Base):
+    __tablename__ = "idempotency_key"
+    __table_args__ = {"schema": "core"}
+
+    key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    tenant_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    request_path: Mapped[str] = mapped_column(String(255), nullable=False)
+    response_status: Mapped[int] = mapped_column(Integer, nullable=False)
+    response_body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
 

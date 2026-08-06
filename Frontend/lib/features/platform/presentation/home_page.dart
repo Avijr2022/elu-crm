@@ -6,6 +6,7 @@ import '../../crm/presentation/leads_page.dart';
 import '../../crm/presentation/opportunities_page.dart';
 import '../data/edition_service.dart';
 import 'editions_page.dart';
+import 'tenants_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,13 +18,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _index = 0;
 
-  static const _titles = [
-    'E-LinkUp',
-    'Editions',
-    'CRM Leads',
-    'Opportunities',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -31,35 +25,80 @@ class _HomePageState extends State<HomePage> {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final isPlatformAdmin = p['role_code'] == 'PLATFORM_ADMIN';
 
+    final titles = <String>[
+      'E-LinkUp',
+      if (isPlatformAdmin) 'Tenants',
+      'Editions',
+      'CRM Leads',
+      'Opportunities',
+    ];
+
     final pages = <Widget>[
-      _DashboardView(profile: p),
+      _DashboardView(profile: p, isPlatformAdmin: isPlatformAdmin),
+      if (isPlatformAdmin) const TenantsPage(),
       if (isPlatformAdmin) const EditionsPage() else const _TenantEditionView(),
       const LeadsPage(),
       const OpportunitiesPage(),
     ];
 
-    const destinations = [
-      NavigationDestination(
+    final destinations = <NavigationDestination>[
+      const NavigationDestination(
         icon: Icon(Icons.dashboard_outlined),
         label: 'Dashboard',
       ),
-      NavigationDestination(
+      if (isPlatformAdmin)
+        const NavigationDestination(
+          icon: Icon(Icons.apartment_outlined),
+          label: 'Tenants',
+        ),
+      const NavigationDestination(
         icon: Icon(Icons.layers_outlined),
         label: 'Editions',
       ),
-      NavigationDestination(
+      const NavigationDestination(
         icon: Icon(Icons.people_outline),
         label: 'Leads',
       ),
-      NavigationDestination(
+      const NavigationDestination(
         icon: Icon(Icons.trending_up_outlined),
         label: 'Pipeline',
       ),
     ];
 
+    final railDestinations = <NavigationRailDestination>[
+      const NavigationRailDestination(
+        icon: Icon(Icons.dashboard_outlined),
+        selectedIcon: Icon(Icons.dashboard),
+        label: Text('Dashboard'),
+      ),
+      if (isPlatformAdmin)
+        const NavigationRailDestination(
+          icon: Icon(Icons.apartment_outlined),
+          selectedIcon: Icon(Icons.apartment),
+          label: Text('Tenants'),
+        ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.layers_outlined),
+        selectedIcon: Icon(Icons.layers),
+        label: Text('Editions'),
+      ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.people_outline),
+        selectedIcon: Icon(Icons.people),
+        label: Text('Leads'),
+      ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.trending_up_outlined),
+        selectedIcon: Icon(Icons.trending_up),
+        label: Text('Pipeline'),
+      ),
+    ];
+
+    final safeIndex = _index.clamp(0, pages.length - 1);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_index.clamp(0, _titles.length - 1)]),
+        title: Text(titles[safeIndex]),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -81,41 +120,20 @@ class _HomePageState extends State<HomePage> {
           ? Row(
               children: [
                 NavigationRail(
-                  selectedIndex: _index,
+                  selectedIndex: safeIndex,
                   onDestinationSelected: (i) => setState(() => _index = i),
                   labelType: NavigationRailLabelType.all,
-                  destinations: const [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.dashboard_outlined),
-                      selectedIcon: Icon(Icons.dashboard),
-                      label: Text('Dashboard'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.layers_outlined),
-                      selectedIcon: Icon(Icons.layers),
-                      label: Text('Editions'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.people_outline),
-                      selectedIcon: Icon(Icons.people),
-                      label: Text('Leads'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.trending_up_outlined),
-                      selectedIcon: Icon(Icons.trending_up),
-                      label: Text('Pipeline'),
-                    ),
-                  ],
+                  destinations: railDestinations,
                 ),
                 const VerticalDivider(width: 1),
-                Expanded(child: pages[_index]),
+                Expanded(child: pages[safeIndex]),
               ],
             )
-          : pages[_index],
+          : pages[safeIndex],
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
-              selectedIndex: _index,
+              selectedIndex: safeIndex,
               onDestinationSelected: (i) => setState(() => _index = i),
               destinations: destinations,
             ),
@@ -124,9 +142,13 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _DashboardView extends StatelessWidget {
-  const _DashboardView({required this.profile});
+  const _DashboardView({
+    required this.profile,
+    required this.isPlatformAdmin,
+  });
 
   final Map<String, dynamic> profile;
+  final bool isPlatformAdmin;
 
   @override
   Widget build(BuildContext context) {
@@ -138,8 +160,10 @@ class _DashboardView extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 8),
-        const Text(
-          'PF-001 Edition Management is available from the Editions tab.',
+        Text(
+          isPlatformAdmin
+              ? 'PF-002 Tenant Management and PF-001 Editions are available from the nav.'
+              : 'Your edition details are available from the Editions tab.',
         ),
         const SizedBox(height: 24),
         _infoTile(
