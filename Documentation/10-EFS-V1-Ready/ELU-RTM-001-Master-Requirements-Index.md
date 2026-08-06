@@ -23,6 +23,8 @@
 | 1.4 | 2026-08-06 | EIIP / PMO | PF-002 RELEASE APPROVED — baseline Phase-2-PF002 |
 | 1.5 | 2026-08-06 | EIIP / QA | PF-003 Subscription Management implementation traceability (QA PASS) |
 | 1.6 | 2026-08-06 | EIIP / PMO | PF-003 RELEASE APPROVED — baseline Phase-2-PF003 |
+| 1.7 | 2026-08-06 | EIIP / QA | PF-003A Enterprise Tenant Isolation traceability (QA PASS — await RELEASE APPROVED) |
+| 1.8 | 2026-08-06 | EIIP / PMO | PF-003A RELEASE APPROVED — baseline Phase-2-PF003A; start PF-004 |
 
 ## 1. Requirement ID Ranges
 
@@ -177,6 +179,32 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 **SQL:** `011_subscription_pf003.sql`, `migrate_pf003.py`  
 **Flutter:** `subscriptions_page.dart`  
 **OpenAPI:** `Backend/openapi/pf003-subscriptions-paths.json`
+
+---
+
+## 9. Implementation Traceability — PF-003A Enterprise Tenant Isolation
+
+| Requirement / Control | Artefact | API / Runtime | Test |
+|----------------------|----------|---------------|------|
+| ADR-015 dual isolation | ADR-016 | `rls_context` + policies | `tests/isolation/*` |
+| FORCE RLS tenant tables | `012_rls_pf003a.sql` | `apply_pf003a_ddl` | `test_migration_idempotent_and_rls_forced` |
+| Session `app.tenant_id` | DEV-001 §6A | `bind_rls_context` / after_begin | `test_set_local_guc_visible_in_session` |
+| Platform Admin bypass | ADR-015 §4 | `platform_context` on PLATFORM_ADMIN | `test_platform_context_bypass`, TC-PF-ISO-04 |
+| Cross-tenant IDOR 404 | T-01 / NFR | CRM lead GET | TC-PF-ISO-01 |
+| Body tenant_id ignored | T-02 | LeadCreate | TC-PF-ISO-02 |
+| Soft-deleted hidden | T-ISO-03 | Auth + SQL | TC-PF-ISO-03 |
+| JWT tenant spoof | T-01 | `get_current_user` | `test_jwt_tenant_spoof_rejected` |
+| Fail-closed empty GUC | CON §3 | `elu_app` + FORCE | `test_rls_blocks_without_context` |
+| Platform-global no RLS | ADR-015 §5 | edition / permission | `test_edition_tables_have_no_rls` |
+
+**Coverage:** **100%** of ADR-015 mandatory isolation controls for current schema.  
+**QA:** [ELU-QA-PF003A](../ELU-QA-PF003A-Enterprise-Tenant-Isolation-Release-Audit.md) — **RELEASE APPROVED**.  
+**Baseline:** Release **Phase-2-PF003A** · Git tag `Phase-2-PF003A` · Notes [ELU-REL-PF003A](../ELU-REL-PF003A-Phase-2-PF003A-Release-Notes.md) · [ELU-EHC-002](../ELU-EHC-002-Enterprise-Security-Health-Card-PF003A.md).  
+**Rule:** PF-001…003A frozen. PF-004 Organization Management started under CON after RELEASE APPROVED.
+
+**Code:** `Backend/app/db/rls_context.py`, `migrate_pf003a.py`, `deps.py`, `auth_service.py`  
+**SQL:** `012_rls_pf003a.sql`  
+**Tests:** `Backend/tests/isolation/test_tenant_isolation.py`
 
 ---
 

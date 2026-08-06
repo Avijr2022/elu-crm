@@ -12,6 +12,7 @@ from app.db.migrate_pf002 import apply_pf002_ddl
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import AuditEvent, Role, Tenant, User
+from tests.conftest import platform_session
 
 
 @pytest.fixture(scope="module")
@@ -23,8 +24,7 @@ def client():
 @pytest.fixture(scope="module")
 def platform_token(client: TestClient) -> str:
     settings = get_settings()
-    db = SessionLocal()
-    try:
+    with platform_session() as db:
         apply_pf002_ddl(db)
         admin = db.scalars(
             select(User).where(User.email == settings.seed_admin_email.lower())
@@ -48,8 +48,6 @@ def platform_token(client: TestClient) -> str:
         admin.role_id = role.role_id
         admin.password_hash = hash_password(settings.seed_admin_password)
         db.commit()
-    finally:
-        db.close()
 
     resp = client.post(
         "/api/v1/auth/login",
@@ -310,8 +308,7 @@ def test_audit_on_create(client: TestClient, auth_header: dict) -> None:
     )
     assert create.status_code == 201, create.text
     tid = uuid.UUID(create.json()["id"])
-    db = SessionLocal()
-    try:
+    with platform_session() as db:
         events = list(
             db.scalars(
                 select(AuditEvent).where(
@@ -321,8 +318,6 @@ def test_audit_on_create(client: TestClient, auth_header: dict) -> None:
             ).all()
         )
         assert len(events) >= 1
-    finally:
-        db.close()
 
 
 def test_search_and_export(client: TestClient, auth_header: dict) -> None:

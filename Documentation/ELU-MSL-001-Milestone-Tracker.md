@@ -25,6 +25,8 @@
 | 1.6 | 2026-08-06 | EIIP / QA | PF-003 Subscription Management QA PASS — awaiting RELEASE APPROVED |
 | 1.7 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF003** RELEASE APPROVED; CON governs all further work |
 | 1.8 | 2026-08-06 | EIIP / Architecture | Phase Gate ELU-PGR-001 — await human approval before PF-004 |
+| 1.9 | 2026-08-06 | EIIP / Security / QA | PF-003A Enterprise Tenant Isolation QA PASS — await RELEASE APPROVED before PF-004 |
+| 1.10 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF003A** RELEASE APPROVED; start PF-004 Organization Management |
 
 ---
 
@@ -86,8 +88,10 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | **PF-001 Edition Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF001` |
 | **PF-002 Tenant Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF002` |
 | **PF-003 Subscription Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003` |
-| Database (PostgreSQL schema) | 🟡 In Progress | 65% | PF-001…003 baselined |
-| FastAPI implementation | 🟡 In Progress | 65% | PF-003 baselined |
+| **PF-003A Enterprise Tenant Isolation** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003A` |
+| **PF-004 Organization Management** | 🟡 In Progress | 5% | Started under CON after PF-003A baseline |
+| Database (PostgreSQL schema) | 🟡 In Progress | 75% | RLS FORCE via PF-003A |
+| FastAPI implementation | 🟡 In Progress | 70% | PF-003A RLS session binding live |
 | Flutter implementation | 🟡 In Progress | 55% | Subscriptions + Tenants + Editions baselined |
 | v1.0 UAT (Euphoria happy path) | ⬜ Not Started | 0% | Lead → Payment |
 
@@ -98,12 +102,13 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-001 Edition Management | **RELEASE APPROVED** | `Phase-2-PF001` | Frozen — bug / CR / ADR only |
 | PF-002 Tenant Management | **RELEASE APPROVED** | `Phase-2-PF002` | Frozen — bug / CR / ADR only |
 | PF-003 Subscription | **RELEASE APPROVED** | `Phase-2-PF003` | Frozen — bug / CR / ADR only |
-| PF-004 Organization | Not Started | — | **Blocked — Phase Gate pending** |
+| PF-003A Tenant Isolation | **RELEASE APPROVED** | `Phase-2-PF003A` | Frozen — bug / CR / ADR only |
+| PF-004 Organization | In Progress | — | Started after PF-003A RELEASE APPROVED |
 | PF-005…011 | Not Started | — | Per BFS/RDM order |
 
 ### 3.2 One-Line Health
 
-> **Phase Gate (ELU-PGR-001).** PF-001…003 baselined. **PF-004 blocked** until Human Phase-Gate Approval. P0: RLS (ADR-015).
+> **Baselines locked:** PF-001…PF-003A. **PF-004 Organization Management** in progress under CON / BFS-PF-004 / RDM.
 
 ### 3.3 Enterprise Progress Dashboard (Phase Gate)
 
@@ -115,7 +120,8 @@ Platform Foundation (11 modules)
 PF-001 Edition              ██████████ 100%
 PF-002 Tenant               ██████████ 100%
 PF-003 Subscription         ██████████ 100%
-PF-004 Organization         ░░░░░░░░░░   0%   ← NEXT (after gate)
+PF-003A Tenant Isolation    ██████████ 100% RELEASE APPROVED
+PF-004 Organization         █░░░░░░░░░   5%   ← IN PROGRESS
 PF-005 Branch               ░░░░░░░░░░   0%
 PF-006 Department           ░░░░░░░░░░   0%
 PF-007 Business Unit        ░░░░░░░░░░   0%

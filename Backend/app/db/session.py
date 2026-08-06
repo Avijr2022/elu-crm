@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
+from app.db.rls_context import clear_rls_context, register_rls_session_listener
 
 
 def _resolve_database_url() -> str:
@@ -20,11 +21,14 @@ engine = create_engine(
 )
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)
+register_rls_session_listener()
 
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
+    clear_rls_context(db)
     try:
         yield db
     finally:
+        clear_rls_context(db)
         db.close()

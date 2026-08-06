@@ -1,19 +1,25 @@
 # E-LinkUp Technical Debt Register — Phase Gate (PF-001…003)
 **Document ID:** ELU-TD-002  
-**Version:** 1.0  
-**Status:** Approved (Phase Gate artefact)  
+**Version:** 1.1  
+**Status:** Approved (Phase Gate artefact; PF-003A update)  
 **Date:** 2026-08-06  
 **Supersedes/Extends:** ELU-TD-001  
-**Related:** ELU-PGR-001, ELU-RSK-001, ELU-CON-001  
+**Related:** ELU-PGR-001, ELU-RSK-001, ELU-CON-001, ELU-QA-PF003A  
 
 ---
 
 ## 1. Critical Debt
 
-| ID | Item | Module | Impact | Action |
-|----|------|--------|--------|--------|
-| TD-CRIT-01 | PostgreSQL RLS + `SET LOCAL app.tenant_id` not implemented (ADR-015 / CON §3) | Cross-PF | Tenant isolation incomplete vs Constitution | **CR required** before/at PF-004 start |
-| TD-CRIT-02 | Automated tenant isolation test suite missing (`TC-PF-ISO-*`) | Cross-PF / QA | Cannot prove dual isolation | Add pytest isolation pack |
+| ID | Item | Module | Impact | Action | Status |
+|----|------|--------|--------|--------|--------|
+| TD-CRIT-01 | PostgreSQL RLS + `SET LOCAL app.tenant_id` (ADR-015 / CON §3) | Cross-PF | Tenant isolation | Delivered as **PF-003A** | **Closed** — tag `Phase-2-PF003A` |
+| TD-CRIT-02 | Automated tenant isolation test suite (`TC-PF-ISO-*`) | Cross-PF / QA | Prove dual isolation | `tests/isolation/` | **Closed** — tag `Phase-2-PF003A` |
+
+### New hardening (Major)
+
+| ID | Item | Action |
+|----|------|--------|
+| TD-MAJ-07 | App DB login still superuser; relies on `SET ROLE elu_app` | Prefer dedicated non-superuser connection in prod |
 
 ---
 

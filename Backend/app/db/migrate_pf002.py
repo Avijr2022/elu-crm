@@ -3,8 +3,16 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.db.rls_context import owner_role
+
 
 def apply_pf002_ddl(db: Session) -> None:
+    with owner_role():
+        db.execute(text("RESET ROLE"))
+        _apply_pf002_ddl_inner(db)
+
+
+def _apply_pf002_ddl_inner(db: Session) -> None:
     stmts = [
         "ALTER TABLE core.tenant ADD COLUMN IF NOT EXISTS industry VARCHAR(100)",
         "ALTER TABLE core.tenant ADD COLUMN IF NOT EXISTS company_size VARCHAR(50)",

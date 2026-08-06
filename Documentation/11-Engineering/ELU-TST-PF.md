@@ -1,6 +1,6 @@
 # E-LinkUp Test Specification — Platform Foundation
 **Document ID:** ELU-TST-PF  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Approved  
 **Related Documents:** ELU-RTM-001, ELU-API-PF, ELU-EFS-001, ELU-SEC-001, ELU-DOC-001  
 
@@ -12,6 +12,7 @@
 |---------|------|--------|--------|
 | 1.0 | 2026-08-06 | EIIP / QA | PF test pack + isolation suite |
 | 1.1 | 2026-08-06 | EIIP / QA | PF-001 edition automated tests mapped |
+| 1.2 | 2026-08-06 | EIIP / QA | PF-003A isolation suite automated (`tests/isolation/`) |
 
 ---
 
@@ -46,21 +47,24 @@ Every `REQ-PF-*` in V1-PF-CRM maps to ≥1 `TC-PF-*`. Isolation tests are mandat
 
 ---
 
-## 3. Isolation Suite (Mandatory)
+## 3. Isolation Suite (Mandatory) — PF-003A automated
 
-| TC ID | Scenario | Expected |
-|-------|----------|----------|
-| TC-PF-ISO-01 | Tenant Admin A reads Tenant B profile by id | 404 |
-| TC-PF-ISO-02 | Body contains foreign tenant_id on user create | ignored / 422; user in JWT tenant |
-| TC-PF-ISO-03 | Soft-deleted user not in list | excluded |
-| TC-PF-ISO-04 | Platform Admin list tenants | allowed; audited |
-| TC-PF-EDN-01 | Community calls Business Unit API | 403 EDITION_FORBIDDEN |
+| TC ID | Scenario | Automated test | Expected |
+|-------|----------|----------------|----------|
+| TC-PF-ISO-01 | Tenant A cannot read Tenant B lead / platform tenant | `test_tc_pf_iso_01_cross_tenant_profile_and_lead` | 404 / 403 |
+| TC-PF-ISO-02 | Body contains foreign tenant_id on lead create | `test_tc_pf_iso_02_foreign_tenant_id_ignored_on_lead` | ignored; JWT tenant |
+| TC-PF-ISO-03 | Soft-deleted user not loginable / not visible | `test_tc_pf_iso_03_soft_deleted_user_invisible` | 401/403 |
+| TC-PF-ISO-04 | Platform Admin list tenants | `test_tc_pf_iso_04_platform_admin_list` | 200 |
+| TC-PF-ISO-RLS-01 | Empty GUC fail-closed | `test_rls_blocks_without_context` | 0 rows |
+| TC-PF-ISO-RLS-02 | SET LOCAL tenant scope | `test_rls_tenant_scope_sql` | 1 row |
+| TC-PF-ISO-JWT-01 | JWT tenant spoof | `test_jwt_tenant_spoof_rejected` | 401 |
+| TC-PF-EDN-01 | Community calls Business Unit API | — | 403 EDITION_FORBIDDEN (deferred) |
 
 ---
 
 ## 4. Locations
 
-`backend/tests/unit/pf/`, `backend/tests/integration/pf/`, `backend/tests/isolation/pf/`
+`backend/tests/unit/pf/`, `backend/tests/integration/pf/`, `backend/tests/isolation/` (`test_tenant_isolation.py`)
 
 ---
 

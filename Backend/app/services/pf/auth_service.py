@@ -11,6 +11,7 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
+from app.db.rls_context import bind_rls_context
 from app.repositories.pf.user_repository import TenantRepository, UserRepository
 from app.schemas.pf.auth import TokenResponse, UserMeResponse
 
@@ -25,6 +26,8 @@ class AuthService:
     def login(
         self, email: str, password: str, tenant_code: str | None = None
     ) -> TokenResponse:
+        # Auth bootstrap: resolve tenant/user before JWT exists (ADR-015).
+        bind_rls_context(self.db, platform=True)
         tenant = None
         if tenant_code:
             tenant = self.tenants.get_by_code(tenant_code)
@@ -77,6 +80,7 @@ class AuthService:
 
         user_id = UUID(payload["sub"])
         tenant_id = UUID(payload["tenant_id"])
+        bind_rls_context(self.db, tenant_id=tenant_id, platform=False)
         user = self.users.get_by_id(user_id, tenant_id)
         if user is None or user.account_status != "ACTIVE":
             raise UnauthorizedError("User not found or inactive", req_id="REQ-PF-051")
@@ -103,6 +107,7 @@ class AuthService:
         )
 
     def me(self, user_id: UUID, tenant_id: UUID) -> UserMeResponse:
+        bind_rls_context(self.db, tenant_id=tenant_id, platform=False)
         user = self.users.get_by_id(user_id, tenant_id)
         if user is None:
             raise UnauthorizedError("User not found", req_id="REQ-PF-051")

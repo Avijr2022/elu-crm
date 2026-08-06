@@ -13,6 +13,7 @@ from app.db.migrate_pf003 import apply_pf003_ddl
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import AuditEvent, Role, User
+from tests.conftest import platform_session
 
 
 @pytest.fixture(scope="module")
@@ -24,8 +25,7 @@ def client():
 @pytest.fixture(scope="module")
 def platform_token(client: TestClient) -> str:
     settings = get_settings()
-    db = SessionLocal()
-    try:
+    with platform_session() as db:
         apply_pf003_ddl(db)
         admin = db.scalars(
             select(User).where(User.email == settings.seed_admin_email.lower())
@@ -49,8 +49,6 @@ def platform_token(client: TestClient) -> str:
         admin.role_id = role.role_id
         admin.password_hash = hash_password(settings.seed_admin_password)
         db.commit()
-    finally:
-        db.close()
 
     resp = client.post(
         "/api/v1/auth/login",
@@ -244,14 +242,11 @@ def test_br_pf_021_seat_over_edition(client: TestClient, auth_header: dict) -> N
 def test_br_pf_019_one_current(client: TestClient, auth_header: dict) -> None:
     # Seed EIIP001 already ACTIVE — creating another ACTIVE must conflict
     settings = get_settings()
-    db = SessionLocal()
-    try:
+    with platform_session() as db:
         admin = db.scalars(
             select(User).where(User.email == settings.seed_admin_email.lower())
         ).first()
         tid = str(admin.tenant_id)
-    finally:
-        db.close()
     resp = client.post(
         "/api/v1/platform/subscriptions",
         headers=auth_header,
@@ -341,8 +336,7 @@ def test_audit_on_activate(client: TestClient, auth_header: dict) -> None:
     )
     assert act.status_code == 200
     sid = uuid.UUID(trial["id"])
-    db = SessionLocal()
-    try:
+    with platform_session() as db:
         events = list(
             db.scalars(
                 select(AuditEvent).where(
@@ -352,8 +346,6 @@ def test_audit_on_activate(client: TestClient, auth_header: dict) -> None:
             ).all()
         )
         assert len(events) >= 1
-    finally:
-        db.close()
 
 
 def test_schema_constraints_and_uk(client: TestClient) -> None:

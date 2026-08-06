@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import UnauthorizedError
 from app.core.security import decode_token
+from app.db.rls_context import bind_rls_context
 from app.db.session import get_db
 from app.models.pf import User
 from app.repositories.pf.user_repository import UserRepository
@@ -22,6 +23,7 @@ class CurrentUser:
     email: str
     role_code: str
     user: User
+    platform_context: bool = False
 
 
 def get_current_user(
@@ -42,9 +44,16 @@ def get_current_user(
 
     user_id = UUID(payload["sub"])
     tenant_id = UUID(payload["tenant_id"])
+    # ADR-015: bind JWT tenant before any repository read.
+    bind_rls_context(db, tenant_id=tenant_id, platform=False)
     user = UserRepository(db).get_by_id(user_id, tenant_id)
     if user is None:
         raise UnauthorizedError("User not found", req_id="REQ-PF-051")
+
+    platform = user.role.role_code == "PLATFORM_ADMIN"
+    if platform:
+        # Platform Admin bypass via app.platform_context (audited at API layer).
+        bind_rls_context(db, tenant_id=tenant_id, platform=True)
 
     return CurrentUser(
         user_id=user.user_id,
@@ -52,4 +61,5 @@ def get_current_user(
         email=user.email,
         role_code=user.role.role_code,
         user=user,
+        platform_context=platform,
     )

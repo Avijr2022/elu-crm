@@ -3,9 +3,17 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.db.rls_context import owner_role
+
 
 def apply_pf001_ddl(db: Session) -> None:
     """Align edition schema to ELU-DDD-PF and ensure audit tables/indexes."""
+    with owner_role():
+        db.execute(text("RESET ROLE"))
+        _apply_pf001_ddl_inner(db)
+
+
+def _apply_pf001_ddl_inner(db: Session) -> None:
     db.execute(text("CREATE SCHEMA IF NOT EXISTS audit"))
     db.execute(text("CREATE SCHEMA IF NOT EXISTS core"))
 

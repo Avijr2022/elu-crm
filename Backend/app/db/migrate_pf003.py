@@ -3,8 +3,16 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.db.rls_context import owner_role
+
 
 def apply_pf003_ddl(db: Session) -> None:
+    with owner_role():
+        db.execute(text("RESET ROLE"))
+        _apply_pf003_ddl_inner(db)
+
+
+def _apply_pf003_ddl_inner(db: Session) -> None:
     stmts = [
         "ALTER TABLE core.subscription ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR(20) DEFAULT 'MONTHLY'",
         "ALTER TABLE core.subscription ADD COLUMN IF NOT EXISTS seat_count INTEGER DEFAULT 10",

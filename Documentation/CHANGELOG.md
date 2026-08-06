@@ -2,7 +2,22 @@
 
 All notable E-LinkUp implementation milestones.
 
-## [Phase Gate] — 2026-08-06 — AWAITING HUMAN APPROVAL
+## [Phase-2-PF003A] — 2026-08-06 — RELEASE APPROVED
+
+### Added
+- PF-003A Enterprise Tenant Isolation (ADR-015 / ADR-016): PostgreSQL FORCE RLS, `elu_app` role, session GUCs (`app.tenant_id`, `app.platform_context`)
+- Isolation pytest pack (`tests/isolation/`) — TC-PF-ISO-01…04 + SQL / JWT spoof
+- Docs: ELU-QA-PF003A, ELU-REL-PF003A, ELU-EHC-002 Security Health Card, ADR-016, SEC/RTM/TST updates
+
+### Notes
+- Git tag: `Phase-2-PF003A`
+- **PF-001 / PF-002 / PF-003 / PF-003A** frozen — change only on bug, approved CR, or ADR
+- TD-CRIT-01 / TD-CRIT-02 closed; RSK-021 Closed
+- Next: **PF-004 Organization Management** (human-approved start)
+
+---
+
+## [Phase Gate] — 2026-08-06 — CONDITION CLOSED (PF-003A RELEASE APPROVED)
 
 ### Added
 - ELU-PGR-001 Phase Gate Review (PF-001…003)
@@ -12,9 +27,8 @@ All notable E-LinkUp implementation milestones.
 - Risk updates RSK-021…023
 
 ### Notes
-- **PF-004 Organization** blocked until Phase-Gate Approval
-- P0: ADR-015 dual RLS + isolation tests
-- No baselined PF-001…003 code modified in this gate
+- Phase Gate architectural condition closed by PF-003A baseline
+- P0 RLS + isolation tests delivered and RELEASE APPROVED
 
 ---
 
