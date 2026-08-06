@@ -8,7 +8,7 @@
 |--------|-----------|---------|-------------|--------|
 | PF-001 Edition Management | ELU-QA-PF001 v2.0 | **RELEASE APPROVED** | `Phase-2-PF001` | Yes |
 | PF-002 Tenant Management | ELU-QA-PF002 v1.1 | **RELEASE APPROVED** | `Phase-2-PF002` | Yes |
-| PF-003 Subscription Management | — | Not Started | — | — |
+| PF-003 Subscription Management | ELU-QA-PF003 v1.0 | **QA PASS — Awaiting RELEASE APPROVED** | — | No |
 
 **Rule:** Locked modules change only on defect or approved change request.
 

@@ -274,6 +274,11 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
         UUID(as_uuid=True), nullable=True
     )
     remarks: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    current_subscription_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.subscription.subscription_id", use_alter=True, name="fk_tenant_current_sub"),
+        nullable=True,
+    )
 
     edition: Mapped["Edition"] = relationship()
     organizations: Mapped[list["Organization"]] = relationship(back_populates="tenant")
@@ -504,6 +509,8 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
 
 
 class Subscription(Base, TimestampMixin, SoftDeleteMixin):
+    """Subscription root. Physical PK `subscription_id`; API exposes DDD `id`/`status`."""
+
     __tablename__ = "subscription"
     __table_args__ = {"schema": "core"}
 
@@ -518,8 +525,13 @@ class Subscription(Base, TimestampMixin, SoftDeleteMixin):
     )
     subscription_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     plan_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    billing_cycle: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="MONTHLY"
+    )
+    seat_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("10"))
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    trial_end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     amount: Mapped[str] = mapped_column(String(30), nullable=False, server_default="0")
     currency_code: Mapped[str] = mapped_column(String(10), nullable=False, server_default="INR")
     payment_status: Mapped[str] = mapped_column(
@@ -527,6 +539,79 @@ class Subscription(Base, TimestampMixin, SoftDeleteMixin):
     )
     subscription_status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="ACTIVE"
+    )
+    cancellation_reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+
+    edition: Mapped["Edition"] = relationship()
+    history: Mapped[list["SubscriptionHistory"]] = relationship(
+        back_populates="subscription", cascade="all, delete-orphan"
+    )
+
+
+class SubscriptionHistory(Base):
+    __tablename__ = "subscription_history"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("core.tenant.tenant_id"), nullable=False, index=True
+    )
+    subscription_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.subscription.subscription_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    change_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    from_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    to_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    from_edition_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    to_edition_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    from_seat_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    to_seat_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    actor_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    changed_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    subscription: Mapped["Subscription"] = relationship(back_populates="history")
+
+
+class SubscriptionUsage(Base):
+    __tablename__ = "subscription_usage"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("core.tenant.tenant_id"), nullable=False, index=True
+    )
+    subscription_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.subscription.subscription_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    metric_code: Mapped[str] = mapped_column(String(32), nullable=False)
+    used_value: Mapped[str] = mapped_column(String(30), nullable=False)
+    measured_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
 

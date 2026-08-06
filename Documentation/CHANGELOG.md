@@ -2,6 +2,20 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [Phase-2-PF003] — 2026-08-06 — AWAITING RELEASE APPROVED
+
+### Added
+- PF-003 Subscription Management (BFS-PF-003): APIs, history/usage tables, Flutter Subscriptions UI, pytest suite
+- Expire cascade to tenant SUSPENDED (BR-PF-024)
+- Release audit: ELU-QA-PF003 v1.0 PASS (pending human RELEASE APPROVED)
+
+### Notes
+- Candidate: ELU-REL-PF003
+- Do **not** start PF-004 until PF-003 is RELEASE APPROVED
+- PF-001 / PF-002 frozen
+
+---
+
 ## [Phase-2-PF002] — 2026-08-06 — RELEASE APPROVED
 
 ### Added

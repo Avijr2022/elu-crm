@@ -41,9 +41,11 @@ async def lifespan(_: FastAPI):
     try:
         from app.db.migrate_pf001 import apply_pf001_ddl
         from app.db.migrate_pf002 import apply_pf002_ddl
+        from app.db.migrate_pf003 import apply_pf003_ddl
 
         apply_pf001_ddl(db)
         apply_pf002_ddl(db)
+        apply_pf003_ddl(db)
         seed_platform(db)
     finally:
         db.close()
@@ -54,9 +56,10 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
-        version="0.4.0",
+        version="0.5.0",
         description=(
-            "E-LinkUp multi-tenant CRM/ERP API — PF-001 Editions + PF-002 Tenants + Auth + CRM"
+            "E-LinkUp multi-tenant CRM/ERP API — PF-001 Editions + PF-002 Tenants "
+            "+ PF-003 Subscriptions + Auth + CRM"
         ),
         lifespan=lifespan,
         openapi_tags=[

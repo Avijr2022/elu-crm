@@ -6,6 +6,7 @@ import '../../crm/presentation/leads_page.dart';
 import '../../crm/presentation/opportunities_page.dart';
 import '../data/edition_service.dart';
 import 'editions_page.dart';
+import 'subscriptions_page.dart';
 import 'tenants_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _HomePageState extends State<HomePage> {
     final titles = <String>[
       'E-LinkUp',
       if (isPlatformAdmin) 'Tenants',
+      if (isPlatformAdmin) 'Subscriptions',
       'Editions',
       'CRM Leads',
       'Opportunities',
@@ -36,6 +38,7 @@ class _HomePageState extends State<HomePage> {
     final pages = <Widget>[
       _DashboardView(profile: p, isPlatformAdmin: isPlatformAdmin),
       if (isPlatformAdmin) const TenantsPage(),
+      if (isPlatformAdmin) const SubscriptionsPage(),
       if (isPlatformAdmin) const EditionsPage() else const _TenantEditionView(),
       const LeadsPage(),
       const OpportunitiesPage(),
@@ -50,6 +53,11 @@ class _HomePageState extends State<HomePage> {
         const NavigationDestination(
           icon: Icon(Icons.apartment_outlined),
           label: 'Tenants',
+        ),
+      if (isPlatformAdmin)
+        const NavigationDestination(
+          icon: Icon(Icons.card_membership_outlined),
+          label: 'Subscriptions',
         ),
       const NavigationDestination(
         icon: Icon(Icons.layers_outlined),
@@ -76,6 +84,12 @@ class _HomePageState extends State<HomePage> {
           icon: Icon(Icons.apartment_outlined),
           selectedIcon: Icon(Icons.apartment),
           label: Text('Tenants'),
+        ),
+      if (isPlatformAdmin)
+        const NavigationRailDestination(
+          icon: Icon(Icons.card_membership_outlined),
+          selectedIcon: Icon(Icons.card_membership),
+          label: Text('Subscriptions'),
         ),
       const NavigationRailDestination(
         icon: Icon(Icons.layers_outlined),
@@ -162,7 +176,7 @@ class _DashboardView extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           isPlatformAdmin
-              ? 'PF-002 Tenant Management and PF-001 Editions are available from the nav.'
+              ? 'PF-003 Subscriptions, PF-002 Tenants, and PF-001 Editions are available from the nav.'
               : 'Your edition details are available from the Editions tab.',
         ),
         const SizedBox(height: 24),

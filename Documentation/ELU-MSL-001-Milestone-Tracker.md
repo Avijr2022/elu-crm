@@ -1,14 +1,14 @@
 # E-LinkUp Milestone Tracker
 **Document ID:** ELU-MSL-001  
 **Document Name:** Milestone Tracker  
-**Version:** 1.5  
+**Version:** 1.6  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
 **Prepared By:** PMO  
 **Document Owner:** PMO  
 **Example Tenant:** Euphoria  
-**Related Documents:** ELU-CON-001, ELU-GOV-VAL-001, ELU-QA-PF001, ELU-QA-PF002, ELU-REL-PF001, ELU-REL-PF002, ELU-DOC-001, ELU-RDM-001, ELU-RSK-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-DEV-001  
+**Related Documents:** ELU-CON-001, ELU-GOV-VAL-001, ELU-QA-PF001, ELU-QA-PF002, ELU-QA-PF003, ELU-REL-PF001, ELU-REL-PF002, ELU-REL-PF003, ELU-QA-REG-001, ELU-DOC-001, ELU-RDM-001, ELU-RSK-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-DEV-001  
 
 ---
 
@@ -22,6 +22,7 @@
 | 1.3 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF001** RELEASE APPROVED; start PF-002 |
 | 1.4 | 2026-08-06 | EIIP / QA | PF-002 Tenant Management QA PASS — awaiting RELEASE APPROVED |
 | 1.5 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF002** RELEASE APPROVED; start PF-003 |
+| 1.6 | 2026-08-06 | EIIP / QA | PF-003 Subscription Management QA PASS — awaiting RELEASE APPROVED |
 
 ---
 
@@ -82,10 +83,10 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | L2C Docs Route (**ELU-L2C-001**) | ✅ Done | 100% | Completed v1.1 |
 | **PF-001 Edition Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF001` |
 | **PF-002 Tenant Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF002` |
-| **PF-003 Subscription Management** | 🟡 In Progress | 0% | Unlocked after PF-002 baseline |
-| Database (PostgreSQL schema) | 🟡 In Progress | 55% | PF-001 + PF-002 baselined |
-| FastAPI implementation | 🟡 In Progress | 55% | PF-002 baselined |
-| Flutter implementation | 🟡 In Progress | 45% | Tenants + Editions UI baselined |
+| **PF-003 Subscription Management** | 🟡 QA PASS | 100% | **Awaiting RELEASE APPROVED** — stop before PF-004 |
+| Database (PostgreSQL schema) | 🟡 In Progress | 65% | PF-001…003 schema delivered |
+| FastAPI implementation | 🟡 In Progress | 65% | PF-003 subscriptions APIs |
+| Flutter implementation | 🟡 In Progress | 55% | Subscriptions + Tenants + Editions |
 | v1.0 UAT (Euphoria happy path) | ⬜ Not Started | 0% | Lead → Payment |
 
 ### 3.1 Module Status List (Phase 2 Platform Foundation)
@@ -94,12 +95,12 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 |--------|--------|---------------|-------|
 | PF-001 Edition Management | **RELEASE APPROVED** | `Phase-2-PF001` | Frozen — change only on defect |
 | PF-002 Tenant Management | **RELEASE APPROVED** | `Phase-2-PF002` | Frozen — change only on defect/CR |
-| PF-003 Subscription | In Progress | — | Implement → Test → QA → Stop |
+| PF-003 Subscription | **QA PASS — Awaiting RELEASE APPROVED** | — | Stop; no PF-004 until approved |
 | PF-004…011 | Not Started | — | Per RDM order |
 
 ### 3.2 One-Line Health
 
-> **PF-002 baselined (`Phase-2-PF002`).** Engineering focus: **PF-003 Subscription Management**. PF-001/PF-002 frozen.
+> **PF-003 QA PASS.** Awaiting human **RELEASE APPROVED**. PF-001/PF-002 frozen. **Do not start PF-004.**
 
 ---
 

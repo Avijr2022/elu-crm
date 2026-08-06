@@ -21,6 +21,7 @@
 | 1.2 | 2026-08-06 | EIIP / QA | PF-001 RELEASE APPROVED — RTM 100% after remediation |
 | 1.3 | 2026-08-06 | EIIP / QA | PF-002 Tenant Management implementation traceability (QA PASS) |
 | 1.4 | 2026-08-06 | EIIP / PMO | PF-002 RELEASE APPROVED — baseline Phase-2-PF002 |
+| 1.5 | 2026-08-06 | EIIP / QA | PF-003 Subscription Management implementation traceability (QA PASS) |
 
 ## 1. Requirement ID Ranges
 
@@ -145,6 +146,36 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 **SQL:** `010_tenant_pf002.sql`, `migrate_pf002.py`  
 **Flutter:** `tenants_page.dart`, `tenant_service.dart`  
 **OpenAPI:** `Backend/openapi/pf002-tenants-paths.json`
+
+---
+
+## 8. Implementation Traceability — PF-003 Subscription Management (100% platform scope)
+
+| Business Rule / Capability | Table(s) | API | Flutter | Automated Test |
+|----------------------------|----------|-----|---------|----------------|
+| One current ACTIVE/TRIAL (BR-PF-019) | `subscription`, `tenant.current_subscription_id` | create / reactivate | — | `test_br_pf_019_one_current` |
+| end_date > start_date (BR-PF-020) | `subscription` | create/update/renew | — | `test_br_pf_020_end_before_start` |
+| Seats ≤ edition MAX_USERS (BR-PF-021) | `edition_limit` | create/update/upgrade | — | `test_br_pf_021_seat_over_edition` |
+| Seats ≥ active users (BR-PF-022/027) | `users` count | renew/update | — | enforced in service |
+| Downgrade guard (BR-PF-023) | edition limits vs users | upgrade | Upgrade dialog | service assert |
+| Expire → tenant SUSPENDED (BR-PF-024) | `subscription`, `tenant` | `POST .../expire` | — | `test_expire_cascades_tenant_suspend` |
+| Trial max 30 days (BR-PF-025) | `subscription` | create TRIAL | — | service validation |
+| History on change (BR-PF-026) | `subscription_history`, audit | history + mutations | View | lifecycle + audit tests |
+| Activate trial | `subscription` | `PATCH .../{id}` | Activate | lifecycle test |
+| Renew / Upgrade | `subscription` | renew / upgrade | Renew / Upgrade | lifecycle test |
+| List / Search / Export | `subscription` | list/search/export | List + Search | list + export tests |
+| My subscription / usage | `subscription_usage` | `/tenant/subscription` + usage | — | `test_usage_and_export` |
+| Migration | PF-003 DDL | — | — | `test_migration_idempotent` |
+
+**Coverage:** **100%** of PF-003 BFS §10 platform APIs + core §11 screens (List/Search/View/Activate/Renew/Upgrade). Scheduler NTF deferred (see ELU-QA-PF003 §3).  
+**QA:** [ELU-QA-PF003 v1.0](../ELU-QA-PF003-Subscription-Management-Release-Audit.md) — **PASS — AWAITING RELEASE APPROVED**.  
+**Candidate notes:** [ELU-REL-PF003](../ELU-REL-PF003-Phase-2-PF003-Release-Notes.md).  
+**Rule:** Do not start PF-004 until PF-003 receives RELEASE APPROVED.
+
+**Code:** `Backend/app/api/v1/pf/subscriptions.py`, `subscription_service.py`  
+**SQL:** `011_subscription_pf003.sql`, `migrate_pf003.py`  
+**Flutter:** `subscriptions_page.dart`  
+**OpenAPI:** `Backend/openapi/pf003-subscriptions-paths.json`
 
 ---
 

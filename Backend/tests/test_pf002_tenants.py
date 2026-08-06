@@ -112,7 +112,11 @@ def test_migration_idempotent(client: TestClient) -> None:
 
 
 def test_list_tenants(client: TestClient, auth_header: dict) -> None:
-    resp = client.get("/api/v1/platform/tenants", headers=auth_header)
+    resp = client.get(
+        "/api/v1/platform/tenants",
+        headers=auth_header,
+        params={"page_size": 100, "search": "EIIP001"},
+    )
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["total"] >= 1
