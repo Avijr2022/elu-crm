@@ -19,6 +19,7 @@ from app.schemas.pf.organization import (
 )
 from app.services.pf.organization_service import (
     OrganizationService,
+    require_org_permission,
     require_org_read,
     require_org_write,
 )
@@ -36,7 +37,7 @@ def list_organizations(
     search: Optional[str] = Query(None),
     sort: Optional[str] = Query(None, description="name|code|status|created_on; prefix - for desc"),
 ) -> OrganizationListResponse:
-    require_org_read(current.role_code)
+    require_org_read(db, current.role_id)
     try:
         return OrganizationService(db).list_orgs(
             current.tenant_id,
@@ -58,7 +59,7 @@ def search_organizations(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> OrganizationListResponse:
-    require_org_read(current.role_code)
+    require_org_read(db, current.role_id)
     try:
         return OrganizationService(db).list_orgs(
             current.tenant_id, page=page, page_size=page_size, search=q
@@ -72,7 +73,7 @@ def export_organizations(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> list[dict]:
-    require_org_read(current.role_code)
+    require_org_permission(db, current.role_id, "organization.export")
     try:
         return OrganizationService(db).export_rows(current.tenant_id)
     except AppError as exc:
@@ -84,7 +85,7 @@ def get_root_organization(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationResponse:
-    require_org_read(current.role_code)
+    require_org_read(db, current.role_id)
     try:
         return OrganizationService(db).get_root(current.tenant_id)
     except AppError as exc:
@@ -101,7 +102,7 @@ def get_hierarchy(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationHierarchyNode:
-    require_org_read(current.role_code)
+    require_org_read(db, current.role_id)
     try:
         return OrganizationService(db).hierarchy(current.tenant_id, org_id)
     except AppError as exc:
@@ -118,7 +119,7 @@ def get_organization_history(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationHistoryResponse:
-    require_org_read(current.role_code)
+    require_org_read(db, current.role_id)
     try:
         return OrganizationService(db).history(current.tenant_id, org_id)
     except AppError as exc:
@@ -131,7 +132,7 @@ def get_organization(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationResponse:
-    require_org_read(current.role_code)
+    require_org_read(db, current.role_id)
     try:
         return OrganizationService(db).get(current.tenant_id, org_id)
     except AppError as exc:
@@ -149,7 +150,7 @@ def create_organization(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationResponse:
-    require_org_write(current.role_code)
+    require_org_write(db, current.role_id, current.role_code, "organization.create")
     try:
         return OrganizationService(db).create(
             current.tenant_id, payload, current.user_id
@@ -165,7 +166,7 @@ def replace_organization(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationResponse:
-    require_org_write(current.role_code)
+    require_org_write(db, current.role_id, current.role_code, "organization.update")
     try:
         return OrganizationService(db).update(
             current.tenant_id, org_id, payload, current.user_id, replace=True
@@ -181,7 +182,7 @@ def update_organization(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> OrganizationResponse:
-    require_org_write(current.role_code)
+    require_org_write(db, current.role_id, current.role_code, "organization.update")
     try:
         return OrganizationService(db).update(
             current.tenant_id, org_id, payload, current.user_id, replace=False
@@ -200,7 +201,7 @@ def delete_organization(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
-    require_org_write(current.role_code)
+    require_org_write(db, current.role_id, current.role_code, "organization.delete")
     try:
         OrganizationService(db).soft_delete(current.tenant_id, org_id, current.user_id)
     except AppError as exc:

@@ -22,6 +22,7 @@ class CurrentUser:
     tenant_id: UUID
     email: str
     role_code: str
+    role_id: UUID
     user: User
     platform_context: bool = False
 
@@ -60,6 +61,7 @@ def get_current_user(
         tenant_id=user.tenant_id,
         email=user.email,
         role_code=user.role.role_code,
+        role_id=user.role.role_id,
         user=user,
         platform_context=platform,
     )

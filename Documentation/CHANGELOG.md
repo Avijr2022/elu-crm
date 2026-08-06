@@ -15,12 +15,13 @@ All notable E-LinkUp implementation milestones.
 
 ---
 
-## [PF-004] — 2026-08-06 — IN PROGRESS
+## [PF-004] — 2026-08-06 — QA CANDIDATE
 
 ### Added
 - PF-004 Organization Management (BFS-PF-004): org profile fields, ROOT UK, GSTIN/PAN validation, hierarchy API, Flutter Organizations tab
+- Security: database-backed `organization.read|create|update|delete|export` permission grains enforced via role-permission checks
 - SQL: `013_organization_pf004.sql` / `migrate_pf004.py`
-- Tests: `tests/test_pf004_organizations.py` (AC-PF-004-01…03)
+- Tests: `tests/test_pf004_organizations.py` (AC-PF-004-01…03) — 14 passed
 
 ### Notes
 - Started after **Phase-2-PF003A** RELEASE APPROVED

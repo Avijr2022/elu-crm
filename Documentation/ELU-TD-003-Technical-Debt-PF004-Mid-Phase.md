@@ -21,7 +21,7 @@ None open for PF-004 after mid-phase corrections.
 
 | ID | Item | Action |
 |----|------|--------|
-| TD-PF004-M01 | Permission-grain RBAC for organization.* | Seed + enforce (or PF-009 waiver) |
+| TD-PF004-M01 | Permission-grain RBAC for organization.* | Closed via database-backed role-permission enforcement |
 | TD-PF004-M02 | PUT ≠ full replace | Align OpenAPI or implement replace |
 | TD-PF004-M03 | Tax identifiers in audit payloads | Mask GSTIN/PAN |
 | TD-PF004-M04 | No Flutter automated tests for org UI | Widget smoke |
@@ -39,6 +39,7 @@ None open for PF-004 after mid-phase corrections.
 - Platform Admin write violation vs BFS  
 - Missing list sort  
 - Missing parent index  
+- Permission-grain RBAC for organization.*  
 
 ---
 

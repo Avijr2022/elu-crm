@@ -15,7 +15,7 @@
 | G-02 | UI | Organization Create screen missing (API exists for children) | **High** | Flutter |
 | G-03 | UI | Organization History / audit timeline missing | **High** | Flutter |
 | G-04 | UI | Dedicated View screen (read-only summary) missing | Medium | Flutter |
-| G-05 | Security | `organization.*` permission grains not seeded/enforced | Medium | Backend / PF-009 |
+| G-05 | Security | `organization.*` permission grains seeded/enforced | Closed | Backend / PF-009 |
 | G-06 | Security | GSTIN/PAN not masked in audit payload | Medium | Backend |
 | G-07 | API | PUT is not full-replace semantics | Medium | Backend |
 | G-08 | API | Export lacks `organization.export` grain; no CSV Content-Disposition | Low | Backend |
@@ -48,7 +48,7 @@
 11. **G-12…G-14** Document engine, NTF, export streaming.
 
 ### Already corrected this review
-- Soft-delete UK, parent index, TENANT_ADMIN write-only, sort, status transitions, Flutter Semantics/empty/dispose, Platform Admin 403 test, OpenAPI fragment.
+- Soft-delete UK, parent index, TENANT_ADMIN write-only, sort, status transitions, Flutter Semantics/empty/dispose, Platform Admin 403 test, OpenAPI fragment, and organization permission-grain enforcement.
 
 ---
 

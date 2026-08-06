@@ -10,7 +10,7 @@ from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.migrate_pf004 import apply_pf004_ddl
 from app.main import app
-from app.models.pf import Role, User
+from app.models.pf import Permission, Role, RolePermission, Tenant, User
 from tests.conftest import platform_session
 
 
@@ -113,6 +113,70 @@ def test_migration_idempotent(client: TestClient) -> None:
             )
         ).first()
         assert soft is not None
+
+
+def test_pf004_org_permissions_seeded_for_business_roles() -> None:
+    with platform_session() as db:
+        tenant = db.scalars(select(Tenant).where(Tenant.tenant_code == "EIIP001")).first()
+        assert tenant is not None
+
+        finance_role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant.tenant_id,
+                Role.role_code == "FINANCE_USER",
+            )
+        ).first()
+        sales_role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant.tenant_id,
+                Role.role_code == "SALES_MANAGER",
+            )
+        ).first()
+        assert finance_role is not None
+        assert sales_role is not None
+
+        read_perm = db.scalars(
+            select(Permission).where(Permission.permission_code == "organization.read")
+        ).first()
+        export_perm = db.scalars(
+            select(Permission).where(Permission.permission_code == "organization.export")
+        ).first()
+        update_perm = db.scalars(
+            select(Permission).where(Permission.permission_code == "organization.update")
+        ).first()
+        assert read_perm is not None
+        assert export_perm is not None
+        assert update_perm is not None
+
+        finance_link = db.scalars(
+            select(RolePermission).where(
+                RolePermission.role_id == finance_role.role_id,
+                RolePermission.permission_id == read_perm.permission_id,
+            )
+        ).first()
+        sales_link = db.scalars(
+            select(RolePermission).where(
+                RolePermission.role_id == sales_role.role_id,
+                RolePermission.permission_id == read_perm.permission_id,
+            )
+        ).first()
+        tenant_admin_link = db.scalars(
+            select(RolePermission).where(
+                RolePermission.role_id == finance_role.role_id,
+                RolePermission.permission_id == update_perm.permission_id,
+            )
+        ).first()
+        export_link = db.scalars(
+            select(RolePermission).where(
+                RolePermission.role_id == finance_role.role_id,
+                RolePermission.permission_id == export_perm.permission_id,
+            )
+        ).first()
+
+        assert finance_link is not None
+        assert sales_link is not None
+        assert tenant_admin_link is None
+        assert export_link is not None
 
 
 def test_platform_admin_read_only_write_forbidden(
