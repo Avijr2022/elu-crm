@@ -2,12 +2,15 @@ import uuid
 from datetime import date, datetime
 from typing import Optional
 
+from decimal import Decimal
+
 from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -38,17 +41,165 @@ class SoftDeleteMixin:
 
 
 class Edition(Base, TimestampMixin, SoftDeleteMixin):
+    """Platform-global edition catalogue (ELU-DDD-PF §3.1).
+
+    Physical PK/UK columns retain scaffold names (`edition_id`, `edition_code`)
+    for tenant/subscription FK compatibility; API DTOs expose DDD names id/code/name.
+    """
+
     __tablename__ = "edition"
     __table_args__ = {"schema": "core"}
 
     edition_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    edition_code: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
+    edition_code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     edition_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     max_users: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="ACTIVE")
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default="DRAFT"
+    )
+    effective_from: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    effective_to: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    list_price_monthly: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(18, 2), nullable=True
+    )
+    list_price_annual: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(18, 2), nullable=True
+    )
+    currency_code: Mapped[Optional[str]] = mapped_column(
+        String(3), nullable=True, server_default="INR"
+    )
+    display_order: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True, server_default=text("0")
+    )
+    published_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    published_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    end_of_sale_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
+    features: Mapped[list["EditionFeature"]] = relationship(
+        back_populates="edition", cascade="all, delete-orphan"
+    )
+    limits: Mapped[list["EditionLimit"]] = relationship(
+        back_populates="edition", cascade="all, delete-orphan"
+    )
+    versions: Mapped[list["EditionVersion"]] = relationship(
+        back_populates="edition"
+    )
+
+
+class FeatureCatalogue(Base, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "feature_catalogue"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    feature_code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    feature_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    module_domain: Mapped[str] = mapped_column(String(30), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class EditionFeature(Base, TimestampMixin):
+    __tablename__ = "edition_feature"
+    __table_args__ = (
+        UniqueConstraint("edition_id", "feature_code", name="uk_edition_feature"),
+        {"schema": "core"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    edition_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.edition.edition_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    feature_code: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("core.feature_catalogue.feature_code"),
+        nullable=False,
+    )
+    is_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+    is_visible: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+
+    edition: Mapped["Edition"] = relationship(back_populates="features")
+
+
+class EditionLimit(Base, TimestampMixin):
+    __tablename__ = "edition_limit"
+    __table_args__ = (
+        UniqueConstraint("edition_id", "limit_code", name="uk_edition_limit"),
+        {"schema": "core"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    edition_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.edition.edition_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    limit_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    limit_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    limit_value: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    limit_unit: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    is_hard_limit: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+    grace_percent: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(5, 2), nullable=True, server_default=text("0")
+    )
+
+    edition: Mapped["Edition"] = relationship(back_populates="limits")
+
+
+class EditionVersion(Base):
+    __tablename__ = "edition_version"
+    __table_args__ = (
+        UniqueConstraint("edition_id", "version_no", name="uk_edition_version"),
+        {"schema": "core"},
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    edition_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.edition.edition_id"),
+        nullable=False,
+        index=True,
+    )
+    version_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[str] = mapped_column(Text, nullable=False)
+    change_summary: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    actor_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    created_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    edition: Mapped["Edition"] = relationship(back_populates="versions")
 
 
 class Tenant(Base, TimestampMixin, SoftDeleteMixin):

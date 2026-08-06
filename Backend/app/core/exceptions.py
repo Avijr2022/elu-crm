@@ -60,6 +60,16 @@ class ConflictError(AppError):
         )
 
 
+class ValidationAppError(AppError):
+    def __init__(self, message: str = "Validation failed", **kwargs: Any) -> None:
+        super().__init__(
+            code="VALIDATION_ERROR",
+            message=message,
+            http_status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            **kwargs,
+        )
+
+
 def error_body(exc: AppError, request_id: Optional[str] = None) -> dict[str, Any]:
     return {
         "error": {

@@ -1,6 +1,6 @@
 # E-LinkUp Master Requirements & Traceability Index
 **Document ID:** ELU-RTM-001  
-**Version:** 1.0 Enterprise Ready  
+**Version:** 1.1  
 **Status:** Approved
 **Document Owner:** BA / QA
 **Related Documents:** ELU-DOC-001, ELU-EFS-001, ELU-DF-001, ELU-TST-*, ELU-BFS-*
@@ -17,6 +17,7 @@
 |---------|------|--------|--------|
 | 1.0 | 2026-07-31 | EIIP | Initial master requirements & RTM index |
 | 1.0a | 2026-07-31 | EIIP / PMO | Status Approved; registered in ELU-DOC-001 |
+| 1.1 | 2026-08-06 | EIIP / Engineering | PF-001 Edition Management implementation traceability |
 
 ## 1. Requirement ID Ranges
 
@@ -56,7 +57,51 @@
 | Developer (Backend) | Implement APIs/tables keyed by `REQ-*` |
 | Developer (Flutter) | Implement screens from UI Navigation + RTM |
 | QA | Author `TC-*` from RTM; never invent unlinked tests |
-| Architect | Enforce NFR and tenant isolation |
+| Architect | Enforce NFR and tenant isolation (**ADR-015**) |
+
+---
+
+## 5. v1.0 Coverage Checklist
+
+SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow must have §§16–22 artefacts.
+
+| Workflow | Domain | V1 Pack | REQ/RTM | State | CRUD | NFR | UI Nav | API | Status |
+|----------|--------|---------|---------|-------|------|-----|--------|-----|--------|
+| WF-PF-001 | PF | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-PF-002 | PF | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-PF-003 | PF | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-CRM-001 | CRM | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-CRM-002 | CRM | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-CRM-003 | CRM | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-CRM-004 | CRM | V1-PF-CRM | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-SAL-001 | SAL | V1-SAL-PRJ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-SAL-002 | SAL | V1-SAL-PRJ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-SAL-003 | SAL | V1-SAL-PRJ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-PRJ-001 | PRJ | V1-SAL-PRJ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-PRJ-002 | PRJ | V1-SAL-PRJ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-PRJ-003 | PRJ | V1-SAL-PRJ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-FIN-001 | FIN | V1-FIN-SRV-INT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-FIN-002 | FIN | V1-FIN-SRV-INT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | Complete |
+| WF-SRV-001 | SRV | V1-FIN-SRV-INT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | v1.1 scope |
+| WF-INT-001…004 | INT | V1-FIN-SRV-INT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | v2.0 scope |
+
+---
+
+## 6. Implementation Traceability — PF-001 Edition Management (2026-08-06)
+
+| Business Rule / Capability | Table(s) | API | Flutter | Automated Test |
+|----------------------------|----------|-----|---------|----------------|
+| Edition catalogue CRUD (BFS §10) | `core.edition` | `/api/v1/platform/editions` | `EditionsPage` | `test_list_editions` |
+| Feature matrix | `core.feature_catalogue`, `core.edition_feature` | create/update body `features` | Edition detail dialog | publish flow tests |
+| Limits (EDM baselines) | `core.edition_limit` | create/update body `limits` | Edition detail dialog | `test_limit_below_community_baseline` |
+| Publish DRAFT→ACTIVE (BR-PF-008) | `edition`, `edition_version` | `POST .../publish` | — (API) | `test_create_publish_deprecate_flow` |
+| Deprecate ACTIVE (BR-PF-005) | `edition` | `POST .../deprecate` | — (API) | `test_create_publish_deprecate_flow` |
+| Tenant read-only edition | `edition` via tenant FK | `GET /api/v1/tenant/edition` | `_TenantEditionView` | `test_get_tenant_edition` |
+| OpenAPI | — | `/openapi.json` | — | `test_openapi_includes_editions` |
+
+**Code:** `Backend/app/api/v1/pf/editions.py`, `Backend/app/services/pf/edition_service.py`  
+**SQL:** `Database/03_PlatformFoundation/008_core_edition_pf001.sql`  
+**OpenAPI export:** `Backend/openapi/openapi.json`, `Backend/openapi/pf001-editions-paths.json`
 
 ---
 

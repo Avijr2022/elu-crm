@@ -1,14 +1,14 @@
 # E-LinkUp Milestone Tracker
 **Document ID:** ELU-MSL-001  
 **Document Name:** Milestone Tracker  
-**Version:** 1.0  
+**Version:** 1.2  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
 **Prepared By:** PMO  
 **Document Owner:** PMO  
 **Example Tenant:** Euphoria  
-**Related Documents:** ELU-DOC-001, ELU-RDM-001, ELU-RSK-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-DEV-001  
+**Related Documents:** ELU-CON-001, ELU-GOV-VAL-001, ELU-DOC-001, ELU-RDM-001, ELU-RSK-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-DEV-001  
 
 ---
 
@@ -17,6 +17,8 @@
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0 | 2026-07-31 | EIIP / PMO | Initial milestone tracker reflecting documentation-complete / build-ready state |
+| 1.1 | 2026-08-06 | EIIP / PMO | Docs remediation complete: DDD/ERD/API/UI/TST PF+CRM, SEC/OPS/CMP, EDM, ADR-015, SAD Approved |
+| 1.2 | 2026-08-06 | EIIP / PMO | Governance Validation & Freeze: CON-001, AI-001, GOV-VAL-001; ADR §7 |
 
 ---
 
@@ -49,33 +51,41 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 |-----------|--------|----------|-------|
 | Project Charter (**ELU-CHR-001** / source) | 🟠 Partial | 80% | Exists in `CRM Documentation.docx`; formal markdown packaging pending |
 | Software Engineering Handbook (**ELU-SEH-001**) | ⬜ Not Started | 0% | Planned; interim guidance via **ELU-DF-001** + **ELU-DEV-001** |
-| Documentation Framework (**ELU-DF-001**) | ✅ Done | 100% | Approved v1.2 |
-| Documentation Master Index (**ELU-DOC-001**) | ✅ Done | 100% | Approved |
-| Architecture Decision Log (**ELU-ADR-001**) | ✅ Done | 100% | ADR-001…014 Accepted |
+| Documentation Framework (**ELU-DF-001**) | ✅ Done | 100% | Approved v1.3+ (hierarchy includes CON) |
+| Enterprise Constitution (**ELU-CON-001**) | ✅ Done | 100% | **Frozen** — supreme governance |
+| Cursor AI Governance (**ELU-AI-001**) | ✅ Done | 100% | + Cursor_Rules + `.cursor/rules` |
+| Governance Validation (**ELU-GOV-VAL-001**) | ✅ Done | 100% | Readiness **96%**; implementation **gated** |
+| Documentation Master Index (**ELU-DOC-001**) | ✅ Done | 100% | Approved v1.5 |
+| Architecture Decision Log (**ELU-ADR-001**) | ✅ Done | 100% | ADR-001…015 Accepted; §7 AI immutability |
 | Business Story (**ELU-STORY-001**) | ✅ Done | 100% | Approved |
 | Business Requirements (**ELU-BRD-001**) | 🟠 Partial | 85% | Source `CRMFeature.xlsx`; controlled markdown export optional |
-| Software Architecture (**ELU-SAD-001**) | 🟡 In Progress | 90% | Status In Review |
+| Software Architecture (**ELU-SAD-001**) | ✅ Done | 100% | Approved v1.1; ADR-015 dual isolation |
 | BFS Packs (**ELU-BFS-***) | ✅ Done | 100% | All 8 domain packs Approved |
 | EFS (**ELU-EFS-001**) | ✅ Done | 100% | v1.0 Enterprise Ready / Approved |
-| RTM Index (**ELU-RTM-001**) | ✅ Done | 100% | Approved |
+| RTM Index (**ELU-RTM-001**) | ✅ Done | 100% | Approved + v1.0 coverage checklist |
 | Product Roadmap (**ELU-RDM-001**) | ✅ Done | 100% | Approved |
+| Edition Matrix (**ELU-EDM-001**) | ✅ Done | 100% | Approved packaging SoT |
 | Risk Register (**ELU-RSK-001**) | ✅ Done | 100% | Approved |
-| Development Standards (**ELU-DEV-001**) | ✅ Done | 100% | Approved |
-| Data Dictionary (**ELU-DDD-***) | ⬜ Not Started | 0% | Next engineering prerequisite |
-| ERD Packs (**ELU-ERD-***) | ⬜ Not Started | 0% | Depends on DDD |
-| API Specifications (**ELU-API-***) | ⬜ Not Started | 0% | After DDD / parallel with services |
-| UI Specifications (**ELU-UI-***) | ⬜ Not Started | 0% | From EFS Flutter Mapping |
-| Test Specifications (**ELU-TST-***) | ⬜ Not Started | 0% | From RTM `TC-*` |
-| Database (PostgreSQL schema) | 🟡 In Progress | 25% | Schemas + PF runtime models via SQLAlchemy; Alembic formal migrations later |
-| FastAPI implementation | 🟡 In Progress | 20% | Step 1–2: PF models + JWT auth + Euphoria seed |
-| Flutter implementation | 🟡 In Progress | 15% | Shell + login against local API |
+| Development Standards (**ELU-DEV-001**) | ✅ Done | 100% | v1.1 + RLS session rules |
+| Threat Model (**ELU-SEC-001**) | ✅ Done | 100% | Approved |
+| Backup/DR (**ELU-OPS-001**) | ✅ Done | 100% | Approved |
+| Data Protection (**ELU-CMP-001**) | ✅ Done | 100% | Approved |
+| Data Dictionary (**ELU-DDD-PF/CRM/SAL/PRJ/FIN**) | ✅ Done | 100% | Lead-to-Cash domains Approved |
+| ERD Packs (**ELU-ERD-*** L2C) | ✅ Done | 100% | PF→FIN Approved |
+| API Specifications (**ELU-API-*** L2C) | ✅ Done | 100% | PF→FIN Approved |
+| UI Specifications (**ELU-UI-*** L2C) | ✅ Done | 100% | PF→FIN Approved |
+| Test Specifications (**ELU-TST-*** L2C) | ✅ Done | 100% | Incl. isolation suites |
+| CPS Stub (**ELU-CPS-STUB-001**) | ✅ Done | 100% | v1.0 approval stub contract |
+| L2C Docs Route (**ELU-L2C-001**) | ✅ Done | 100% | Completed v1.1 |
+| Database (PostgreSQL schema) | 🟡 In Progress | 35% | PF-001 edition DDL + feature/limit tables applied |
+| FastAPI implementation | 🟡 In Progress | 35% | **PF-001 Edition Management** complete (APIs + tests) |
+| Flutter implementation | 🟡 In Progress | 25% | Editions tab (list/detail + tenant read) |
 | v1.0 UAT (Euphoria happy path) | ⬜ Not Started | 0% | Lead → Payment |
 
 ### 3.1 One-Line Health
 
-> **Documentation & specification: strong.**  
-> **Engineering: Step 1–2 scaffold complete (local Docker + FastAPI PF/Auth + Flutter login); runtime verify after Docker Desktop is up.**  
-> **Next:** Step 3 CRM Lead (`REQ-CRM-001`).
+> **Documentation: Lead-to-Cash complete (PF→FIN engineering packs).**  
+> **Engineering next:** Alembic + RLS from DDD → implement spine Lead→Payment using L2C coding order.
 
 ---
 
@@ -87,10 +97,12 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | Framework | ELU-DF-001 | ✅ | 100% |
 | Decision Log | ELU-ADR-001 | ✅ | 100% |
 | Story | ELU-STORY-001 | ✅ | 100% |
-| SAD | ELU-SAD-001 | 🟡 In Review | 90% |
+| SAD | ELU-SAD-001 | ✅ Approved | 100% |
 | Workflow base | ELU-WF-001 | ✅ Deprecated (superseded) | 100% narrative → EFS |
 | EFS | ELU-EFS-001 | ✅ | 100% |
 | RTM | ELU-RTM-001 | ✅ | 100% |
+| L2C Route | ELU-L2C-001 | ✅ Completed | Lead-to-Cash docs route done |
+| EDM | ELU-EDM-001 | ✅ | 100% |
 | BFS-PF | ELU-BFS-PF | ✅ | 100% |
 | BFS-CRM | ELU-BFS-CRM | ✅ | 100% |
 | BFS-SAL | ELU-BFS-SAL | ✅ | 100% |
@@ -102,6 +114,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | Roadmap | ELU-RDM-001 | ✅ | 100% |
 | Risks | ELU-RSK-001 | ✅ | 100% |
 | Dev Standards | ELU-DEV-001 | ✅ | 100% |
+| SEC/OPS/CMP | ELU-SEC/OPS/CMP-001 | ✅ | 100% |
 | SEH | ELU-SEH-001 | ⬜ | 0% |
 
 ---
@@ -110,14 +123,20 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 
 | Milestone | Status | Progress | Entry Criteria |
 |-----------|--------|----------|----------------|
-| ELU-DDD-PF + ELU-DDD-CRM | ⬜ Not Started | 0% | EFS/BFS Approved ✅ |
-| ELU-ERD-PF + ELU-ERD-CRM | ⬜ Not Started | 0% | DDD draft |
-| PostgreSQL migrations (Alembic) | 🟠 Partial | 15% | `create_all` + seed for local; Alembic formalise later |
-| FastAPI PF + Auth skeleton | 🟡 In Progress | 80% | Scaffolded; verify after Postgres up |
-| FastAPI CRM Lead/Opportunity | 🟡 In Progress | 70% | Lead CRUD + Opportunity pipeline/stage/convert |
-| FastAPI Sales → Finance path | ⬜ Not Started | 0% | Upstream CRM APIs |
+| ELU-DDD-PF + ELU-DDD-CRM | ✅ Done | 100% | Approved |
+| ELU-ERD-PF + ELU-ERD-CRM | ✅ Done | 100% | Approved |
+| ELU-API/UI/TST PF+CRM | ✅ Done | 100% | Approved + isolation |
+| ELU-DDD/ERD/API/UI/TST SAL | ✅ Done | 100% | L2C Step 2 |
+| ELU-DDD/ERD/API/UI/TST PRJ | ✅ Done | 100% | L2C Step 3 |
+| ELU-DDD/ERD/API/UI/TST FIN | ✅ Done | 100% | L2C Step 4 |
+| PostgreSQL migrations (Alembic) | 🟠 Partial | 15% | From ELU-DDD-* + ADR-015 RLS |
+| FastAPI PF + Auth skeleton | 🟡 In Progress | 80% | Scaffolded |
+| FastAPI CRM Lead/Opportunity | 🟡 In Progress | 70% | Lead CRUD + pipeline |
+| FastAPI Sales → Finance path | ⬜ Not Started | 0% | After SAL/PRJ/FIN docs |
 | Flutter shell + auth | ✅ Done | 90% | Login + dashboard verified |
-| Flutter CRM → Finance screens | 🟡 In Progress | 45% | Leads + Opportunities pipeline UI |
+| Flutter CRM → Finance screens | 🟡 In Progress | 45% | Leads + Opportunities UI |
+| Isolation test suite | ⬜ Not Started | 0% | ELU-TST-* specs ready |
+| Euphoria UAT Lead→Payment | ⬜ Not Started | 0% | Vertical slice complete |
 | Isolation test suite | ⬜ Not Started | 0% | First tenant entity API |
 | ELU-TST-CRM (sample) | ⬜ Not Started | 0% | RTM ✅ |
 | Euphoria UAT Lead→Payment | ⬜ Not Started | 0% | Vertical slice complete |
@@ -139,11 +158,11 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 
 | # | Action | Owner | Unlocks |
 |---|--------|-------|---------|
-| 1 | Start Docker Desktop → `docker compose up -d postgres minio` → run API + Flutter login | Dev | Runtime verify Step 1–2 |
-| 2 | Build CRM Lead (`REQ-CRM-001`) — Step 3 | Backend + Flutter | First vertical CRM slice |
-| 3 | Author **ELU-DDD-PF** + **ELU-DDD-CRM** (parallel) | BA / Data Architect | Formal field dictionary |
-| 4 | Approve **ELU-SAD-001** (In Review → Approved) | Solution Architecture | Architecture baseline |
-| 5 | Create first **ELU-TST-CRM** from RTM | QA Lead | Quality gate |
+| 1 | Implement Alembic migrations from **ELU-DDD-PF/CRM** with RLS (**ADR-015**) | Backend | Schema freeze |
+| 2 | Build CRM Lead (`REQ-CRM-001`) per **ELU-API-CRM** / **ELU-UI-CRM** | Backend + Flutter | First vertical CRM slice |
+| 3 | Run **ELU-TST-CRM** isolation suite in CI | QA / Backend | RSK-001 mitigation |
+| 4 | Author ELU-DDD/API for SAL → FIN (next domains) | BA / Tech Lead | Lead-to-Cash completion |
+| 5 | Quarterly restore drill per **ELU-OPS-001** | DevOps | DR readiness |
 
 ---
 

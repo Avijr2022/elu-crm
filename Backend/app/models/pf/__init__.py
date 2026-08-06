@@ -1,5 +1,9 @@
 from app.models.pf.entities import (
     Edition,
+    EditionFeature,
+    EditionLimit,
+    EditionVersion,
+    FeatureCatalogue,
     Organization,
     Permission,
     Role,
@@ -12,6 +16,10 @@ from app.models.pf.entities import (
 
 __all__ = [
     "Edition",
+    "EditionFeature",
+    "EditionLimit",
+    "EditionVersion",
+    "FeatureCatalogue",
     "Organization",
     "Permission",
     "Role",

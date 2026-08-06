@@ -49,9 +49,21 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
-        version="0.2.0",
-        description="E-LinkUp multi-tenant CRM/ERP API (Step 4: Opportunity Pipeline + Lead + Auth)",
+        version="0.3.0",
+        description=(
+            "E-LinkUp multi-tenant CRM/ERP API — PF-001 Edition Management + Auth + CRM"
+        ),
         lifespan=lifespan,
+        openapi_tags=[
+            {"name": "Health", "description": "Liveness"},
+            {"name": "Authentication", "description": "JWT login / refresh"},
+            {
+                "name": "PF-001 Editions",
+                "description": "Edition catalogue, feature matrix, limits (ELU-BFS-PF-001)",
+            },
+            {"name": "CRM Leads", "description": "Lead management"},
+            {"name": "CRM Opportunities", "description": "Opportunity pipeline"},
+        ],
     )
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(

@@ -1,12 +1,18 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
+from uuid import uuid4
 
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.security import hash_password
+from app.db.migrate_pf001 import apply_pf001_ddl
 from app.models.pf import (
     Edition,
+    EditionFeature,
+    EditionLimit,
+    FeatureCatalogue,
     Organization,
     Permission,
     Role,
@@ -25,6 +31,13 @@ PERMISSIONS = [
     ("user.read", "View user", "PF"),
     ("user.update", "Update user", "PF"),
     ("role.assign", "Assign roles", "PF"),
+    ("edition.create", "Create edition", "PF"),
+    ("edition.read", "View edition", "PF"),
+    ("edition.update", "Update edition", "PF"),
+    ("edition.delete", "Delete edition", "PF"),
+    ("edition.publish", "Publish edition", "PF"),
+    ("edition.deprecate", "Deprecate edition", "PF"),
+    ("edition.export", "Export edition matrix", "PF"),
     ("lead.create", "Create lead", "CRM"),
     ("lead.read", "View lead", "CRM"),
     ("lead.update", "Update lead", "CRM"),
@@ -32,12 +45,89 @@ PERMISSIONS = [
 ]
 
 ROLES = [
+    ("PLATFORM_ADMIN", "Platform Admin", True),
     ("TENANT_ADMIN", "Tenant Admin", True),
     ("SALES_EXECUTIVE", "Sales Executive", True),
     ("SALES_MANAGER", "Sales Manager", True),
     ("PROJECT_MANAGER", "Project Manager", True),
     ("FINANCE_USER", "Finance User", True),
 ]
+
+FEATURE_CATALOGUE = [
+    ("CRM_LEAD", "CRM Lead Management", "CRM", "Lead capture and convert"),
+    ("CRM_OPPORTUNITY", "Opportunity Pipeline", "CRM", "Opportunity module"),
+    ("SAL_QUOTE", "Quotations", "SAL", "Sales quotations"),
+    ("PRJ_WO", "Projects / Work Orders", "PRJ", "Delivery"),
+    ("FIN_INVOICE", "Invoicing", "FIN", "AR invoicing"),
+    ("SSO", "Single Sign-On", "PF", "Enterprise SSO"),
+    ("AUDIT_RETENTION_7Y", "7-year audit retention", "PF", "Enterprise audit"),
+    ("MFA", "Multi-factor authentication", "PF", "MFA"),
+    ("BRANCH", "Branch hierarchy", "PF", "Multi-branch"),
+    ("BUSINESS_UNIT", "Business units", "PF", "BU management"),
+]
+
+# ELU-EDM-001 limits
+EDITION_SPECS = {
+    "COMMUNITY": {
+        "name": "Community Edition",
+        "description": "Learning & demo",
+        "display_order": 1,
+        "max_users": 5,
+        "features": [
+            "CRM_LEAD",
+            "MFA",
+        ],
+        "limits": [
+            ("MAX_USERS", "Maximum users", Decimal("5"), "users"),
+            ("MAX_STORAGE_GB", "Maximum storage", Decimal("5"), "GB"),
+            ("MAX_ROLES", "Maximum custom roles", Decimal("5"), "roles"),
+        ],
+    },
+    "PROFESSIONAL": {
+        "name": "Professional Edition",
+        "description": "SME full CRM/ERP suite",
+        "display_order": 2,
+        "max_users": 50,
+        "features": [
+            "CRM_LEAD",
+            "CRM_OPPORTUNITY",
+            "SAL_QUOTE",
+            "PRJ_WO",
+            "FIN_INVOICE",
+            "MFA",
+            "BRANCH",
+            "BUSINESS_UNIT",
+        ],
+        "limits": [
+            ("MAX_USERS", "Maximum users", Decimal("50"), "users"),
+            ("MAX_STORAGE_GB", "Maximum storage", Decimal("100"), "GB"),
+            ("MAX_ROLES", "Maximum custom roles", Decimal("25"), "roles"),
+        ],
+    },
+    "ENTERPRISE": {
+        "name": "Enterprise Edition",
+        "description": "Large enterprise SaaS",
+        "display_order": 3,
+        "max_users": None,
+        "features": [
+            "CRM_LEAD",
+            "CRM_OPPORTUNITY",
+            "SAL_QUOTE",
+            "PRJ_WO",
+            "FIN_INVOICE",
+            "MFA",
+            "BRANCH",
+            "BUSINESS_UNIT",
+            "SSO",
+            "AUDIT_RETENTION_7Y",
+        ],
+        "limits": [
+            ("MAX_USERS", "Maximum users", Decimal("999999"), "users"),
+            ("MAX_STORAGE_GB", "Maximum storage", Decimal("999999"), "GB"),
+            ("MAX_ROLES", "Maximum custom roles", Decimal("999999"), "roles"),
+        ],
+    },
+}
 
 
 def ensure_schemas(db: Session) -> None:
@@ -57,40 +147,109 @@ def ensure_schemas(db: Session) -> None:
     db.commit()
 
 
+def _ensure_feature_catalogue(db: Session) -> None:
+    existing = {
+        r.feature_code
+        for r in db.scalars(select(FeatureCatalogue)).all()
+    }
+    for code, name, domain, desc in FEATURE_CATALOGUE:
+        if code in existing:
+            continue
+        db.add(
+            FeatureCatalogue(
+                id=uuid4(),
+                feature_code=code,
+                feature_name=name,
+                module_domain=domain,
+                description=desc,
+            )
+        )
+    db.flush()
+
+
+def _ensure_editions(db: Session) -> dict[str, Edition]:
+    result: dict[str, Edition] = {}
+    for code, spec in EDITION_SPECS.items():
+        edition = db.scalars(
+            select(Edition).where(Edition.edition_code == code)
+        ).first()
+        if edition is None:
+            edition = Edition(
+                edition_id=uuid4(),
+                edition_code=code,
+                edition_name=spec["name"],
+                description=spec["description"],
+                max_users=spec["max_users"],
+                status="ACTIVE",
+                display_order=spec["display_order"],
+                currency_code="INR",
+                published_at=datetime.now(timezone.utc),
+                version_no=1,
+            )
+            db.add(edition)
+            db.flush()
+        else:
+            edition.edition_name = spec["name"]
+            edition.description = spec["description"]
+            edition.max_users = spec["max_users"]
+            edition.display_order = spec["display_order"]
+            if edition.status not in ("DEPRECATED", "ARCHIVED", "CANCELLED"):
+                edition.status = "ACTIVE"
+            if edition.published_at is None and edition.status == "ACTIVE":
+                edition.published_at = datetime.now(timezone.utc)
+
+        # Features
+        have_f = {f.feature_code for f in edition.features}
+        for fcode in spec["features"]:
+            if fcode in have_f:
+                continue
+            edition.features.append(
+                EditionFeature(
+                    id=uuid4(),
+                    feature_code=fcode,
+                    is_enabled=True,
+                    is_visible=True,
+                )
+            )
+
+        # Limits
+        have_l = {lim.limit_code for lim in edition.limits}
+        for lcode, lname, lval, lunit in spec["limits"]:
+            if lcode in have_l:
+                continue
+            edition.limits.append(
+                EditionLimit(
+                    id=uuid4(),
+                    limit_code=lcode,
+                    limit_name=lname,
+                    limit_value=lval,
+                    limit_unit=lunit,
+                    is_hard_limit=True,
+                    grace_percent=Decimal("0"),
+                )
+            )
+        result[code] = edition
+    db.flush()
+    return result
+
+
 def seed_platform(db: Session) -> None:
     settings = get_settings()
     ensure_schemas(db)
+    apply_pf001_ddl(db)
+    _ensure_feature_catalogue(db)
+    editions = _ensure_editions(db)
 
     existing = db.scalars(
         select(Tenant).where(Tenant.tenant_code == "EIIP001")
     ).first()
     if existing:
+        # Ensure platform admin role/user even on re-seed skip path
+        _ensure_platform_admin(db, existing, editions)
+        db.commit()
         return
 
-    editions = [
-        Edition(
-            edition_code="COMMUNITY",
-            edition_name="Community Edition",
-            description="Learning & demo",
-            max_users=5,
-        ),
-        Edition(
-            edition_code="PROFESSIONAL",
-            edition_name="Professional Edition",
-            description="SME full CRM/ERP suite",
-            max_users=100,
-        ),
-        Edition(
-            edition_code="ENTERPRISE",
-            edition_name="Enterprise Edition",
-            description="Large enterprise SaaS",
-            max_users=None,
-        ),
-    ]
-    db.add_all(editions)
-    db.flush()
-
-    professional = next(e for e in editions if e.edition_code == "PROFESSIONAL")
+    professional = editions["PROFESSIONAL"]
 
     tenant = Tenant(
         tenant_code="EIIP001",
@@ -174,8 +333,13 @@ def seed_platform(db: Session) -> None:
         role_map[code] = role
     db.flush()
 
-    # Tenant Admin gets all permissions
     for perm in perm_map.values():
+        db.add(
+            RolePermission(
+                role_id=role_map["PLATFORM_ADMIN"].role_id,
+                permission_id=perm.permission_id,
+            )
+        )
         db.add(
             RolePermission(
                 role_id=role_map["TENANT_ADMIN"].role_id,
@@ -197,10 +361,11 @@ def seed_platform(db: Session) -> None:
             )
         )
 
+    # Seed admin acts as Platform Admin for PF-001 ops (Euphoria demo)
     admin = User(
         tenant_id=tenant.tenant_id,
         organization_id=org.organization_id,
-        role_id=role_map["TENANT_ADMIN"].role_id,
+        role_id=role_map["PLATFORM_ADMIN"].role_id,
         employee_code="EMP000001",
         first_name="Euphoria",
         last_name="Admin",
@@ -208,8 +373,56 @@ def seed_platform(db: Session) -> None:
         email=settings.seed_admin_email.lower(),
         mobile="+919876543210",
         password_hash=hash_password(settings.seed_admin_password),
-        designation="Tenant Administrator",
+        designation="Platform Administrator",
         account_status="ACTIVE",
     )
     db.add(admin)
     db.commit()
+
+
+def _ensure_platform_admin(
+    db: Session, tenant: Tenant, editions: dict[str, Edition]
+) -> None:
+    """Upgrade existing Euphoria seed to PF-001 roles/permissions when re-running."""
+    settings = get_settings()
+    _ = editions
+
+    # Permissions
+    for code, name, module in PERMISSIONS:
+        exists = db.scalars(
+            select(Permission).where(Permission.permission_code == code)
+        ).first()
+        if not exists:
+            db.add(
+                Permission(
+                    permission_code=code, permission_name=name, module_code=module
+                )
+            )
+    db.flush()
+
+    platform_role = db.scalars(
+        select(Role).where(
+            Role.tenant_id == tenant.tenant_id,
+            Role.role_code == "PLATFORM_ADMIN",
+        )
+    ).first()
+    if platform_role is None:
+        platform_role = Role(
+            tenant_id=tenant.tenant_id,
+            role_code="PLATFORM_ADMIN",
+            role_name="Platform Admin",
+            description="System role: Platform Admin",
+            is_system=True,
+        )
+        db.add(platform_role)
+        db.flush()
+
+    admin = db.scalars(
+        select(User).where(
+            User.tenant_id == tenant.tenant_id,
+            User.email == settings.seed_admin_email.lower(),
+        )
+    ).first()
+    if admin:
+        admin.role_id = platform_role.role_id
+        admin.designation = "Platform Administrator"

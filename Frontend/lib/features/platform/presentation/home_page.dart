@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../crm/presentation/leads_page.dart';
 import '../../crm/presentation/opportunities_page.dart';
+import '../data/edition_service.dart';
+import 'editions_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,16 +17,23 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _index = 0;
 
-  static const _titles = ['E-LinkUp', 'CRM Leads', 'Opportunities'];
+  static const _titles = [
+    'E-LinkUp',
+    'Editions',
+    'CRM Leads',
+    'Opportunities',
+  ];
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     final p = auth.profile ?? {};
     final wide = MediaQuery.sizeOf(context).width >= 900;
+    final isPlatformAdmin = p['role_code'] == 'PLATFORM_ADMIN';
 
-    final pages = [
+    final pages = <Widget>[
       _DashboardView(profile: p),
+      if (isPlatformAdmin) const EditionsPage() else const _TenantEditionView(),
       const LeadsPage(),
       const OpportunitiesPage(),
     ];
@@ -33,6 +42,10 @@ class _HomePageState extends State<HomePage> {
       NavigationDestination(
         icon: Icon(Icons.dashboard_outlined),
         label: 'Dashboard',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.layers_outlined),
+        label: 'Editions',
       ),
       NavigationDestination(
         icon: Icon(Icons.people_outline),
@@ -46,7 +59,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_index]),
+        title: Text(_titles[_index.clamp(0, _titles.length - 1)]),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -76,6 +89,11 @@ class _HomePageState extends State<HomePage> {
                       icon: Icon(Icons.dashboard_outlined),
                       selectedIcon: Icon(Icons.dashboard),
                       label: Text('Dashboard'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.layers_outlined),
+                      selectedIcon: Icon(Icons.layers),
+                      label: Text('Editions'),
                     ),
                     NavigationRailDestination(
                       icon: Icon(Icons.people_outline),
@@ -121,7 +139,7 @@ class _DashboardView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Step 4 — Opportunity pipeline is available from the Pipeline tab.',
+          'PF-001 Edition Management is available from the Editions tab.',
         ),
         const SizedBox(height: 24),
         _infoTile(
@@ -142,6 +160,70 @@ class _DashboardView extends StatelessWidget {
       dense: true,
       title: Text(label),
       subtitle: Text(value),
+    );
+  }
+}
+
+class _TenantEditionView extends StatefulWidget {
+  const _TenantEditionView();
+
+  @override
+  State<_TenantEditionView> createState() => _TenantEditionViewState();
+}
+
+class _TenantEditionViewState extends State<_TenantEditionView> {
+  final _service = EditionService();
+  bool _loading = true;
+  String? _error;
+  EditionSummary? _edition;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final e = await _service.tenantEdition();
+      if (!mounted) return;
+      setState(() {
+        _edition = e;
+        _loading = false;
+      });
+    } catch (err) {
+      if (!mounted) return;
+      setState(() {
+        _error = err.toString().replaceFirst('Exception: ', '');
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(child: Text(_error!));
+    }
+    final e = _edition!;
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Text('Your edition', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Text('${e.code} — ${e.name}'),
+        Text('Status: ${e.status}'),
+        const SizedBox(height: 16),
+        Text('Features', style: Theme.of(context).textTheme.titleSmall),
+        ...e.features.map((f) => Text('• ${f['feature_code']}')),
+      ],
     );
   }
 }
