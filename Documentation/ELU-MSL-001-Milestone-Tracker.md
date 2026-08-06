@@ -1,14 +1,14 @@
 # E-LinkUp Milestone Tracker
 **Document ID:** ELU-MSL-001  
 **Document Name:** Milestone Tracker  
-**Version:** 1.7  
+**Version:** 1.8  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
 **Prepared By:** PMO  
 **Document Owner:** PMO  
 **Example Tenant:** Euphoria  
-**Related Documents:** ELU-CON-001, ELU-GOV-VAL-001, ELU-QA-PF001, ELU-QA-PF002, ELU-QA-PF003, ELU-REL-PF001, ELU-REL-PF002, ELU-REL-PF003, ELU-QA-REG-001, ELU-TD-001, ELU-DOC-001, ELU-RDM-001, ELU-RSK-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-DEV-001  
+**Related Documents:** ELU-CON-001, ELU-GOV-VAL-001, ELU-QA-PF001, ELU-QA-PF002, ELU-QA-PF003, ELU-REL-PF001, ELU-REL-PF002, ELU-REL-PF003, ELU-QA-REG-001, ELU-TD-001, ELU-TD-002, ELU-PGR-001, ELU-DOC-001, ELU-RDM-001, ELU-RSK-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-DEV-001  
 
 ---
 
@@ -24,6 +24,7 @@
 | 1.5 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF002** RELEASE APPROVED; start PF-003 |
 | 1.6 | 2026-08-06 | EIIP / QA | PF-003 Subscription Management QA PASS — awaiting RELEASE APPROVED |
 | 1.7 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF003** RELEASE APPROVED; CON governs all further work |
+| 1.8 | 2026-08-06 | EIIP / Architecture | Phase Gate ELU-PGR-001 — await human approval before PF-004 |
 
 ---
 
@@ -97,11 +98,45 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-001 Edition Management | **RELEASE APPROVED** | `Phase-2-PF001` | Frozen — bug / CR / ADR only |
 | PF-002 Tenant Management | **RELEASE APPROVED** | `Phase-2-PF002` | Frozen — bug / CR / ADR only |
 | PF-003 Subscription | **RELEASE APPROVED** | `Phase-2-PF003` | Frozen — bug / CR / ADR only |
-| PF-004…011 | Not Started | — | Requires human start + CON GAP analysis |
+| PF-004 Organization | Not Started | — | **Blocked — Phase Gate pending** |
+| PF-005…011 | Not Started | — | Per BFS/RDM order |
 
 ### 3.2 One-Line Health
 
-> **PF-003 baselined (`Phase-2-PF003`).** PF-001…003 frozen. **Enterprise Constitution (CON) governs all further work.** Await human instruction for next module.
+> **Phase Gate (ELU-PGR-001).** PF-001…003 baselined. **PF-004 blocked** until Human Phase-Gate Approval. P0: RLS (ADR-015).
+
+### 3.3 Enterprise Progress Dashboard (Phase Gate)
+
+```text
+Overall Project Progress (indicative CRM programme)
+███████░░░░░░░░░░░░░░░░  ~18%
+
+Platform Foundation (11 modules)
+PF-001 Edition              ██████████ 100%
+PF-002 Tenant               ██████████ 100%
+PF-003 Subscription         ██████████ 100%
+PF-004 Organization         ░░░░░░░░░░   0%   ← NEXT (after gate)
+PF-005 Branch               ░░░░░░░░░░   0%
+PF-006 Department           ░░░░░░░░░░   0%
+PF-007 Business Unit        ░░░░░░░░░░   0%
+PF-008 Users & Identity     ░░░░░░░░░░   0%
+PF-009 RBAC                 ░░░░░░░░░░   0%
+PF-010 Audit & Compliance   ░░░░░░░░░░   0%
+PF-011 System Configuration ░░░░░░░░░░   0%
+
+Overall
+Modules Completed (PF)     : 3 / 11  (27%)
+Modules Remaining (PF)     : 8
+Business Rules (PF-001…027): ~85% enforced / deferred documented
+API (PF platform paths)    : ~35 paths of future PF surface (growing)
+Database (PF delivered)    : ~55% of PF schema surface
+Flutter (PF screens)       : ~40% of PF UI surface
+Documentation (PF slice)   : 95% for delivered modules
+Testing (PF suites)        : 32 automated API tests PASS; Flutter tests 0
+Overall CRM Progress       : ~18%
+```
+
+**Note:** Progress % are governance estimates for Phase Gate visibility, not billing metrics.
 
 ---
 

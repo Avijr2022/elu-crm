@@ -1,14 +1,14 @@
 # E-LinkUp Project Risk Register
 **Document ID:** ELU-RSK-001  
 **Document Name:** Project Risk Register  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
 **Prepared By:** PMO / Solution Architecture  
 **Document Owner:** PMO  
 **Example Tenant:** Euphoria  
-**Related Documents:** ELU-DOC-001, ELU-RDM-001, ELU-MSL-001, ELU-ADR-001, ELU-EFS-001, ELU-SAD-001, ELU-CHR-001, ELU-CON-001, ELU-TD-001  
+**Related Documents:** ELU-DOC-001, ELU-RDM-001, ELU-MSL-001, ELU-ADR-001, ELU-EFS-001, ELU-SAD-001, ELU-CHR-001, ELU-CON-001, ELU-TD-001, ELU-TD-002, ELU-PGR-001  
 
 ---
 
@@ -18,6 +18,7 @@
 |---------|------|--------|--------|
 | 1.0 | 2026-07-31 | EIIP / PMO | Initial risk register for documentation-complete / build-ready phase |
 | 1.1 | 2026-08-06 | EIIP / PMO | Post Phase-2-PF003 baseline; CON freeze; expire-scheduler risk |
+| 1.2 | 2026-08-06 | EIIP / Architecture | Phase Gate PGR-001: RLS gap RSK-021; AI drift RSK-022; docs sync RSK-023 |
 
 ---
 
@@ -74,6 +75,9 @@ Catalogue: **ELU-DOC-001 – Documentation Master Index**.
 | RSK-018 | AI features over-promised before CPS-007 maturity | Commercial | M | M | MM | Keep AI in v2.0+ only; label as assistive not authoritative | Product Owner | Mitigating | ELU-RDM-001 |
 | RSK-019 | Trial/paid subscriptions expire without timely tenant suspend | Functional | M | M | MM | Manual expire API shipped (PF-003); schedule CPS job for BR-PF-024 SLA; track **ELU-TD-001** | Platform / Ops | Open | ELU-BFS-PF-003, ELU-TD-001 |
 | RSK-020 | Drift from Constitution when starting next module without GAP | Process | M | H | HM | Mandatory CON GAP analysis before coding; locked modules require bug/CR/ADR | PMO / Tech Lead | Mitigating | ELU-CON-001, ELU-MSL-001 |
+| RSK-021 | Dual RLS (ADR-015) not yet in runtime — isolation relies on app filters only | Security | H | H | HH | Phase Gate P0; CR for RLS + isolation tests before/at PF-004; optional temporary ADR waiver with deadline | Solution Architecture / Tech Lead | Open | ELU-PGR-001, ELU-TD-002, ADR-015 |
+| RSK-022 | AI-generated Phase-2 code drift from DDD/CON without gate discipline | Quality | M | H | HM | CON + AI-001 + Phase Gate; freeze locked modules; RTM audits | PMO / QA | Mitigating | ELU-CON-001, ELU-AI-001 |
+| RSK-023 | Uncommitted documentation packs cause SoT ambiguity | Process | M | M | MM | Commit/register packs; ELU-DOC-001 sync | PMO / BA | Open | ELU-PGR-001 |
 
 ---
 
@@ -81,8 +85,8 @@ Catalogue: **ELU-DOC-001 – Documentation Master Index**.
 
 | Priority Band | Risk IDs |
 |---------------|----------|
-| **Critical attention** | RSK-002 (scope creep), RSK-001 (isolation), RSK-003 (REQ drift), RSK-004 (DDD delay), RSK-016 (test debt) |
-| **Watch** | RSK-005, RSK-006, RSK-008, RSK-011, RSK-012 |
+| **Critical attention** | RSK-021 (RLS gap), RSK-002 (scope creep), RSK-001 (isolation), RSK-003 (REQ drift), RSK-016 (test debt) |
+| **Watch** | RSK-005, RSK-006, RSK-008, RSK-011, RSK-012, RSK-019, RSK-022, RSK-023 |
 | **Accepted / monitored** | RSK-009, RSK-015 |
 
 ---

@@ -9,6 +9,7 @@
 | PF-001 Edition Management | ELU-QA-PF001 v2.0 | **RELEASE APPROVED** | `Phase-2-PF001` | Yes |
 | PF-002 Tenant Management | ELU-QA-PF002 v1.1 | **RELEASE APPROVED** | `Phase-2-PF002` | Yes |
 | PF-003 Subscription Management | ELU-QA-PF003 v2.1 | **RELEASE APPROVED** | `Phase-2-PF003` | Yes |
+| Phase Gate PF-001…003 | ELU-PGR-001 | **AWAITING HUMAN APPROVAL** | — | PF-004 blocked |
 
 **Rule:** Locked modules change only on documented bug, approved Change Request (CR), or ADR requirement.  
 **Governance:** Enterprise Engineering Constitution (CON) binds all further modules.

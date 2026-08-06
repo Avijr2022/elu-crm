@@ -2,6 +2,22 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [Phase Gate] — 2026-08-06 — AWAITING HUMAN APPROVAL
+
+### Added
+- ELU-PGR-001 Phase Gate Review (PF-001…003)
+- ELU-TD-002 Technical Debt Register (Critical RLS / isolation)
+- ELU-EHC-001 Enterprise Health Card v2.0
+- ELU-MSL-001 §3.3 Progress Dashboard
+- Risk updates RSK-021…023
+
+### Notes
+- **PF-004 Organization** blocked until Phase-Gate Approval
+- P0: ADR-015 dual RLS + isolation tests
+- No baselined PF-001…003 code modified in this gate
+
+---
+
 ## [Phase-2-PF003] — 2026-08-06 — RELEASE APPROVED
 
 ### Added
