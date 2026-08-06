@@ -1,9 +1,9 @@
 # E-LinkUp Master Requirements & Traceability Index
 **Document ID:** ELU-RTM-001  
-**Version:** 1.1  
+**Version:** 1.2  
 **Status:** Approved
 **Document Owner:** BA / QA
-**Related Documents:** ELU-DOC-001, ELU-EFS-001, ELU-DF-001, ELU-TST-*, ELU-BFS-*
+**Related Documents:** ELU-DOC-001, ELU-EFS-001, ELU-DF-001, ELU-TST-*, ELU-BFS-*, ELU-QA-PF001
 **Parent:** ELU-EFS-001  
 **Example Tenant:** Euphoria  
 
@@ -18,6 +18,7 @@
 | 1.0 | 2026-07-31 | EIIP | Initial master requirements & RTM index |
 | 1.0a | 2026-07-31 | EIIP / PMO | Status Approved; registered in ELU-DOC-001 |
 | 1.1 | 2026-08-06 | EIIP / Engineering | PF-001 Edition Management implementation traceability |
+| 1.2 | 2026-08-06 | EIIP / QA | PF-001 RELEASE APPROVED — RTM 100% after remediation |
 
 ## 1. Requirement ID Ranges
 
@@ -87,21 +88,28 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 
 ---
 
-## 6. Implementation Traceability — PF-001 Edition Management (2026-08-06)
+## 6. Implementation Traceability — PF-001 Edition Management (100%)
 
 | Business Rule / Capability | Table(s) | API | Flutter | Automated Test |
 |----------------------------|----------|-----|---------|----------------|
-| Edition catalogue CRUD (BFS §10) | `core.edition` | `/api/v1/platform/editions` | `EditionsPage` | `test_list_editions` |
-| Feature matrix | `core.feature_catalogue`, `core.edition_feature` | create/update body `features` | Edition detail dialog | publish flow tests |
-| Limits (EDM baselines) | `core.edition_limit` | create/update body `limits` | Edition detail dialog | `test_limit_below_community_baseline` |
-| Publish DRAFT→ACTIVE (BR-PF-008) | `edition`, `edition_version` | `POST .../publish` | — (API) | `test_create_publish_deprecate_flow` |
-| Deprecate ACTIVE (BR-PF-005) | `edition` | `POST .../deprecate` | — (API) | `test_create_publish_deprecate_flow` |
+| Edition catalogue CRUD (BFS §10) | `core.edition` (`id`,`code`,`name`) | `/api/v1/platform/editions` | List + Create + Edit + View | `test_list_editions`, create flows |
+| Feature matrix | `feature_catalogue`, `edition_feature` | create/update `features` | View dialog | publish / create tests |
+| Limits (EDM baselines) | `edition_limit` | create/update `limits` | View dialog | `test_limit_below_community_baseline` |
+| Publish DRAFT→ACTIVE (BR-PF-008) | `edition`, `edition_version`, `audit.audit_event` | `POST .../publish` | Publish approval dialog | `test_create_publish_deprecate_flow` |
+| Deprecate / deactivate (BR-PF-005) | `edition`, audit | `POST .../deprecate` + `assert_assignable` | (API; UI deprecate via future action) | deprecate + audit asserts |
+| Search | `edition` | `GET .../search` | Search field | `test_search_and_history` |
+| History | `edition_version` | `GET .../history` | History dialog | `test_search_and_history` |
 | Tenant read-only edition | `edition` via tenant FK | `GET /api/v1/tenant/edition` | `_TenantEditionView` | `test_get_tenant_edition` |
+| DDD schema alignment | `edition` CHECK + indexes | — | — | `test_schema_ddd_columns` |
 | OpenAPI | — | `/openapi.json` | — | `test_openapi_includes_editions` |
+| Audit logging | `audit.audit_event` | mutations | — | audit asserts in publish flow |
 
-**Code:** `Backend/app/api/v1/pf/editions.py`, `Backend/app/services/pf/edition_service.py`  
-**SQL:** `Database/03_PlatformFoundation/008_core_edition_pf001.sql`  
-**OpenAPI export:** `Backend/openapi/openapi.json`, `Backend/openapi/pf001-editions-paths.json`
+**Coverage:** **100%** of PF-001 BFS §10 APIs and §11 screens (List/Create/Edit/View/Search/Publish/History).  
+**QA:** [ELU-QA-PF001 v2.0](../ELU-QA-PF001-Edition-Management-Release-Audit.md) — **RELEASE APPROVED**.
+
+**Code:** `Backend/app/api/v1/pf/editions.py`, `edition_service.py`, `audit_service.py`  
+**SQL:** `009_edition_ddd_align_pf001.sql`, `migrate_pf001.py`  
+**OpenAPI:** `Backend/openapi/openapi.json`
 
 ---
 

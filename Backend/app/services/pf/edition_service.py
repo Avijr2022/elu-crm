@@ -7,7 +7,6 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
-    AppError,
     ConflictError,
     ForbiddenError,
     NotFoundError,
@@ -27,8 +26,8 @@ from app.schemas.pf.edition import (
     EditionUpdate,
     EditionVersionOut,
 )
+from app.services.pf.audit_service import write_audit_event
 
-# Community baseline (ELU-EDM-001 / BR-PF-006)
 COMMUNITY_BASELINES = {
     "MAX_USERS": Decimal("5"),
     "MAX_STORAGE_GB": Decimal("5"),
@@ -44,16 +43,16 @@ class EditionService:
         self.repo = EditionRepository(db)
 
     def _to_response(self, edition: Edition) -> EditionResponse:
-        feature_names: dict[str, tuple[str, str]] = {}
+        feature_names: dict[str, tuple[Optional[str], Optional[str]]] = {}
         for f in edition.features:
             cat = self.repo.get_feature_catalogue(f.feature_code)
             if cat:
                 feature_names[f.feature_code] = (cat.feature_name, cat.module_domain)
 
         return EditionResponse(
-            id=edition.edition_id,
-            code=edition.edition_code,
-            name=edition.edition_name,
+            id=edition.id,
+            code=edition.code,
+            name=edition.name,
             description=edition.description,
             status=edition.status,
             version_no=edition.version_no,
@@ -128,11 +127,19 @@ class EditionService:
                 req_id="BR-PF-007",
             )
 
+    def assert_assignable(self, edition: Edition) -> None:
+        """BR-PF-005 — DEPRECATED (and non-ACTIVE) editions cannot be assigned."""
+        if edition.status != "ACTIVE":
+            raise ValidationAppError(
+                f"Edition {edition.code} status {edition.status} is not assignable",
+                req_id="BR-PF-005",
+            )
+
     def _snapshot(self, edition: Edition) -> str:
         return json.dumps(
             {
-                "code": edition.edition_code,
-                "name": edition.edition_name,
+                "code": edition.code,
+                "name": edition.name,
                 "status": edition.status,
                 "version_no": edition.version_no,
                 "features": [
@@ -152,6 +159,24 @@ class EditionService:
                 ],
             },
             default=str,
+        )
+
+    def _audit(
+        self,
+        *,
+        event_type: str,
+        edition: Edition,
+        actor_id: UUID,
+        payload: Optional[dict] = None,
+    ) -> None:
+        write_audit_event(
+            self.db,
+            event_type=event_type,
+            event_category="EDITION",
+            entity_type="edition",
+            entity_id=edition.id,
+            actor_id=actor_id,
+            payload={"code": edition.code, "status": edition.status, **(payload or {})},
         )
 
     def list_editions(
@@ -197,9 +222,9 @@ class EditionService:
         )
 
         edition = Edition(
-            edition_id=uuid4(),
-            edition_code=payload.code,
-            edition_name=payload.name,
+            id=uuid4(),
+            code=payload.code,
+            name=payload.name,
             description=payload.description,
             status="DRAFT",
             display_order=payload.display_order or 0,
@@ -232,13 +257,11 @@ class EditionService:
                     grace_percent=lim.grace_percent or Decimal("0"),
                 )
             )
-            if lim.limit_code.upper() == "MAX_USERS":
-                edition.max_users = int(lim.limit_value) if lim.limit_value >= 0 else None
 
         self.repo.add(edition)
+        self._audit(event_type="EDITION_CREATED", edition=edition, actor_id=actor_id)
         self.db.commit()
-        self.db.refresh(edition)
-        return self._to_response(self.repo.get_by_id(edition.edition_id))  # type: ignore[arg-type]
+        return self._to_response(self.repo.get_by_id(edition.id))  # type: ignore[arg-type]
 
     def update(
         self, edition_id: UUID, payload: EditionUpdate, actor_id: UUID
@@ -247,16 +270,14 @@ class EditionService:
         if edition is None:
             raise NotFoundError("Edition not found", req_id="PF-001")
         self._check_lock(edition, payload.version_no)
-        if edition.status not in ("DRAFT",):
-            # ACTIVE matrix changes require version bump (BR-PF-004)
-            if edition.status != "ACTIVE":
-                raise ValidationAppError(
-                    f"Cannot full-update edition in status {edition.status}",
-                    req_id="BR-PF-004",
-                )
+        if edition.status not in ("DRAFT", "ACTIVE"):
+            raise ValidationAppError(
+                f"Cannot full-update edition in status {edition.status}",
+                req_id="BR-PF-004",
+            )
 
         if payload.name is not None:
-            edition.edition_name = payload.name
+            edition.name = payload.name
         if payload.description is not None:
             edition.description = payload.description
         if payload.display_order is not None:
@@ -275,7 +296,7 @@ class EditionService:
         if payload.features is not None:
             self._validate_features_exist([f.feature_code for f in payload.features])
             enabled = {f.feature_code.upper() for f in payload.features if f.is_enabled}
-            self._validate_enterprise(edition.edition_code, enabled)
+            self._validate_enterprise(edition.code, enabled)
             rows = [
                 EditionFeature(
                     id=uuid4(),
@@ -302,26 +323,21 @@ class EditionService:
                 for lim in payload.limits
             ]
             self.repo.replace_limits(edition, rows)
-            for lim in rows:
-                if lim.limit_code == "MAX_USERS":
-                    edition.max_users = int(lim.limit_value)
 
         if edition.status == "ACTIVE":
             self.db.add(
                 EditionVersion(
                     id=uuid4(),
-                    edition_id=edition.edition_id,
+                    edition_id=edition.id,
                     version_no=edition.version_no,
                     snapshot_json=self._snapshot(edition),
                     change_summary="Feature/limit update on ACTIVE edition",
                     actor_id=actor_id,
                 )
             )
-            edition.version_no += 1
-        else:
-            edition.version_no += 1
-
+        edition.version_no += 1
         edition.modified_by = actor_id
+        self._audit(event_type="EDITION_UPDATED", edition=edition, actor_id=actor_id)
         self.db.commit()
         return self._to_response(self.repo.get_by_id(edition_id))  # type: ignore[arg-type]
 
@@ -333,7 +349,7 @@ class EditionService:
             raise NotFoundError("Edition not found", req_id="PF-001")
         self._check_lock(edition, payload.version_no)
         if payload.name is not None:
-            edition.edition_name = payload.name
+            edition.name = payload.name
         if payload.description is not None:
             edition.description = payload.description
         if payload.display_order is not None:
@@ -347,6 +363,7 @@ class EditionService:
             )
         edition.version_no += 1
         edition.modified_by = actor_id
+        self._audit(event_type="EDITION_UPDATED", edition=edition, actor_id=actor_id)
         self.db.commit()
         return self._to_response(self.repo.get_by_id(edition_id))  # type: ignore[arg-type]
 
@@ -368,9 +385,8 @@ class EditionService:
                 req_id="BR-PF-008",
             )
         enabled = {f.feature_code for f in edition.features if f.is_enabled}
-        self._validate_enterprise(edition.edition_code, enabled)
+        self._validate_enterprise(edition.code, enabled)
 
-        # BR-PF-002: only one ACTIVE per code — same code unique so OK
         edition.status = "ACTIVE"
         edition.published_at = datetime.now(timezone.utc)
         edition.published_by = actor_id
@@ -379,13 +395,14 @@ class EditionService:
         self.db.add(
             EditionVersion(
                 id=uuid4(),
-                edition_id=edition.edition_id,
+                edition_id=edition.id,
                 version_no=edition.version_no,
                 snapshot_json=self._snapshot(edition),
                 change_summary="Published",
                 actor_id=actor_id,
             )
         )
+        self._audit(event_type="EDITION_PUBLISHED", edition=edition, actor_id=actor_id)
         self.db.commit()
         return self._to_response(self.repo.get_by_id(edition_id))  # type: ignore[arg-type]
 
@@ -408,12 +425,18 @@ class EditionService:
         self.db.add(
             EditionVersion(
                 id=uuid4(),
-                edition_id=edition.edition_id,
+                edition_id=edition.id,
                 version_no=edition.version_no,
                 snapshot_json=self._snapshot(edition),
                 change_summary=f"Deprecated: {payload.reason}",
                 actor_id=actor_id,
             )
+        )
+        self._audit(
+            event_type="EDITION_DEACTIVATED",
+            edition=edition,
+            actor_id=actor_id,
+            payload={"reason": payload.reason},
         )
         self.db.commit()
         return self._to_response(self.repo.get_by_id(edition_id))  # type: ignore[arg-type]
@@ -429,8 +452,6 @@ class EditionService:
             )
         if edition.status == "DRAFT":
             edition.status = "CANCELLED"
-            edition.is_deleted = True
-            edition.is_active = False
         elif edition.status in ("DEPRECATED", "ACTIVE"):
             edition.status = "ARCHIVED"
         else:
@@ -440,6 +461,7 @@ class EditionService:
             )
         edition.modified_by = actor_id
         edition.version_no += 1
+        self._audit(event_type="EDITION_DELETED", edition=edition, actor_id=actor_id)
         self.db.commit()
 
     def history(self, edition_id: UUID) -> list[EditionVersionOut]:
@@ -454,8 +476,8 @@ class EditionService:
         items, _ = self.repo.list(page=1, page_size=100)
         return [
             {
-                "code": e.edition_code,
-                "name": e.edition_name,
+                "code": e.code,
+                "name": e.name,
                 "status": e.status,
                 "features": [
                     {"code": f.feature_code, "enabled": f.is_enabled}
@@ -470,7 +492,6 @@ class EditionService:
         ]
 
     def tenant_edition(self, edition_id: UUID) -> EditionResponse:
-        """Tenant Admin read of own edition (BR: read-only)."""
         return self.get_edition(edition_id)
 
 

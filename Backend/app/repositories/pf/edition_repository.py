@@ -12,23 +12,19 @@ class EditionRepository:
         self.db = db
 
     def _base_query(self):
-        return (
-            select(Edition)
-            .options(
-                selectinload(Edition.features),
-                selectinload(Edition.limits),
-            )
-            .where(Edition.is_deleted.is_(False))
+        return select(Edition).options(
+            selectinload(Edition.features),
+            selectinload(Edition.limits),
         )
 
     def get_by_id(self, edition_id: UUID) -> Optional[Edition]:
         return self.db.scalars(
-            self._base_query().where(Edition.edition_id == edition_id)
+            self._base_query().where(Edition.id == edition_id)
         ).first()
 
     def get_by_code(self, code: str) -> Optional[Edition]:
         return self.db.scalars(
-            self._base_query().where(Edition.edition_code == code.upper())
+            self._base_query().where(Edition.code == code.upper())
         ).first()
 
     def list(
@@ -46,14 +42,14 @@ class EditionRepository:
             like = f"%{search.strip()}%"
             q = q.where(
                 or_(
-                    Edition.edition_code.ilike(like),
-                    Edition.edition_name.ilike(like),
+                    Edition.code.ilike(like),
+                    Edition.name.ilike(like),
                 )
             )
         total = self.db.scalar(select(func.count()).select_from(q.subquery())) or 0
         items = list(
             self.db.scalars(
-                q.order_by(Edition.display_order.asc().nulls_last(), Edition.edition_code)
+                q.order_by(Edition.display_order.asc().nulls_last(), Edition.code)
                 .offset((page - 1) * page_size)
                 .limit(page_size)
             ).all()

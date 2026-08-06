@@ -1,38 +1,18 @@
-"""Apply PF-001 DDD alignment DDL (idempotent, Python-driven)."""
+-- PF-001 schema alignment to ELU-DDD-PF §3.1–3.2 (idempotent where possible)
+-- Renames edition PK/UK columns to id/code/name; adds CHECK + indexes; audit schema.
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+CREATE SCHEMA IF NOT EXISTS audit;
 
-
-def apply_pf001_ddl(db: Session) -> None:
-    """Align edition schema to ELU-DDD-PF and ensure audit tables/indexes."""
-    db.execute(text("CREATE SCHEMA IF NOT EXISTS audit"))
-    db.execute(text("CREATE SCHEMA IF NOT EXISTS core"))
-
-    exists = db.execute(
-        text(
-            """
-SELECT EXISTS (
-  SELECT 1 FROM information_schema.tables
-  WHERE table_schema = 'core' AND table_name = 'edition'
-)
-"""
-        )
-    ).scalar()
-    if not exists:
-        db.commit()
-        return
-
-    # Rename scaffold columns → DDD when needed
-    db.execute(
-        text(
-            """
-DO $mig$
+-- ---------------------------------------------------------------------------
+-- 1) Rename edition columns (scaffold → DDD) when old names still exist
+-- ---------------------------------------------------------------------------
+DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'core' AND table_name = 'edition' AND column_name = 'edition_id'
   ) THEN
+    -- Drop dependent FKs
     ALTER TABLE IF EXISTS core.tenant DROP CONSTRAINT IF EXISTS tenant_edition_id_fkey;
     ALTER TABLE IF EXISTS core.subscription DROP CONSTRAINT IF EXISTS subscription_edition_id_fkey;
     ALTER TABLE IF EXISTS core.edition_feature DROP CONSTRAINT IF EXISTS edition_feature_edition_id_fkey;
@@ -43,6 +23,7 @@ BEGIN
     ALTER TABLE core.edition RENAME COLUMN edition_code TO code;
     ALTER TABLE core.edition RENAME COLUMN edition_name TO name;
 
+    -- Recreate FKs → core.edition(id)
     ALTER TABLE core.tenant
       ADD CONSTRAINT tenant_edition_id_fkey
       FOREIGN KEY (edition_id) REFERENCES core.edition(id);
@@ -51,77 +32,63 @@ BEGIN
       ADD CONSTRAINT subscription_edition_id_fkey
       FOREIGN KEY (edition_id) REFERENCES core.edition(id);
 
-    IF EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'core' AND table_name = 'edition_feature'
-    ) THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='core' AND table_name='edition_feature') THEN
       ALTER TABLE core.edition_feature
         ADD CONSTRAINT edition_feature_edition_id_fkey
         FOREIGN KEY (edition_id) REFERENCES core.edition(id) ON DELETE CASCADE;
     END IF;
-    IF EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'core' AND table_name = 'edition_limit'
-    ) THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='core' AND table_name='edition_limit') THEN
       ALTER TABLE core.edition_limit
         ADD CONSTRAINT edition_limit_edition_id_fkey
         FOREIGN KEY (edition_id) REFERENCES core.edition(id) ON DELETE CASCADE;
     END IF;
-    IF EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'core' AND table_name = 'edition_version'
-    ) THEN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='core' AND table_name='edition_version') THEN
       ALTER TABLE core.edition_version
         ADD CONSTRAINT edition_version_edition_id_fkey
         FOREIGN KEY (edition_id) REFERENCES core.edition(id);
     END IF;
   END IF;
-END
-$mig$;
-"""
-        )
-    )
+END $$;
 
-    for stmt in (
-        "ALTER TABLE core.edition DROP COLUMN IF EXISTS max_users",
-        "ALTER TABLE core.edition DROP COLUMN IF EXISTS is_active",
-        "ALTER TABLE core.edition DROP COLUMN IF EXISTS is_deleted",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS effective_from DATE",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS effective_to DATE",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS list_price_monthly NUMERIC(18,2)",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS list_price_annual NUMERIC(18,2)",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS currency_code CHAR(3) DEFAULT 'INR'",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS published_by UUID",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS created_by UUID",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS modified_by UUID",
-        "ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS end_of_sale_date DATE",
-    ):
-        db.execute(text(stmt))
+-- Drop non-DDD denormalized / soft-delete columns on edition (status is SoT)
+ALTER TABLE core.edition DROP COLUMN IF EXISTS max_users;
+ALTER TABLE core.edition DROP COLUMN IF EXISTS is_active;
+ALTER TABLE core.edition DROP COLUMN IF EXISTS is_deleted;
 
-    db.execute(
-        text(
-            """
-DO $ck$
+-- Ensure DDD audit / commercial columns
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS effective_from DATE;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS effective_to DATE;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS list_price_monthly NUMERIC(18,2);
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS list_price_annual NUMERIC(18,2);
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS currency_code CHAR(3) DEFAULT 'INR';
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS published_by UUID;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS created_by UUID;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS modified_by UUID;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS end_of_sale_date DATE;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS version_no INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS created_on TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE core.edition ADD COLUMN IF NOT EXISTS modified_on TIMESTAMPTZ;
+
+-- Status CHECK
+DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_edition_status') THEN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'ck_edition_status'
+  ) THEN
     ALTER TABLE core.edition
       ADD CONSTRAINT ck_edition_status
       CHECK (status IN ('DRAFT','ACTIVE','DEPRECATED','ARCHIVED','CANCELLED'));
   END IF;
-END
-$ck$;
-"""
-        )
-    )
+END $$;
 
-    db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uk_edition_code ON core.edition(code)"))
-    db.execute(text("CREATE INDEX IF NOT EXISTS idx_edition_status ON core.edition(status)"))
+CREATE UNIQUE INDEX IF NOT EXISTS uk_edition_code ON core.edition(code);
+CREATE INDEX IF NOT EXISTS idx_edition_status ON core.edition(status);
 
-    db.execute(
-        text(
-            """
+-- ---------------------------------------------------------------------------
+-- 2) Child tables (DDD)
+-- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS core.feature_catalogue (
     id UUID PRIMARY KEY,
     feature_code VARCHAR(64) NOT NULL UNIQUE,
@@ -133,13 +100,8 @@ CREATE TABLE IF NOT EXISTS core.feature_catalogue (
     version_no INTEGER NOT NULL DEFAULT 1,
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_on TIMESTAMPTZ
-)
-"""
-        )
-    )
-    db.execute(
-        text(
-            """
+);
+
 CREATE TABLE IF NOT EXISTS core.edition_feature (
     id UUID PRIMARY KEY,
     edition_id UUID NOT NULL REFERENCES core.edition(id) ON DELETE CASCADE,
@@ -149,13 +111,8 @@ CREATE TABLE IF NOT EXISTS core.edition_feature (
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_on TIMESTAMPTZ,
     UNIQUE (edition_id, feature_code)
-)
-"""
-        )
-    )
-    db.execute(
-        text(
-            """
+);
+
 CREATE TABLE IF NOT EXISTS core.edition_limit (
     id UUID PRIMARY KEY,
     edition_id UUID NOT NULL REFERENCES core.edition(id) ON DELETE CASCADE,
@@ -168,13 +125,8 @@ CREATE TABLE IF NOT EXISTS core.edition_limit (
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_on TIMESTAMPTZ,
     UNIQUE (edition_id, limit_code)
-)
-"""
-        )
-    )
-    db.execute(
-        text(
-            """
+);
+
 CREATE TABLE IF NOT EXISTS core.edition_version (
     id UUID PRIMARY KEY,
     edition_id UUID NOT NULL REFERENCES core.edition(id),
@@ -184,29 +136,15 @@ CREATE TABLE IF NOT EXISTS core.edition_version (
     actor_id UUID,
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (edition_id, version_no)
-)
-"""
-        )
-    )
-    db.execute(
-        text(
-            "CREATE INDEX IF NOT EXISTS idx_edition_feature_edition ON core.edition_feature(edition_id)"
-        )
-    )
-    db.execute(
-        text(
-            "CREATE INDEX IF NOT EXISTS idx_edition_limit_edition ON core.edition_limit(edition_id)"
-        )
-    )
-    db.execute(
-        text(
-            "CREATE INDEX IF NOT EXISTS idx_edition_version_edition ON core.edition_version(edition_id)"
-        )
-    )
+);
 
-    db.execute(
-        text(
-            """
+CREATE INDEX IF NOT EXISTS idx_edition_feature_edition ON core.edition_feature(edition_id);
+CREATE INDEX IF NOT EXISTS idx_edition_limit_edition ON core.edition_limit(edition_id);
+CREATE INDEX IF NOT EXISTS idx_edition_version_edition ON core.edition_version(edition_id);
+
+-- ---------------------------------------------------------------------------
+-- 3) Platform / tenant audit events (ELU-DDD-PF §8; tenant_id NULL for platform)
+-- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS audit.audit_event (
     id UUID PRIMARY KEY,
     tenant_id UUID NULL,
@@ -221,18 +159,9 @@ CREATE TABLE IF NOT EXISTS audit.audit_event (
     session_id UUID,
     payload_json TEXT,
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW()
-)
-"""
-        )
-    )
-    db.execute(
-        text(
-            "CREATE INDEX IF NOT EXISTS idx_audit_event_entity ON audit.audit_event(entity_type, entity_id)"
-        )
-    )
-    db.execute(
-        text(
-            "CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit.audit_event(event_type)"
-        )
-    )
-    db.commit()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_event_entity
+  ON audit.audit_event(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_event_type
+  ON audit.audit_event(event_type);

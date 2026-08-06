@@ -1,4 +1,5 @@
 from app.models.pf.entities import (
+    AuditEvent,
     Edition,
     EditionFeature,
     EditionLimit,
@@ -15,6 +16,7 @@ from app.models.pf.entities import (
 )
 
 __all__ = [
+    "AuditEvent",
     "Edition",
     "EditionFeature",
     "EditionLimit",

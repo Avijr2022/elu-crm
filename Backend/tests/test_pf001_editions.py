@@ -1,4 +1,6 @@
-"""PF-001 Edition Management tests (ELU-BFS-PF-001 / ELU-TST-PF related)."""
+"""PF-001 Edition Management tests — repeatable (unique codes per run)."""
+
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,7 +10,7 @@ from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.main import app
-from app.models.pf import Role, User
+from app.models.pf import AuditEvent, Role, User
 
 
 @pytest.fixture(scope="module")
@@ -20,7 +22,6 @@ def client():
 @pytest.fixture(scope="module")
 def platform_token(client: TestClient) -> str:
     settings = get_settings()
-    # Ensure admin is PLATFORM_ADMIN (re-seed path may have upgraded)
     db = SessionLocal()
     try:
         admin = db.scalars(
@@ -65,6 +66,33 @@ def auth_header(platform_token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {platform_token}"}
 
 
+def _unique_code(prefix: str = "T") -> str:
+    return f"{prefix}{uuid.uuid4().hex[:10].upper()}"
+
+
+def _baseline_limits() -> list[dict]:
+    return [
+        {
+            "limit_code": "MAX_USERS",
+            "limit_name": "Maximum users",
+            "limit_value": "5",
+            "limit_unit": "users",
+        },
+        {
+            "limit_code": "MAX_STORAGE_GB",
+            "limit_name": "Storage",
+            "limit_value": "5",
+            "limit_unit": "GB",
+        },
+        {
+            "limit_code": "MAX_ROLES",
+            "limit_name": "Roles",
+            "limit_value": "5",
+            "limit_unit": "roles",
+        },
+    ]
+
+
 def test_list_editions(client: TestClient, auth_header: dict) -> None:
     resp = client.get("/api/v1/platform/editions", headers=auth_header)
     assert resp.status_code == 200, resp.text
@@ -82,46 +110,28 @@ def test_get_tenant_edition(client: TestClient, auth_header: dict) -> None:
 
 
 def test_create_publish_deprecate_flow(client: TestClient, auth_header: dict) -> None:
+    code = _unique_code("PUB")
     create = client.post(
         "/api/v1/platform/editions",
         headers=auth_header,
         json={
-            "code": "PF001_TEST",
+            "code": code,
             "name": "PF001 Test Edition",
             "description": "Automated test draft",
             "display_order": 99,
             "features": [
                 {"feature_code": "CRM_LEAD", "is_enabled": True, "is_visible": True}
             ],
-            "limits": [
-                {
-                    "limit_code": "MAX_USERS",
-                    "limit_name": "Maximum users",
-                    "limit_value": "5",
-                    "limit_unit": "users",
-                },
-                {
-                    "limit_code": "MAX_STORAGE_GB",
-                    "limit_name": "Storage",
-                    "limit_value": "5",
-                    "limit_unit": "GB",
-                },
-                {
-                    "limit_code": "MAX_ROLES",
-                    "limit_name": "Roles",
-                    "limit_value": "5",
-                    "limit_unit": "roles",
-                },
-            ],
+            "limits": _baseline_limits(),
         },
     )
     assert create.status_code == 201, create.text
     edition = create.json()
     assert edition["status"] == "DRAFT"
+    assert edition["code"] == code
     edition_id = edition["id"]
     version = edition["version_no"]
 
-    # Publish without bump conflict
     pub = client.post(
         f"/api/v1/platform/editions/{edition_id}/publish",
         headers=auth_header,
@@ -139,6 +149,21 @@ def test_create_publish_deprecate_flow(client: TestClient, auth_header: dict) ->
     assert dep.status_code == 200, dep.text
     assert dep.json()["status"] == "DEPRECATED"
 
+    # Audit events persisted
+    db = SessionLocal()
+    try:
+        events = list(
+            db.scalars(
+                select(AuditEvent).where(AuditEvent.entity_id == uuid.UUID(edition_id))
+            ).all()
+        )
+        types = {e.event_type for e in events}
+        assert "EDITION_CREATED" in types
+        assert "EDITION_PUBLISHED" in types
+        assert "EDITION_DEACTIVATED" in types
+    finally:
+        db.close()
+
 
 def test_publish_requires_feature_and_limit(
     client: TestClient, auth_header: dict
@@ -147,7 +172,7 @@ def test_publish_requires_feature_and_limit(
         "/api/v1/platform/editions",
         headers=auth_header,
         json={
-            "code": "PF001_EMPTY",
+            "code": _unique_code("EMP"),
             "name": "Empty Draft",
             "features": [],
             "limits": [],
@@ -172,7 +197,7 @@ def test_limit_below_community_baseline(
         "/api/v1/platform/editions",
         headers=auth_header,
         json={
-            "code": "PF001_LOW",
+            "code": _unique_code("LOW"),
             "name": "Too Low",
             "features": [
                 {"feature_code": "CRM_LEAD", "is_enabled": True, "is_visible": True}
@@ -202,3 +227,60 @@ def test_openapi_includes_editions(client: TestClient) -> None:
     paths = spec["paths"]
     assert "/api/v1/platform/editions" in paths
     assert "/api/v1/tenant/edition" in paths
+
+
+def test_search_and_history(client: TestClient, auth_header: dict) -> None:
+    code = _unique_code("SRCH")
+    create = client.post(
+        "/api/v1/platform/editions",
+        headers=auth_header,
+        json={
+            "code": code,
+            "name": "Searchable Edition",
+            "features": [
+                {"feature_code": "CRM_LEAD", "is_enabled": True, "is_visible": True}
+            ],
+            "limits": _baseline_limits(),
+        },
+    )
+    assert create.status_code == 201, create.text
+    edition_id = create.json()["id"]
+    version = create.json()["version_no"]
+    pub = client.post(
+        f"/api/v1/platform/editions/{edition_id}/publish",
+        headers=auth_header,
+        json={"version_no": version},
+    )
+    assert pub.status_code == 200, pub.text
+
+    search = client.get(
+        "/api/v1/platform/editions/search",
+        headers=auth_header,
+        params={"q": code[:6]},
+    )
+    assert search.status_code == 200, search.text
+    assert any(i["code"] == code for i in search.json()["items"])
+
+    hist = client.get(
+        f"/api/v1/platform/editions/{edition_id}/history",
+        headers=auth_header,
+    )
+    assert hist.status_code == 200, hist.text
+    assert len(hist.json()) >= 1
+
+
+def test_schema_ddd_columns() -> None:
+    from sqlalchemy import inspect
+
+    from app.db.session import engine
+
+    insp = inspect(engine)
+    cols = {c["name"] for c in insp.get_columns("edition", schema="core")}
+    assert {"id", "code", "name", "status", "version_no", "created_on"} <= cols
+    assert "edition_id" not in cols
+    assert "edition_code" not in cols
+    assert "max_users" not in cols
+    checks = insp.get_check_constraints("edition", schema="core")
+    assert any(c["name"] == "ck_edition_status" for c in checks)
+    indexes = {i["name"] for i in insp.get_indexes("edition", schema="core")}
+    assert "idx_edition_status" in indexes

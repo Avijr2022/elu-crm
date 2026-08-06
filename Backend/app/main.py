@@ -39,6 +39,9 @@ async def lifespan(_: FastAPI):
 
     db = SessionLocal()
     try:
+        from app.db.migrate_pf001 import apply_pf001_ddl
+
+        apply_pf001_ddl(db)
         seed_platform(db)
     finally:
         db.close()

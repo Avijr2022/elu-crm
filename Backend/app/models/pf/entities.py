@@ -40,23 +40,21 @@ class SoftDeleteMixin:
     version_no: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
 
 
-class Edition(Base, TimestampMixin, SoftDeleteMixin):
-    """Platform-global edition catalogue (ELU-DDD-PF §3.1).
-
-    Physical PK/UK columns retain scaffold names (`edition_id`, `edition_code`)
-    for tenant/subscription FK compatibility; API DTOs expose DDD names id/code/name.
-    """
+class Edition(Base, TimestampMixin):
+    """Platform-global edition catalogue (ELU-DDD-PF §3.1). No tenant_id / no RLS."""
 
     __tablename__ = "edition"
     __table_args__ = {"schema": "core"}
 
-    edition_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    edition_code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
-    edition_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    code: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    max_users: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    version_no: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1")
+    )
     status: Mapped[str] = mapped_column(
         String(32), nullable=False, server_default="DRAFT"
     )
@@ -124,7 +122,7 @@ class EditionFeature(Base, TimestampMixin):
     )
     edition_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("core.edition.edition_id", ondelete="CASCADE"),
+        ForeignKey("core.edition.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -155,7 +153,7 @@ class EditionLimit(Base, TimestampMixin):
     )
     edition_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("core.edition.edition_id", ondelete="CASCADE"),
+        ForeignKey("core.edition.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -185,7 +183,7 @@ class EditionVersion(Base):
     )
     edition_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("core.edition.edition_id"),
+        ForeignKey("core.edition.id"),
         nullable=False,
         index=True,
     )
@@ -202,6 +200,39 @@ class EditionVersion(Base):
     edition: Mapped["Edition"] = relationship(back_populates="versions")
 
 
+class AuditEvent(Base):
+    """ELU-DDD-PF §8 — tenant_id NULL for platform-global edition events."""
+
+    __tablename__ = "audit_event"
+    __table_args__ = {"schema": "audit"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    event_category: Mapped[str] = mapped_column(String(64), nullable=False)
+    actor_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    actor_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    ip_address: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    session_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    payload_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "tenant"
     __table_args__ = {"schema": "core"}
@@ -213,7 +244,7 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     tenant_name: Mapped[str] = mapped_column(String(200), nullable=False)
     legal_name: Mapped[str] = mapped_column(String(250), nullable=False)
     edition_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("core.edition.edition_id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("core.edition.id"), nullable=False
     )
     organization_type: Mapped[str] = mapped_column(String(50), nullable=False)
     registration_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -357,7 +388,7 @@ class Subscription(Base, TimestampMixin, SoftDeleteMixin):
         UUID(as_uuid=True), ForeignKey("core.tenant.tenant_id"), nullable=False, index=True
     )
     edition_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("core.edition.edition_id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("core.edition.id"), nullable=False
     )
     subscription_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     plan_type: Mapped[str] = mapped_column(String(30), nullable=False)

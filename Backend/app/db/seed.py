@@ -171,15 +171,14 @@ def _ensure_editions(db: Session) -> dict[str, Edition]:
     result: dict[str, Edition] = {}
     for code, spec in EDITION_SPECS.items():
         edition = db.scalars(
-            select(Edition).where(Edition.edition_code == code)
+            select(Edition).where(Edition.code == code)
         ).first()
         if edition is None:
             edition = Edition(
-                edition_id=uuid4(),
-                edition_code=code,
-                edition_name=spec["name"],
+                id=uuid4(),
+                code=code,
+                name=spec["name"],
                 description=spec["description"],
-                max_users=spec["max_users"],
                 status="ACTIVE",
                 display_order=spec["display_order"],
                 currency_code="INR",
@@ -189,9 +188,8 @@ def _ensure_editions(db: Session) -> dict[str, Edition]:
             db.add(edition)
             db.flush()
         else:
-            edition.edition_name = spec["name"]
+            edition.name = spec["name"]
             edition.description = spec["description"]
-            edition.max_users = spec["max_users"]
             edition.display_order = spec["display_order"]
             if edition.status not in ("DEPRECATED", "ARCHIVED", "CANCELLED"):
                 edition.status = "ACTIVE"
@@ -255,7 +253,7 @@ def seed_platform(db: Session) -> None:
         tenant_code="EIIP001",
         tenant_name="Euphoria",
         legal_name="Euphoria Infotech (I) Limited",
-        edition_id=professional.edition_id,
+        edition_id=professional.id,
         organization_type="Pvt Ltd",
         gstin="19AABCE1234F1Z5",
         pan="AABCE1234F",
@@ -299,7 +297,7 @@ def seed_platform(db: Session) -> None:
     db.add(
         Subscription(
             tenant_id=tenant.tenant_id,
-            edition_id=professional.edition_id,
+            edition_id=professional.id,
             subscription_number="SUB-2026-000001",
             plan_type="Yearly",
             start_date=date.today(),

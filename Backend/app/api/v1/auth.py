@@ -65,7 +65,7 @@ def current_tenant(
         tenant_code=tenant.tenant_code,
         tenant_name=tenant.tenant_name,
         status=tenant.status,
-        edition_code=tenant.edition.edition_code,
+        edition_code=tenant.edition.code,
         currency_code=tenant.settings.currency_code if tenant.settings else "INR",
         time_zone=tenant.settings.time_zone if tenant.settings else "Asia/Kolkata",
     )
