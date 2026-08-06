@@ -105,7 +105,9 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | Audit logging | `audit.audit_event` | mutations | — | audit asserts in publish flow |
 
 **Coverage:** **100%** of PF-001 BFS §10 APIs and §11 screens (List/Create/Edit/View/Search/Publish/History).  
-**QA:** [ELU-QA-PF001 v2.0](../ELU-QA-PF001-Edition-Management-Release-Audit.md) — **RELEASE APPROVED**.
+**QA:** [ELU-QA-PF001 v2.0](../ELU-QA-PF001-Edition-Management-Release-Audit.md) — **RELEASE APPROVED**.  
+**Baseline:** Release **Phase-2-PF001** · Git tag `Phase-2-PF001` · Notes [ELU-REL-PF001](../ELU-REL-PF001-Phase-2-PF001-Release-Notes.md) · [CHANGELOG](../CHANGELOG.md).  
+**Rule:** Do not modify PF-001 unless a defect is reported.
 
 **Code:** `Backend/app/api/v1/pf/editions.py`, `edition_service.py`, `audit_service.py`  
 **SQL:** `009_edition_ddd_align_pf001.sql`, `migrate_pf001.py`  
