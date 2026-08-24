@@ -9,7 +9,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationAppError
-from app.models.pf import AuditEvent, Organization, Permission, RolePermission, TenantAddress
+from app.models.pf import AuditEvent, Organization, TenantAddress
 from app.schemas.pf.organization import (
     OrganizationCreate,
     OrganizationHierarchyNode,
@@ -35,37 +35,15 @@ def _mask_tax_payload(payload: Optional[dict[str, Any]]) -> Optional[dict[str, A
     return out
 
 
-def require_org_permission(db: Session, role_id: UUID | None, permission_code: str) -> None:
-    if role_id is None:
-        raise ForbiddenError("Organization permission not permitted", req_id="PF-004")
-
-    has_perm = bool(
-        db.scalars(
-            select(Permission)
-            .join(RolePermission, RolePermission.permission_id == Permission.permission_id)
-            .where(
-                RolePermission.role_id == role_id,
-                Permission.permission_code == permission_code,
-            )
-        ).first()
-    )
-    if not has_perm:
-        raise ForbiddenError("Organization permission not permitted", req_id="PF-004")
+def require_org_read(role_code: str) -> None:
+    if role_code not in {"PLATFORM_ADMIN", "TENANT_ADMIN", "FINANCE_USER", "SALES_MANAGER"}:
+        raise ForbiddenError("Organization read not permitted", req_id="PF-004")
 
 
-def require_org_read(db: Session, role_id: UUID | None) -> None:
-    require_org_permission(db, role_id, "organization.read")
-
-
-def require_org_write(
-    db: Session,
-    role_id: UUID | None,
-    role_code: str | None,
-    permission_code: str,
-) -> None:
-    if role_code == "PLATFORM_ADMIN":
+def require_org_write(role_code: str) -> None:
+    # BFS-PF-004 §12: Platform Admin is read-only; Tenant Admin mutates.
+    if role_code != "TENANT_ADMIN":
         raise ForbiddenError("Organization write not permitted", req_id="PF-004")
-    require_org_permission(db, role_id, permission_code)
 
 
 class OrganizationService:

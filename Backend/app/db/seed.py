@@ -412,15 +412,9 @@ def _ensure_platform_admin(
             )
     db.flush()
 
-    # Grant PF-004 organization permissions to admin and business roles (idempotent)
+    # Grant PF-004 organization permissions to admin roles (idempotent)
     org_perm_codes = [c for c, _, _ in PERMISSIONS if c.startswith("organization.")]
-    role_permission_map = {
-        "PLATFORM_ADMIN": org_perm_codes,
-        "TENANT_ADMIN": org_perm_codes,
-        "FINANCE_USER": ["organization.read", "organization.export"],
-        "SALES_MANAGER": ["organization.read"],
-    }
-    for role_code, perm_codes in role_permission_map.items():
+    for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
         role = db.scalars(
             select(Role).where(
                 Role.tenant_id == tenant.tenant_id,
@@ -429,7 +423,7 @@ def _ensure_platform_admin(
         ).first()
         if role is None:
             continue
-        for pcode in perm_codes:
+        for pcode in org_perm_codes:
             perm = db.scalars(
                 select(Permission).where(Permission.permission_code == pcode)
             ).first()
