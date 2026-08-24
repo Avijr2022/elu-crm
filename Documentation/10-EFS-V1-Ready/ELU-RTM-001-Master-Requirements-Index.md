@@ -25,7 +25,6 @@
 | 1.6 | 2026-08-06 | EIIP / PMO | PF-003 RELEASE APPROVED — baseline Phase-2-PF003 |
 | 1.7 | 2026-08-06 | EIIP / QA | PF-003A Enterprise Tenant Isolation traceability (QA PASS — await RELEASE APPROVED) |
 | 1.8 | 2026-08-06 | EIIP / PMO | PF-003A RELEASE APPROVED — baseline Phase-2-PF003A; start PF-004 |
-| 1.9 | 2026-08-06 | EIIP / Security / QA | PF-004 organization permission-grain enforcement verified in pytest; UI/data gaps remain |
 
 ## 1. Requirement ID Ranges
 
@@ -218,7 +217,6 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | BR-PF-030 GSTIN | schema validator | PATCH | `test_ac_pf_004_02_invalid_gstin` |
 | BR-PF-031 no delete ROOT | service | DELETE | `test_ac_pf_004_03_root_cannot_delete` |
 | BR-PF-033 FY month | CHECK + schema | PATCH | profile update test |
-| Permission grains `organization.*` | `role_permission` + `permission` | `/api/v1/org/organizations*` | `test_pf004_org_permissions_seeded_for_business_roles` |
 | List/Search/Export/Hierarchy | BFS §10 | `/api/v1/org/organizations*` | list + hierarchy tests |
 | Flutter §11 | Organizations tab | — | manual / analyze |
 

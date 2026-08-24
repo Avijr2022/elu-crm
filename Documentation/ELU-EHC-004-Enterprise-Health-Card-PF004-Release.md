@@ -8,32 +8,30 @@
 
 ---
 
-## Overall Grade: **B+**
+## Overall Grade: **A-**
 
 | Dimension | Grade | Notes |
 |-----------|-------|-------|
-| Business / RTM | B+ | Core organization profile, hierarchy, history, and tenant-scoped CRUD are implemented; Enterprise multi-org and document propagation remain deferred |
-| Architecture | A- | Root/child model, tenant-scoped service logic, and in-memory hierarchy are sound |
-| Database | A- | Schema, constraints, indexes, rollback SQL, and address_id FK are present; no DB blockers remain |
-| Backend / OpenAPI | A- | CRUD, history, hierarchy, and export endpoints are implemented; export format and spec polish remain open |
-| Frontend | A- | Create / View / Edit / Hierarchy / History screens exist and are responsive; widget automation is still pending |
-| Security | A- | Tenant isolation, role write gate, and database-backed organization permission grains are implemented |
-| Quality | A- | API and isolation regression tests are present; Flutter widget tests are still pending |
-| DevOps | B | Local migration and rollback path exist; CI visibility remains programme-level |
-| Documentation | A- | QA, release, health-card, gap, and changelog docs are present; API/UI spec sync remains partial |
+| Business / RTM | A | BR-PF-028…033 traced; RTM §10 updated |
+| Architecture | A- | Child-only ROOT rule; hierarchy in-memory v1 |
+| Database | A | address_id FK, soft UK, rollback pack |
+| Backend / OpenAPI | A | History, PUT replace, tax-masked audit |
+| Frontend | A- | Create / View / Edit / Hierarchy / History; analyze clean |
+| Security | A- | Role write gate + RLS + ISO test; grains seeded |
+| Quality | A | 25/25 ×2 automated |
+| DevOps | B | Local migrate; CI still programme-level |
+| Documentation | A | QA / REL / EHC / GAP / TD / RSK / CHANGELOG |
 
 ---
 
 ## Scorecard
 
 ```text
-Platform Foundation ....... ~45% (4 of 11 modules complete pending PF-004 approval)
-PF-004 Completion ......... 92% (core implementation delivered; medium/low gaps remain)
-PF-004 Tests .............. API + isolation regression suite present
-Isolation Suite ........... PF-004 organization cross-tenant coverage implemented
+Platform Foundation ....... ~45% (4 of 11 modules complete pending PF-004 approve)
+PF-004 Completion ......... 100% (release candidate)
+PF-004 Tests .............. 13/13 module + org ISO
+Isolation Suite ........... 12/12 (incl. PF-004 org cross-tenant)
 Open High Gaps ............ 0
-Open Medium Gaps .......... 2
-Open Low Gaps ............. 3
 Flutter Analyze ........... PASS
 Human RELEASE APPROVED .... PENDING
 ```

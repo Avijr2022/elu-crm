@@ -28,7 +28,6 @@
 | 1.9 | 2026-08-06 | EIIP / Security / QA | PF-003A Enterprise Tenant Isolation QA PASS — await RELEASE APPROVED before PF-004 |
 | 1.10 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF003A** RELEASE APPROVED; start PF-004 Organization Management |
 | 1.11 | 2026-08-06 | EIIP / Architecture | PF-004 Mid-Phase Review ELU-MPR-PF004; Health Card ELU-EHC-003; continue build |
-| 1.12 | 2026-08-06 | EIIP / Security / QA | PF-004 permission-grain enforcement completed and verified via pytest; remain UI/data gaps only |
 
 ---
 
@@ -91,10 +90,10 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | **PF-002 Tenant Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF002` |
 | **PF-003 Subscription Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003` |
 | **PF-003A Enterprise Tenant Isolation** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003A` |
-| **PF-004 Organization Management** | 🟡 In Progress | 92% | Core profile CRUD, hierarchy, history, RLS, permission grains, and tests implemented; UI/data gaps remain before final baseline |
-| Database (PostgreSQL schema) | 🟡 In Progress | 90% | RLS FORCE via PF-003A plus organization constraints and rollback SQL present |
-| FastAPI implementation | 🟡 In Progress | 92% | PF-003A RLS session binding live; export and permission-grain polish remain |
-| Flutter implementation | 🟡 In Progress | 85% | Organizations list/create/view/edit/hierarchy/history are present; widget tests pending |
+| **PF-004 Organization Management** | 🟡 In Progress | 60% | Mid-phase CONDITIONAL PASS (ELU-MPR-PF004); gaps before QA |
+| Database (PostgreSQL schema) | 🟡 In Progress | 75% | RLS FORCE via PF-003A |
+| FastAPI implementation | 🟡 In Progress | 70% | PF-003A RLS session binding live |
+| Flutter implementation | 🟡 In Progress | 55% | Subscriptions + Tenants + Editions baselined |
 | v1.0 UAT (Euphoria happy path) | ⬜ Not Started | 0% | Lead → Payment |
 
 ### 3.1 Module Status List (Phase 2 Platform Foundation)
@@ -123,7 +122,7 @@ PF-001 Edition              ██████████ 100%
 PF-002 Tenant               ██████████ 100%
 PF-003 Subscription         ██████████ 100%
 PF-003A Tenant Isolation    ██████████ 100% RELEASE APPROVED
-PF-004 Organization         ████████░░  92%   ← CORE IMPLEMENTATION DELIVERED + RBAC GRAIN VERIFIED
+PF-004 Organization         ██████░░░░  60%   ← MID-PHASE REVIEW DONE
 PF-005 Branch               ░░░░░░░░░░   0%
 PF-006 Department           ░░░░░░░░░░   0%
 PF-007 Business Unit        ░░░░░░░░░░   0%
@@ -140,7 +139,7 @@ API (PF platform paths)    : ~35 paths of future PF surface (growing)
 Database (PF delivered)    : ~55% of PF schema surface
 Flutter (PF screens)       : ~40% of PF UI surface
 Documentation (PF slice)   : 95% for delivered modules
-Testing (PF suites)        : 34 automated API tests PASS; Flutter tests 0
+Testing (PF suites)        : 32 automated API tests PASS; Flutter tests 0
 Overall CRM Progress       : ~18%
 ```
 
