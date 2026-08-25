@@ -1,0 +1,17 @@
+name: Main Config
+version: 1.0.0
+schema: v1
+
+models:
+  - title: "DeepSeek V4 Flash"
+    provider: "deepseek"
+    model: "deepseek-v4-flash"
+    apiBase: "https://api.deepseek.com/v1"
+    apiKey: "[REDACTED]"
+
+tabAutoCompleteModel:
+  title: "DeepSeek Autocomplete"
+  provider: "deepseek"
+  model: "deepseek-v4-flash"
+  apiBase: "https://api.deepseek.com/v1"
+  apiKey: "[REDACTED]"
