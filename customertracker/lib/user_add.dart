@@ -84,6 +84,29 @@ class MyCustomFormState extends State<MyCustomForm> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController passwordController = TextEditingController();
 
+  // Dropdown 3.0+ explicit state control parameters setup
+  final List<String> items = ['Admin', 'Manager', 'Employee', 'Guest'];
+  String? selectedValue;
+  late final ValueNotifier<String?> selectedValueNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedValueNotifier = ValueNotifier<String?>(selectedValue);
+    selectedValueNotifier.addListener(() {
+      setState(() {
+        selectedValue = selectedValueNotifier.value;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    passwordController.dispose();
+    selectedValueNotifier.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -126,9 +149,7 @@ class MyCustomFormState extends State<MyCustomForm> {
               Container(
                 padding: const EdgeInsets.only(left: 10.0, top: 0.0),
                 height: 50,
-                decoration: const BoxDecoration(
-                    // color: Color.fromARGB(255, 214, 214, 135),
-                    ),
+                decoration: const BoxDecoration(),
                 child: TextFormField(
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.person),
@@ -140,9 +161,7 @@ class MyCustomFormState extends State<MyCustomForm> {
               Container(
                 padding: const EdgeInsets.only(left: 10.0, top: 0.0),
                 height: 50,
-                decoration: const BoxDecoration(
-                    // color: Color.fromARGB(255, 214, 214, 135),
-                    ),
+                decoration: const BoxDecoration(),
                 child: const TextField(
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.person),
@@ -154,9 +173,7 @@ class MyCustomFormState extends State<MyCustomForm> {
               Container(
                 padding: const EdgeInsets.only(left: 10.0, top: 0.0),
                 height: 50,
-                decoration: const BoxDecoration(
-                    // color: Color.fromARGB(255, 214, 214, 135),
-                    ),
+                decoration: const BoxDecoration(),
                 child: const TextField(
                   decoration: InputDecoration(
                     prefixIcon: Icon(FontAwesomeIcons.userTie),
@@ -168,9 +185,7 @@ class MyCustomFormState extends State<MyCustomForm> {
               Container(
                 padding: const EdgeInsets.only(left: 10.0, top: 0.0),
                 height: 50,
-                decoration: const BoxDecoration(
-                    // color: Color.fromARGB(255, 214, 214, 135),
-                    ),
+                decoration: const BoxDecoration(),
                 child: const TextField(
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.email),
@@ -182,9 +197,7 @@ class MyCustomFormState extends State<MyCustomForm> {
               Container(
                 padding: const EdgeInsets.only(left: 10.0, top: 0.0),
                 height: 50,
-                decoration: const BoxDecoration(
-                    // color: Color.fromARGB(255, 214, 214, 135),
-                    ),
+                decoration: const BoxDecoration(),
                 child: const TextField(
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.phone),
@@ -202,7 +215,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.key),
                     suffixIcon: Icon(Icons.remove_red_eye),
-                    hintText: 'Enter a passowrd',
+                    hintText: 'Enter a password',
                     labelText: 'Password',
                   ),
                 ),
@@ -221,77 +234,23 @@ class MyCustomFormState extends State<MyCustomForm> {
                       ),
                     ),
                     items: items
-                        .map((item) => DropdownMenuItem(
+                        .map((item) => DropdownItem<String>(
                               value: item,
+                              height:
+                                  40, // Height explicitly configured inside items loop syntax
                               child: Text(
                                 item,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                ),
+                                style: const TextStyle(fontSize: 14),
                               ),
                             ))
                         .toList(),
-                    value: selectedValue,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedValue = value as String;
-                      });
-                    },
-                    buttonStyleData: const ButtonStyleData(
-                      height: 40,
-                      width: 230,
-                    ),
+                    valueListenable: selectedValueNotifier,
                     dropdownStyleData: const DropdownStyleData(
                       maxHeight: 200,
                     ),
-                    menuItemStyleData: const MenuItemStyleData(
-                      height: 40,
-                    ),
-                    dropdownSearchData: DropdownSearchData(
-                      searchController: textEditingController,
-                      searchInnerWidgetHeight: 40,
-                      searchInnerWidget: Container(
-                        height: 40,
-                        padding: const EdgeInsets.only(
-                          top: 8,
-                          bottom: 4,
-                          right: 8,
-                          left: 8,
-                        ),
-                        child: TextFormField(
-                          expands: true,
-                          maxLines: null,
-                          controller: textEditingController,
-                          decoration: InputDecoration(
-                            icon: const Icon(Icons.gpp_good),
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
-                            hintText: 'Search role...',
-                            hintStyle: const TextStyle(fontSize: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                      searchMatchFn: (item, searchValue) {
-                        return (item.value.toString().contains(searchValue));
-                      },
-                    ),
-                    //This to clear the search value when you close the menu
-                    onMenuStateChange: (isOpen) {
-                      if (!isOpen) {
-                        textEditingController.clear();
-                      }
-                    },
+                    menuItemStyleData: const MenuItemStyleData(),
                   ),
                 ),
-              ),
-              const Divider(
-                color: Color.fromARGB(255, 91, 92, 92),
               ),
             ],
           ),
@@ -300,14 +259,3 @@ class MyCustomFormState extends State<MyCustomForm> {
     );
   }
 }
-
-final List<String> items = [
-  'Select Role',
-  'Account Owner',
-  'Manager',
-  'L1 User',
-  'L2 User',
-];
-
-String? selectedValue;
-final TextEditingController textEditingController = TextEditingController();
