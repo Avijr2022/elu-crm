@@ -13,7 +13,9 @@ from app.db.seed import seed_platform
 from app.db.session import SessionLocal, engine
 from app.middleware.request_id import RequestIdMiddleware
 from app.models import pf as _pf_models  # noqa: F401 — register models
-from app.models import crm as _crm_models  # noqa: F401 — register CRM models
+from app.models import prj as _prj_models  # noqa: F401 — register PRJ models
+from app.models import fin as _fin_models  # noqa: F401 — register FIN models
+from app.models import sal as _sal_models  # noqa: F401 — register SAL models
 from app.schemas.pf.auth import HealthResponse
 
 
@@ -54,6 +56,18 @@ async def lifespan(_: FastAPI):
         apply_pf003_ddl(db)
         apply_pf003a_ddl(db)
         apply_pf004_ddl(db)
+        from app.db.migrate_crm import apply_crm_ddl
+
+        apply_crm_ddl(db)
+        from app.db.migrate_sal import apply_sal_ddl
+
+        apply_sal_ddl(db)
+        from app.db.migrate_fin import apply_fin_ddl
+
+        apply_fin_ddl(db)
+        from app.db.migrate_prj import apply_prj_ddl
+
+        apply_prj_ddl(db)
         seed_platform(db)
         clear_rls_context(db)
     finally:

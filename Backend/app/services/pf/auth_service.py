@@ -12,6 +12,7 @@ from app.core.security import (
     verify_password,
 )
 from app.db.rls_context import bind_rls_context
+from app.repositories.pf.permission_repository import permissions_for_role
 from app.repositories.pf.user_repository import TenantRepository, UserRepository
 from app.schemas.pf.auth import TokenResponse, UserMeResponse
 
@@ -113,6 +114,7 @@ class AuthService:
             raise UnauthorizedError("User not found", req_id="REQ-PF-051")
 
         settings = user.tenant.settings
+        perms = sorted(permissions_for_role(self.db, user.role_id))
         return UserMeResponse(
             user_id=user.user_id,
             tenant_id=user.tenant_id,
@@ -122,6 +124,7 @@ class AuthService:
             display_name=user.display_name,
             role_code=user.role.role_code,
             role_name=user.role.role_name,
+            permissions=perms,
             organization_name=user.organization.organization_name,
             currency_code=settings.currency_code if settings else "INR",
             time_zone=settings.time_zone if settings else "Asia/Kolkata",

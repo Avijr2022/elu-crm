@@ -8,6 +8,7 @@ import 'package:customertracker/lead_category.dart';
 import 'package:customertracker/lead_event_calendar.dart';
 // import 'package:customertracker/lead_add_followup.dart';
 import 'package:customertracker/home.dart';
+import 'package:customertracker/screens/payment_receipts_list.dart';
 import 'package:customertracker/lead_report.dart';
 import 'package:customertracker/main.dart';
 import 'package:customertracker/my_profile.dart';
@@ -17,6 +18,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'add_lead.dart';
 import 'lead_state.dart';
 import 'settings.dart';
+import 'package:customertracker/screens/branding_primary_color.dart';
 
 class NavDrawer extends StatelessWidget {
   const NavDrawer({super.key});
@@ -119,6 +121,17 @@ class NavDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('Payment Receipts'),
+            onTap: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const PaymentReceiptsList()),
+              )
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () => {
@@ -126,6 +139,17 @@ class NavDrawer extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const SettingsLayout()))
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.color_lens),
+            title: const Text('Branding - Primary Color'),
+            onTap: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const BrandingPrimaryColorScreen()),
+              )
             },
           ),
           ListTile(

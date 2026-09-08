@@ -77,6 +77,7 @@ class OpportunityResponse(BaseModel):
     owner_id: Optional[UUID]
     loss_reason: Optional[str]
     notes: Optional[str]
+    customer_id: Optional[UUID]
     created_on: datetime
     modified_on: Optional[datetime]
     weighted_value: Decimal = Decimal("0")

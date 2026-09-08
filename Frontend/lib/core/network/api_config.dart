@@ -1,5 +1,7 @@
-/// Local API endpoint for host-run FastAPI.
+/// API base URL — override via `--dart-define=API_BASE_URL=http://host:port`.
 class ApiConfig {
-  // Use a completely relative mapping to drop domain lookups entirely
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8000',
+  );
 }

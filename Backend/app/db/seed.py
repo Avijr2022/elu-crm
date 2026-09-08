@@ -21,8 +21,20 @@ from app.models.pf import (
     RolePermission,
     Subscription,
     Tenant,
+    TenantBranding,
     TenantSettings,
     User,
+)
+
+# 1x1 JPEG for seeded tenant branding (PDF logo smoke test).
+_SEED_LOGO_JPEG = (
+    "data:image/jpeg;base64,"
+    "/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRof"
+    "Hh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwh"
+    "MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAAR"
+    "CAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAA"
+    "AAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAA"
+    "IRAxEAPwCwAA8A/9k="
 )
 
 
@@ -49,6 +61,22 @@ PERMISSIONS = [
     ("lead.read", "View lead", "CRM"),
     ("lead.update", "Update lead", "CRM"),
     ("lead.convert", "Convert lead", "CRM"),
+    ("lead.qualify", "Qualify lead", "CRM"),
+    ("lead.disqualify", "Disqualify lead", "CRM"),
+    ("customer.read", "View customer", "CRM"),
+    ("customer.create", "Create customer", "CRM"),
+    ("customer.update", "Update customer", "CRM"),
+    ("activity.read", "View activity", "CRM"),
+    ("activity.create", "Create activity", "CRM"),
+    ("opportunity.read", "View opportunity", "CRM"),
+    ("opportunity.update", "Update opportunity", "CRM"),
+    ("opportunity.approve", "Close won / approve opportunity", "CRM"),
+    ("quotation.read", "View quotation", "SAL"),
+    ("quotation.create", "Create quotation", "SAL"),
+    ("quotation.update", "Update quotation", "SAL"),
+    ("quotation.submit", "Submit quotation", "SAL"),
+    ("quotation.approve", "Approve quotation", "SAL"),
+    ("quotation.cancel", "Cancel quotation", "SAL"),
 ]
 
 ROLES = [
@@ -63,6 +91,8 @@ ROLES = [
 FEATURE_CATALOGUE = [
     ("CRM_LEAD", "CRM Lead Management", "CRM", "Lead capture and convert"),
     ("CRM_OPPORTUNITY", "Opportunity Pipeline", "CRM", "Opportunity module"),
+    ("CRM_CUSTOMER", "Customer Management", "CRM", "Customer accounts"),
+    ("CRM_ACTIVITY", "Activity Ledger", "CRM", "Calls, tasks, timeline"),
     ("SAL_QUOTE", "Quotations", "SAL", "Sales quotations"),
     ("PRJ_WO", "Projects / Work Orders", "PRJ", "Delivery"),
     ("FIN_INVOICE", "Invoicing", "FIN", "AR invoicing"),
@@ -82,6 +112,8 @@ EDITION_SPECS = {
         "max_users": 5,
         "features": [
             "CRM_LEAD",
+            "CRM_CUSTOMER",
+            "CRM_ACTIVITY",
             "MFA",
         ],
         "limits": [
@@ -98,6 +130,8 @@ EDITION_SPECS = {
         "features": [
             "CRM_LEAD",
             "CRM_OPPORTUNITY",
+            "CRM_CUSTOMER",
+            "CRM_ACTIVITY",
             "SAL_QUOTE",
             "PRJ_WO",
             "FIN_INVOICE",
@@ -119,6 +153,8 @@ EDITION_SPECS = {
         "features": [
             "CRM_LEAD",
             "CRM_OPPORTUNITY",
+            "CRM_CUSTOMER",
+            "CRM_ACTIVITY",
             "SAL_QUOTE",
             "PRJ_WO",
             "FIN_INVOICE",
@@ -253,6 +289,10 @@ def seed_platform(db: Session) -> None:
     if existing:
         # Ensure platform admin role/user even on re-seed skip path
         _ensure_platform_admin(db, existing, editions)
+        _upgrade_crm_permissions(db, existing)
+        _upgrade_sal_permissions(db, existing)
+        _ensure_community_demo_tenant(db, editions)
+        _ensure_tenant_branding(db, existing)
         db.commit()
         return
 
@@ -307,6 +347,7 @@ def seed_platform(db: Session) -> None:
             default_language=settings.default_language,
         )
     )
+    _ensure_tenant_branding(db, tenant)
 
     db.add(
         Subscription(
@@ -358,20 +399,21 @@ def seed_platform(db: Session) -> None:
                 permission_id=perm.permission_id,
             )
         )
-    for code in ("lead.create", "lead.read", "lead.update"):
+    for code in ("lead.create", "lead.read", "lead.update", "customer.read", "customer.create", "activity.read", "activity.create", "opportunity.read", "opportunity.update"):
         db.add(
             RolePermission(
                 role_id=role_map["SALES_EXECUTIVE"].role_id,
                 permission_id=perm_map[code].permission_id,
             )
         )
-    for code in ("lead.create", "lead.read", "lead.update", "lead.convert"):
+    for code in ("lead.create", "lead.read", "lead.update", "lead.convert", "customer.read", "customer.create", "customer.update", "activity.read", "activity.create", "opportunity.read", "opportunity.update", "opportunity.approve"):
         db.add(
             RolePermission(
                 role_id=role_map["SALES_MANAGER"].role_id,
                 permission_id=perm_map[code].permission_id,
             )
         )
+    db.flush()
 
     # Seed admin acts as Platform Admin for PF-001 ops (Euphoria demo)
     admin = User(
@@ -389,6 +431,9 @@ def seed_platform(db: Session) -> None:
         account_status="ACTIVE",
     )
     db.add(admin)
+    _upgrade_crm_permissions(db, tenant)
+    _upgrade_sal_permissions(db, tenant)
+    _ensure_community_demo_tenant(db, editions)
     db.commit()
 
 
@@ -469,3 +514,258 @@ def _ensure_platform_admin(
     if admin:
         admin.role_id = platform_role.role_id
         admin.designation = "Platform Administrator"
+
+
+CRM_SALES_EXEC_PERMS = (
+    "lead.create",
+    "lead.read",
+    "lead.update",
+    "lead.qualify",
+    "lead.disqualify",
+    "customer.read",
+    "customer.create",
+    "activity.read",
+    "activity.create",
+    "opportunity.read",
+    "opportunity.update",
+    "quotation.read",
+    "quotation.create",
+    "quotation.update",
+    "quotation.submit",
+    "quotation.cancel",
+)
+CRM_COMMUNITY_PERMS = tuple(
+    c for c in CRM_SALES_EXEC_PERMS if not c.startswith("opportunity.")
+) + ("lead.convert", "lead.qualify", "lead.disqualify", "customer.update")
+CRM_SALES_MANAGER_PERMS = CRM_SALES_EXEC_PERMS + (
+    "lead.convert",
+    "customer.update",
+    "opportunity.approve",
+    "quotation.approve",
+)
+
+
+def _grant_role_permissions(
+    db: Session, tenant_id, role_code: str, perm_codes: tuple[str, ...]
+) -> None:
+    role = db.scalars(
+        select(Role).where(Role.tenant_id == tenant_id, Role.role_code == role_code)
+    ).first()
+    if role is None:
+        return
+    for pcode in perm_codes:
+        perm = db.scalars(
+            select(Permission).where(Permission.permission_code == pcode)
+        ).first()
+        if perm is None:
+            continue
+        linked = db.scalars(
+            select(RolePermission).where(
+                RolePermission.role_id == role.role_id,
+                RolePermission.permission_id == perm.permission_id,
+            )
+        ).first()
+        if linked is None:
+            db.add(
+                RolePermission(
+                    role_id=role.role_id,
+                    permission_id=perm.permission_id,
+                )
+            )
+            db.flush()
+
+
+def provision_tenant_roles(db: Session, tenant_id) -> None:
+    """Idempotent system roles + permission grants when a tenant is activated."""
+    for code, name, module in PERMISSIONS:
+        exists = db.scalars(
+            select(Permission).where(Permission.permission_code == code)
+        ).first()
+        if not exists:
+            db.add(
+                Permission(
+                    permission_code=code, permission_name=name, module_code=module
+                )
+            )
+    db.flush()
+
+    for code, name, is_system in ROLES:
+        exists = db.scalars(
+            select(Role).where(Role.tenant_id == tenant_id, Role.role_code == code)
+        ).first()
+        if exists is None:
+            db.add(
+                Role(
+                    tenant_id=tenant_id,
+                    role_code=code,
+                    role_name=name,
+                    description=f"System role: {name}",
+                    is_system=is_system,
+                )
+            )
+    db.flush()
+
+    all_codes = tuple(code for code, _, _ in PERMISSIONS)
+    for role_code in ("TENANT_ADMIN", "PLATFORM_ADMIN"):
+        _grant_role_permissions(db, tenant_id, role_code, all_codes)
+    _grant_role_permissions(db, tenant_id, "SALES_EXECUTIVE", CRM_SALES_EXEC_PERMS)
+    _grant_role_permissions(db, tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
+
+
+def _upgrade_sal_permissions(db: Session, tenant: Tenant) -> None:
+    """Idempotent backfill of SAL quotation permissions on re-seed."""
+    sal_perm_codes = tuple(
+        code for code, _, module in PERMISSIONS if module == "SAL"
+    )
+    for code, name, module in PERMISSIONS:
+        if module != "SAL":
+            continue
+        exists = db.scalars(
+            select(Permission).where(Permission.permission_code == code)
+        ).first()
+        if not exists:
+            db.add(
+                Permission(
+                    permission_code=code, permission_name=name, module_code=module
+                )
+            )
+    db.flush()
+    _grant_role_permissions(db, tenant.tenant_id, "SALES_EXECUTIVE", CRM_SALES_EXEC_PERMS)
+    _grant_role_permissions(db, tenant.tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
+    for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
+        _grant_role_permissions(db, tenant.tenant_id, role_code, sal_perm_codes)
+
+
+def _upgrade_crm_permissions(db: Session, tenant: Tenant) -> None:
+    """Idempotent backfill of CRM permissions and edition features on re-seed."""
+    for code, name, module in PERMISSIONS:
+        if not code.split(".", 1)[0] in {"lead", "customer", "activity", "opportunity"}:
+            continue
+        exists = db.scalars(
+            select(Permission).where(Permission.permission_code == code)
+        ).first()
+        if not exists:
+            db.add(
+                Permission(
+                    permission_code=code, permission_name=name, module_code=module
+                )
+            )
+    db.flush()
+    crm_perm_codes = tuple(
+        code
+        for code, _, _ in PERMISSIONS
+        if code.split(".", 1)[0] in {"lead", "customer", "activity", "opportunity"}
+    )
+    _grant_role_permissions(db, tenant.tenant_id, "SALES_EXECUTIVE", CRM_SALES_EXEC_PERMS)
+    _grant_role_permissions(db, tenant.tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
+    for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
+        _grant_role_permissions(db, tenant.tenant_id, role_code, crm_perm_codes)
+
+
+def _ensure_tenant_branding(db: Session, tenant: Tenant) -> None:
+    row = db.scalars(
+        select(TenantBranding).where(TenantBranding.tenant_id == tenant.tenant_id)
+    ).first()
+    if row is None:
+        db.add(
+            TenantBranding(
+                tenant_id=tenant.tenant_id,
+                logo_url=_SEED_LOGO_JPEG,
+                primary_color="#1565C0",
+                secondary_color="#424242",
+            )
+        )
+        return
+    if not row.logo_url:
+        row.logo_url = _SEED_LOGO_JPEG
+
+
+def _ensure_community_demo_tenant(db: Session, editions: dict[str, Edition]) -> None:
+    """Idempotent Community-edition tenant for manual smoke tests."""
+    settings = get_settings()
+    existing = db.scalars(select(Tenant).where(Tenant.tenant_code == "COMU001")).first()
+    if existing:
+        _grant_role_permissions(db, existing.tenant_id, "SALES_EXECUTIVE", CRM_COMMUNITY_PERMS)
+        return
+    community = editions["COMMUNITY"]
+    tenant = Tenant(
+        tenant_code="COMU001",
+        tenant_name="Community Demo",
+        legal_name="Community Demo Org",
+        edition_id=community.id,
+        organization_type="Pvt Ltd",
+        email="community@euphoriainfotech.com",
+        mobile="+919876543211",
+        status="ACTIVE",
+        activation_date=date.today(),
+    )
+    db.add(tenant)
+    db.flush()
+    org = Organization(
+        tenant_id=tenant.tenant_id,
+        organization_code="HO001",
+        organization_name="Community HQ",
+        legal_name="Community Demo Org",
+        organization_type="ROOT",
+        email="ho@community-demo.com",
+        phone="+913340000001",
+        status="ACTIVE",
+        is_root=True,
+        level=0,
+        default_currency_code="INR",
+        fiscal_year_start_month=4,
+    )
+    db.add(org)
+    db.flush()
+    db.add(
+        TenantSettings(
+            tenant_id=tenant.tenant_id,
+            financial_year_start=date(date.today().year, 4, 1),
+            currency_code="INR",
+            time_zone="Asia/Kolkata",
+            date_format="DD/MM/YYYY",
+            default_language="en",
+        )
+    )
+    db.add(
+        Subscription(
+            tenant_id=tenant.tenant_id,
+            edition_id=community.id,
+            subscription_number="SUB-COMU-000001",
+            plan_type="Yearly",
+            start_date=date.today(),
+            end_date=date.today() + timedelta(days=365),
+            amount="0",
+            currency_code="INR",
+            payment_status="PAID",
+            subscription_status="ACTIVE",
+        )
+    )
+    role = Role(
+        tenant_id=tenant.tenant_id,
+        role_code="SALES_EXECUTIVE",
+        role_name="Sales Executive",
+        description="Community demo sales role",
+        is_system=True,
+    )
+    db.add(role)
+    db.flush()
+    for code in CRM_COMMUNITY_PERMS:
+        perm = db.scalars(select(Permission).where(Permission.permission_code == code)).first()
+        if perm:
+            db.add(RolePermission(role_id=role.role_id, permission_id=perm.permission_id))
+    db.add(
+        User(
+            tenant_id=tenant.tenant_id,
+            organization_id=org.organization_id,
+            role_id=role.role_id,
+            employee_code="COMU0001",
+            first_name="Community",
+            last_name="User",
+            display_name="Community Demo User",
+            email="community@euphoriainfotech.com",
+            mobile="+919876543211",
+            password_hash=hash_password("Community@12345"),
+            account_status="ACTIVE",
+        )
+    )

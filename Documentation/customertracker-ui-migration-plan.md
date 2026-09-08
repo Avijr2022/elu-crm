@@ -1,5 +1,7 @@
 # CustomerTracker UI Migration Plan
 
+> **Superseded for implementation decisions by** [customertracker-ui-reuse-assessment.md](customertracker-ui-reuse-assessment.md) (2026-09-01). This document remains as historical context.
+
 ## Purpose
 
 This document translates the CRM gap analysis into a prioritized UI migration plan for the current Frontend. It uses the existing Flutter Frontend as the implementation foundation and uses the approved CRM documentation as the source of truth. It does not change production code; it defines the intended migration sequence and the frontend areas that should evolve.

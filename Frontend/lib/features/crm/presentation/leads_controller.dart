@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../data/lead_model.dart';
 import '../data/lead_service.dart';
-import '../data/opportunity_service.dart';
 
 class LeadsController extends ChangeNotifier {
   LeadsController({
     LeadService? service,
-    OpportunityService? opportunityService,
-  })  : _service = service ?? LeadService(),
-        _opportunityService = opportunityService ?? OpportunityService();
+  }) : _service = service ?? LeadService();
 
   final LeadService _service;
-  final OpportunityService _opportunityService;
 
   bool loading = false;
   String? error;
@@ -73,9 +69,9 @@ class LeadsController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final opp = await _opportunityService.convertLead(lead.leadId);
+      final result = await _service.convert(lead.leadId);
       await load();
-      return opp.opportunityNumber;
+      return result.referenceNumber;
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();

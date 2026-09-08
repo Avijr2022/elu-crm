@@ -20,11 +20,14 @@ class OpportunityRepository:
         stage: str | None = None,
         status: str | None = None,
         search: str | None = None,
+        customer_id: UUID | None = None,
     ) -> tuple[list[Opportunity], int]:
         filters = [
             Opportunity.tenant_id == tenant_id,
             Opportunity.is_deleted.is_(False),
         ]
+        if customer_id:
+            filters.append(Opportunity.customer_id == customer_id)
         if stage:
             filters.append(Opportunity.stage == stage.upper())
         if status:

@@ -12,8 +12,11 @@ class Opportunity {
     this.expectedCloseDate,
     this.sourceLeadId,
     this.notes,
+    this.customerId,
     required this.weightedValue,
     this.createdOn,
+    this.modifiedOn,
+    this.lossReason,
   });
 
   final String opportunityId;
@@ -28,8 +31,14 @@ class Opportunity {
   final DateTime? expectedCloseDate;
   final String? sourceLeadId;
   final String? notes;
+  final String? customerId;
   final double weightedValue;
   final DateTime? createdOn;
+  final DateTime? modifiedOn;
+  final String? lossReason;
+
+  bool get isTerminal =>
+      status == 'CLOSED_WON' || status == 'CLOSED_LOST';
 
   factory Opportunity.fromJson(Map<String, dynamic> json) {
     return Opportunity(
@@ -48,11 +57,16 @@ class Opportunity {
           : null,
       sourceLeadId: json['source_lead_id'] as String?,
       notes: json['notes'] as String?,
+      customerId: json['customer_id'] as String?,
       weightedValue:
           double.tryParse(json['weighted_value']?.toString() ?? '') ?? 0,
       createdOn: json['created_on'] != null
           ? DateTime.tryParse(json['created_on'] as String)
           : null,
+      modifiedOn: json['modified_on'] != null
+          ? DateTime.tryParse(json['modified_on'].toString())
+          : null,
+      lossReason: json['loss_reason'] as String?,
     );
   }
 }

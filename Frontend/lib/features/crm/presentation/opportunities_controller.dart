@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../data/lookup_service.dart';
 import '../data/opportunity_model.dart';
 import '../data/opportunity_service.dart';
 
-const pipelineStages = [
-  'QUALIFICATION',
-  'TECHNICAL_EVAL',
-  'BUDGET_VALIDATION',
-  'PROPOSAL',
-  'QUOTATION_ISSUED',
-  'NEGOTIATION',
-];
-
 class OpportunitiesController extends ChangeNotifier {
-  OpportunitiesController({OpportunityService? service})
-      : _service = service ?? OpportunityService();
+  OpportunitiesController({OpportunityService? service, LookupService? lookups})
+      : _service = service ?? OpportunityService(),
+        _lookups = lookups ?? LookupService();
 
   final OpportunityService _service;
+  final LookupService _lookups;
 
   bool loading = false;
   String? error;
@@ -25,18 +19,16 @@ class OpportunitiesController extends ChangeNotifier {
   String search = '';
   String? stageFilter;
   PipelineResult? pipeline;
+  List<String> stages = [];
 
-  String? nextStage(String current) {
-    final idx = pipelineStages.indexOf(current);
-    if (idx < 0 || idx >= pipelineStages.length - 1) return null;
-    return pipelineStages[idx + 1];
-  }
+  String? nextStage(String current) => nextPipelineStage(stages, current);
 
   Future<void> load() async {
     loading = true;
     error = null;
     notifyListeners();
     try {
+      stages = await _lookups.pipelineStageCodes();
       final result = await _service.list(
         search: search.isEmpty ? null : search,
         stage: stageFilter,

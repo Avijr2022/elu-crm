@@ -1,5 +1,7 @@
 # CustomerTracker Integration Analysis
 
+> **Superseded for implementation decisions by** [customertracker-ui-reuse-assessment.md](customertracker-ui-reuse-assessment.md) (2026-09-01). This document remains as historical context.
+
 ## Purpose
 
 This document analyzes the relationship between the legacy reference application in CustomerTracker and the current E-LinkUp CRM implementation in Frontend, Backend, Database, and Documentation.

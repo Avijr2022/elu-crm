@@ -15,6 +15,7 @@
 | 0b | **ELU-GOV-VAL-001** | Governance Validation Report (96% · STOP before code) | [ELU-GOV-VAL-001-Governance-Validation-Report.md](ELU-GOV-VAL-001-Governance-Validation-Report.md) |
 | 1 | **ELU-DOC-001** | **Documentation Master Index** (central catalogue) | [ELU-DOC-001-Documentation-Master-Index.md](ELU-DOC-001-Documentation-Master-Index.md) |
 | 2 | **ELU-MSL-001** | Milestone Tracker (progress dashboard) | [ELU-MSL-001-Milestone-Tracker.md](ELU-MSL-001-Milestone-Tracker.md) |
+| 2a | **ELU-MSL-002** | CRM Build Tracker (implementation status) | [ELU-MSL-002-CRM-Build-Tracker.md](ELU-MSL-002-CRM-Build-Tracker.md) |
 | 3 | **ELU-DF-001** | Documentation Framework | [00-Framework/ELU-DF-001-Documentation-Framework.md](00-Framework/ELU-DF-001-Documentation-Framework.md) |
 | 4 | **ELU-RDM-001** | Product Roadmap | [ELU-RDM-001-Product-Roadmap.md](ELU-RDM-001-Product-Roadmap.md) |
 | 5 | **ELU-EDM-001** | Edition × Module Matrix | [ELU-EDM-001-Edition-Module-Matrix.md](ELU-EDM-001-Edition-Module-Matrix.md) |

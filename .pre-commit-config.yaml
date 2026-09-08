@@ -1,0 +1,15 @@
+# Pre-commit hooks for the E-LinkUp monorepo.
+#
+# Primary guard: gitleaks scans staged content for secrets/API keys (e.g. the
+# DeepSeek `sk-…` keys). Enable with:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Install order matters — run `pre-commit autoupdate` periodically to pin newer
+# gitleaks revisions.
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks

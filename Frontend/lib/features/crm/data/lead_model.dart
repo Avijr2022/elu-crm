@@ -10,7 +10,9 @@ class Lead {
     required this.estimatedValue,
     required this.currencyCode,
     this.notes,
+    this.ownerId,
     this.createdOn,
+    this.modifiedOn,
   });
 
   final String leadId;
@@ -23,7 +25,17 @@ class Lead {
   final double estimatedValue;
   final String currencyCode;
   final String? notes;
+  final String? ownerId;
   final DateTime? createdOn;
+  final DateTime? modifiedOn;
+
+  bool get isTerminal => status == 'CONVERTED' || status == 'DISQUALIFIED';
+
+  bool get canQualify =>
+      !isTerminal &&
+      {'NEW', 'UNDER_QUALIFICATION', 'NURTURE', 'ON_HOLD'}.contains(status);
+
+  bool get canDisqualify => !isTerminal;
 
   factory Lead.fromJson(Map<String, dynamic> json) {
     return Lead(
@@ -38,8 +50,12 @@ class Lead {
           double.tryParse(json['estimated_value']?.toString() ?? '') ?? 0,
       currencyCode: (json['currency_code'] as String?) ?? 'INR',
       notes: json['notes'] as String?,
+      ownerId: json['owner_id'] as String?,
       createdOn: json['created_on'] != null
           ? DateTime.tryParse(json['created_on'] as String)
+          : null,
+      modifiedOn: json['modified_on'] != null
+          ? DateTime.tryParse(json['modified_on'] as String)
           : null,
     );
   }

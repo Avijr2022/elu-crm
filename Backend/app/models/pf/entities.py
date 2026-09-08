@@ -286,6 +286,9 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     settings: Mapped[Optional["TenantSettings"]] = relationship(
         back_populates="tenant", uselist=False
     )
+    branding: Mapped[Optional["TenantBranding"]] = relationship(
+        back_populates="tenant", uselist=False
+    )
     contacts: Mapped[list["TenantContact"]] = relationship(
         back_populates="tenant", cascade="all, delete-orphan"
     )
@@ -670,3 +673,24 @@ class TenantSettings(Base, TimestampMixin, SoftDeleteMixin):
     )
 
     tenant: Mapped["Tenant"] = relationship(back_populates="settings")
+
+
+class TenantBranding(Base, TimestampMixin, SoftDeleteMixin):
+    __tablename__ = "tenant_branding"
+    __table_args__ = {"schema": "core"}
+
+    branding_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id"),
+        nullable=False,
+        unique=True,
+    )
+    logo_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    primary_color: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    secondary_color: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    favicon_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+
+    tenant: Mapped["Tenant"] = relationship(back_populates="branding")

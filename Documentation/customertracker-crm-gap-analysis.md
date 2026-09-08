@@ -1,5 +1,7 @@
 # CustomerTracker → CRM Frontend Gap Analysis
 
+> **Superseded for implementation decisions by** [customertracker-ui-reuse-assessment.md](customertracker-ui-reuse-assessment.md) (2026-09-01). This document remains as historical context.
+
 ## Purpose
 
 This document compares the legacy CustomerTracker reference application with the existing E-LinkUp CRM Frontend, Backend, Database, and approved CRM documentation. It identifies what can be reused visually, what must be adapted, what should be rebuilt in the existing Frontend, and what should not be carried forward.

@@ -187,16 +187,15 @@ Overall CRM Progress       : ~18%
 | ELU-DDD/ERD/API/UI/TST SAL | ✅ Done | 100% | L2C Step 2 |
 | ELU-DDD/ERD/API/UI/TST PRJ | ✅ Done | 100% | L2C Step 3 |
 | ELU-DDD/ERD/API/UI/TST FIN | ✅ Done | 100% | L2C Step 4 |
-| PostgreSQL migrations (Alembic) | 🟠 Partial | 15% | From ELU-DDD-* + ADR-015 RLS |
-| FastAPI PF + Auth skeleton | 🟡 In Progress | 80% | Scaffolded |
-| FastAPI CRM Lead/Opportunity | 🟡 In Progress | 70% | Lead CRUD + pipeline |
+| PostgreSQL migrations (Alembic) | 🟠 Partial | 75% | CRM DDL 003–005 via `migrate_crm.py`; Alembic backlog |
+| FastAPI PF + Auth skeleton | 🟡 In Progress | 85% | Scaffolded + RBAC permissions |
+| FastAPI CRM (Lead/Opp/Customer/Activity) | 🟡 In Progress | 80% | CRUD, close-won, qualify/disqualify, edition gates — see **ELU-MSL-002** |
 | FastAPI Sales → Finance path | ⬜ Not Started | 0% | After SAL/PRJ/FIN docs |
-| Flutter shell + auth | ✅ Done | 90% | Login + dashboard verified |
-| Flutter CRM → Finance screens | 🟡 In Progress | 45% | Leads + Opportunities UI |
+| Flutter shell + auth | ✅ Done | 90% | Login + AppShell + go_router |
+| Flutter CRM screens | 🟡 In Progress | 65% | Leads, Opportunities, Customers, Activities — see **ELU-MSL-002** |
+| CRM automated tests (pytest) | 🟡 In Progress | 40% | 16 CRM API cases; ELU-TST-CRM CI pending |
 | Isolation test suite | ⬜ Not Started | 0% | ELU-TST-* specs ready |
-| Euphoria UAT Lead→Payment | ⬜ Not Started | 0% | Vertical slice complete |
-| Isolation test suite | ⬜ Not Started | 0% | First tenant entity API |
-| ELU-TST-CRM (sample) | ⬜ Not Started | 0% | RTM ✅ |
+| ELU-TST-CRM (sample) | 🟡 In Progress | 25% | Sample cases in repo; full RTM execution pending |
 | Euphoria UAT Lead→Payment | ⬜ Not Started | 0% | Vertical slice complete |
 
 ---
@@ -216,10 +215,10 @@ Overall CRM Progress       : ~18%
 
 | # | Action | Owner | Unlocks |
 |---|--------|-------|---------|
-| 1 | Implement Alembic migrations from **ELU-DDD-PF/CRM** with RLS (**ADR-015**) | Backend | Schema freeze |
-| 2 | Build CRM Lead (`REQ-CRM-001`) per **ELU-API-CRM** / **ELU-UI-CRM** | Backend + Flutter | First vertical CRM slice |
-| 3 | Run **ELU-TST-CRM** isolation suite in CI | QA / Backend | RSK-001 mitigation |
-| 4 | Author ELU-DDD/API for SAL → FIN (next domains) | BA / Tech Lead | Lead-to-Cash completion |
+| 1 | Close-won wizard UI + activity calendar | Backend + Flutter | CRM-002/004 per **ELU-MSL-002** |
+| 2 | Run **ELU-TST-CRM** isolation suite in CI | QA / Backend | RSK-001 mitigation |
+| 3 | Author ELU-DDD/API for SAL → FIN (next domains) | BA / Tech Lead | Lead-to-Cash completion |
+| 4 | Implement Alembic migrations from **ELU-DDD-PF/CRM** with RLS (**ADR-015**) | Backend | Schema freeze |
 | 5 | Quarterly restore drill per **ELU-OPS-001** | DevOps | DR readiness |
 
 ---

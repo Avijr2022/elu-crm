@@ -4,12 +4,15 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import AppError, NotFoundError
+from app.core.exceptions import AppError, ForbiddenError, NotFoundError
 from app.models.crm import Lead, Opportunity
 from app.models.pf import Tenant
 from app.repositories.crm.lead_repository import LeadRepository
+from app.repositories.crm.lookup_repository import LookupRepository
 from app.repositories.crm.opportunity_repository import OpportunityRepository
 from app.repositories.pf.user_repository import TenantRepository
+from app.services.crm.activity_service import ActivityService
+from app.services.crm.customer_service import CustomerService
 from app.schemas.crm.opportunity import (
     OPPORTUNITY_STATUSES,
     PIPELINE_STAGES,
@@ -30,6 +33,26 @@ class OpportunityService:
         self.repo = OpportunityRepository(db)
         self.leads = LeadRepository(db)
         self.tenants = TenantRepository(db)
+        self.lookups = LookupRepository(db)
+
+    def _pipeline_stage_codes(self, tenant_id: UUID) -> list[str]:
+        rows = self.lookups.list_opportunity_stages(tenant_id, active_only=True)
+        if rows:
+            return [s.code for s in rows]
+        return list(PIPELINE_STAGES)
+
+    def _stage_probability(self, tenant_id: UUID, code: str) -> int:
+        row = next(
+            (
+                s
+                for s in self.lookups.list_opportunity_stages(tenant_id, active_only=False)
+                if s.code == code
+            ),
+            None,
+        )
+        if row is not None:
+            return row.default_probability
+        return STAGE_PROBABILITY.get(code, 0)
 
     def list_opportunities(
         self,
@@ -40,6 +63,7 @@ class OpportunityService:
         stage: str | None = None,
         status: str | None = None,
         search: str | None = None,
+        customer_id: UUID | None = None,
     ) -> OpportunityListResponse:
         page = max(page, 1)
         page_size = min(max(page_size, 1), 100)
@@ -50,6 +74,7 @@ class OpportunityService:
             stage=stage,
             status=status,
             search=search,
+            customer_id=customer_id,
         )
         return OpportunityListResponse(
             items=[self._to_response(i) for i in items],
@@ -98,7 +123,13 @@ class OpportunityService:
         return self._to_response(self.repo.add(opp))
 
     def update_opportunity(
-        self, tenant_id: UUID, opportunity_id: UUID, payload: OpportunityUpdate
+        self,
+        tenant_id: UUID,
+        opportunity_id: UUID,
+        payload: OpportunityUpdate,
+        *,
+        actor_id: UUID | None = None,
+        can_approve: bool = False,
     ) -> OpportunityResponse:
         opp = self.repo.get_by_id(tenant_id, opportunity_id)
         if opp is None:
@@ -136,11 +167,47 @@ class OpportunityService:
                     422,
                     req_id="REQ-CRM-013",
                 )
+            if status == "CLOSED_WON" and opp.status != "CLOSED_WON":
+                if not can_approve:
+                    raise ForbiddenError(
+                        "opportunity.approve permission required to close won",
+                        req_id="REQ-CRM-RBAC",
+                    )
+                owner = actor_id or opp.owner_id
+                if owner is None:
+                    raise AppError(
+                        "VALIDATION_ERROR",
+                        "Opportunity owner required to close won",
+                        422,
+                        req_id="REQ-CRM-013",
+                    )
+                customer = CustomerService(self.db).create_from_opportunity(
+                    tenant_id, owner, opp
+                )
+                opp.customer_id = customer.customer_id
+                ActivityService(self.db).log_system_event(
+                    tenant_id,
+                    owner,
+                    entity_type="OPPORTUNITY",
+                    entity_id=opp.opportunity_id,
+                    subject="Closed Won",
+                    description=f"Customer {customer.customer_number} created",
+                )
+            elif status == "CLOSED_LOST" and opp.status != "CLOSED_LOST" and actor_id:
+                ActivityService(self.db).log_system_event(
+                    tenant_id,
+                    actor_id,
+                    entity_type="OPPORTUNITY",
+                    entity_id=opp.opportunity_id,
+                    subject="Closed Lost",
+                    description=data.get("loss_reason") or opp.loss_reason,
+                )
             opp.status = status
         if "stage" in data and data["stage"]:
             # Prefer dedicated stage endpoint for gated advances; allow direct set only if same
             stage = data["stage"].upper()
-            if stage not in PIPELINE_STAGES:
+            valid_stages = self._pipeline_stage_codes(tenant_id)
+            if stage not in valid_stages:
                 raise AppError(
                     "VALIDATION_ERROR",
                     f"Invalid stage '{data['stage']}'",
@@ -148,7 +215,7 @@ class OpportunityService:
                     req_id="REQ-CRM-014",
                 )
             opp.stage = stage
-            opp.probability = STAGE_PROBABILITY.get(stage, opp.probability)
+            opp.probability = self._stage_probability(tenant_id, stage)
 
         return self._to_response(self.repo.save(opp))
 
@@ -167,7 +234,8 @@ class OpportunityService:
             )
 
         target = payload.stage.upper()
-        if target not in PIPELINE_STAGES:
+        pipeline = self._pipeline_stage_codes(tenant_id)
+        if target not in pipeline:
             raise AppError(
                 "VALIDATION_ERROR",
                 f"Invalid stage '{payload.stage}'",
@@ -175,8 +243,8 @@ class OpportunityService:
                 req_id="REQ-CRM-014",
             )
 
-        current_idx = PIPELINE_STAGES.index(opp.stage)
-        target_idx = PIPELINE_STAGES.index(target)
+        current_idx = pipeline.index(opp.stage) if opp.stage in pipeline else -1
+        target_idx = pipeline.index(target)
         if target_idx != current_idx + 1:
             raise AppError(
                 "VALIDATION_ERROR",
@@ -196,17 +264,18 @@ class OpportunityService:
                 )
 
         opp.stage = target
-        opp.probability = STAGE_PROBABILITY.get(target, opp.probability)
+        opp.probability = self._stage_probability(tenant_id, target)
         return self._to_response(self.repo.save(opp))
 
     def pipeline(self, tenant_id: UUID) -> PipelineResponse:
         items = self.repo.list_open_pipeline(tenant_id)
-        by_stage: dict[str, list[Opportunity]] = {s: [] for s in PIPELINE_STAGES}
+        stage_codes = self._pipeline_stage_codes(tenant_id)
+        by_stage: dict[str, list[Opportunity]] = {s: [] for s in stage_codes}
         for item in items:
             by_stage.setdefault(item.stage, []).append(item)
 
         buckets: list[PipelineStageBucket] = []
-        for stage in PIPELINE_STAGES:
+        for stage in stage_codes:
             stage_items = by_stage.get(stage, [])
             responses = [self._to_response(i) for i in stage_items]
             total_value = sum((r.opportunity_value for r in responses), Decimal("0"))

@@ -103,6 +103,22 @@ CREATE TABLE IF NOT EXISTS core.tenant_status_history (
         "CREATE INDEX IF NOT EXISTS idx_tenant_address_tenant ON core.tenant_address(tenant_id)",
         "CREATE INDEX IF NOT EXISTS idx_tenant_status_history_tenant ON core.tenant_status_history(tenant_id)",
         """
+CREATE TABLE IF NOT EXISTS core.tenant_branding (
+    branding_id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL UNIQUE REFERENCES core.tenant(tenant_id) ON DELETE CASCADE,
+    logo_url VARCHAR(2048),
+    primary_color VARCHAR(16),
+    secondary_color VARCHAR(16),
+    favicon_url VARCHAR(2048),
+    created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    modified_on TIMESTAMPTZ,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    version_no INTEGER NOT NULL DEFAULT 1
+)
+""",
+        "CREATE INDEX IF NOT EXISTS ix_tenant_branding_tenant ON core.tenant_branding(tenant_id)",
+        """
 CREATE TABLE IF NOT EXISTS core.idempotency_key (
     key VARCHAR(128) PRIMARY KEY,
     tenant_id UUID,

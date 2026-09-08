@@ -1,17 +1,22 @@
-name: Main Config
+name: DeepSeek Config
 version: 1.0.0
 schema: v1
-
 models:
-  - title: "DeepSeek V4 Flash"
+  - name: "DeepSeek Chat"
     provider: "deepseek"
-    model: "deepseek-v4-flash"
-    apiBase: "https://api.deepseek.com/v1"
-    apiKey: "[REDACTED]"
+    model: "deepseek-chat"
+    apiBase: "https://deepseek.com"
+    apiKeyEnv: "DEEPSEEK_API_KEY"
+    roles:
+      - chat
+      - edit
+      - apply
+      - summarize
 
 tabAutoCompleteModel:
-  title: "DeepSeek Autocomplete"
+  name: "DeepSeek Autocomplete"
   provider: "deepseek"
-  model: "deepseek-v4-flash"
-  apiBase: "https://api.deepseek.com/v1"
-  apiKey: "[REDACTED]"
+  model: "deepseek-chat"
+  apiBase: "https://deepseek.com"
+  apiKeyEnv: "DEEPSEEK_API_KEY"
+

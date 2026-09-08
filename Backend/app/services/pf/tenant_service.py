@@ -13,6 +13,7 @@ from app.core.exceptions import (
     NotFoundError,
     ValidationAppError,
 )
+from app.db.seed import provision_tenant_roles
 from app.models.pf import (
     IdempotencyKey,
     Organization,
@@ -396,6 +397,7 @@ class TenantService:
             entity_id=tenant.tenant_id,
             actor_id=actor_id,
         )
+        provision_tenant_roles(self.db, tenant.tenant_id)
         self.db.commit()
         return self._to_response(self._load(tenant_id))  # type: ignore[arg-type]
 

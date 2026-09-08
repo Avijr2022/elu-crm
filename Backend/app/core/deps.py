@@ -11,6 +11,7 @@ from app.core.security import decode_token
 from app.db.rls_context import bind_rls_context
 from app.db.session import get_db
 from app.models.pf import User
+from app.repositories.pf.permission_repository import permissions_for_role
 from app.repositories.pf.user_repository import UserRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -22,6 +23,7 @@ class CurrentUser:
     tenant_id: UUID
     email: str
     role_code: str
+    permissions: frozenset[str]
     user: User
     platform_context: bool = False
 
@@ -55,11 +57,13 @@ def get_current_user(
         # Platform Admin bypass via app.platform_context (audited at API layer).
         bind_rls_context(db, tenant_id=tenant_id, platform=True)
 
+    perms = permissions_for_role(db, user.role_id)
     return CurrentUser(
         user_id=user.user_id,
         tenant_id=user.tenant_id,
         email=user.email,
         role_code=user.role.role_code,
+        permissions=perms,
         user=user,
         platform_context=platform,
     )

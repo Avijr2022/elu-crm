@@ -14,6 +14,7 @@ class OpportunityService {
     String? stage,
     String? status,
     String? search,
+    String? customerId,
   }) async {
     final query = <String, String>{
       'page': '$page',
@@ -21,6 +22,7 @@ class OpportunityService {
       if (stage != null && stage.isNotEmpty) 'stage': stage,
       if (status != null && status.isNotEmpty) 'status': status,
       if (search != null && search.isNotEmpty) 'search': search,
+      if (customerId != null && customerId.isNotEmpty) 'customer_id': customerId,
     };
     final response =
         await _client.get('/api/v1/crm/opportunities', query: query);
@@ -31,6 +33,34 @@ class OpportunityService {
       );
     }
     return OpportunityListResult.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<OpportunityListResult> listForCustomer(String customerId) async {
+    final response = await _client.get(
+      '/api/v1/crm/customers/$customerId/opportunities',
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+        _client.extractError(response.body) ??
+            'Failed to load customer opportunities (${response.statusCode})',
+      );
+    }
+    return OpportunityListResult.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<Opportunity> getById(String id) async {
+    final response = await _client.get('/api/v1/crm/opportunities/$id');
+    if (response.statusCode != 200) {
+      throw Exception(
+        _client.extractError(response.body) ??
+            'Failed to load opportunity (${response.statusCode})',
+      );
+    }
+    return Opportunity.fromJson(
       jsonDecode(response.body) as Map<String, dynamic>,
     );
   }
@@ -72,6 +102,36 @@ class OpportunityService {
       throw Exception(
         _client.extractError(response.body) ??
             'Failed to create opportunity (${response.statusCode})',
+      );
+    }
+    return Opportunity.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<Opportunity> update(
+    String id, {
+    String? name,
+    String? companyName,
+    double? opportunityValue,
+    String? notes,
+    String? status,
+    String? lossReason,
+  }) async {
+    final body = <String, dynamic>{
+      if (name != null) 'name': name,
+      if (companyName != null) 'company_name': companyName,
+      if (opportunityValue != null) 'opportunity_value': opportunityValue,
+      if (notes != null) 'notes': notes,
+      if (status != null) 'status': status,
+      if (lossReason != null) 'loss_reason': lossReason,
+    };
+    final response =
+        await _client.patch('/api/v1/crm/opportunities/$id', body: body);
+    if (response.statusCode != 200) {
+      throw Exception(
+        _client.extractError(response.body) ??
+            'Failed to update opportunity (${response.statusCode})',
       );
     }
     return Opportunity.fromJson(
