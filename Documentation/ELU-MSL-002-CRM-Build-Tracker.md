@@ -86,5 +86,6 @@
 | 4.37 | 2026-09-08 | Pushed local commits to `origin/cursor/crm-opportunity-pipeline` (`9ac9fd3..66be459`; remote `github.com/Avijr2022/elu-crm.git`). Working tree clean and branch synced. |
 | 4.38 | 2026-09-09 | Re-verification (2026-09-09): all DeepSeek deliverables present (`app/deepseek_client.py`, `scripts/test_deepseek.py`, `README_DEEPSEEK.md`, `requirements.txt` with httpx/redis), `.continue/config.yaml` uses `apiKeyEnv`, no `sk-…`/`apiKey` secrets at HEAD, tree clean on `cursor/crm-opportunity-pipeline`, `DEEPSEEK_API_KEY` set (no API spend). |
 | 4.39 | 2026-09-09 | Key rotation: new DeepSeek key created by owner and verified via `scripts/test_deepseek.py` (model `deepseek-v4-flash`, status completed, ~222 tokens). Key is NOT stored in any file — loaded only from `DEEPSEEK_API_KEY` env var. Guidance given for local (`setx`/session env), Continue (reads env), running backend (restart with new env), and CI (GitHub secret). Old exposed keys (`sk-f484a1d7…`, `sk-0a1d51c8…`) should be deleted in the DeepSeek console. |
+| 4.40 | 2026-09-09 | Restarted the local backend on `:8000` with the rotated `DEEPSEEK_API_KEY` in its process env (new process 2100). Health check `200` (`{"status":"ok","app":"E-LinkUp"}`). The `/api/v1/integrations/deepseek/generate` endpoint now runs with the new key. |
 
 *© Euphoria Infotech — ELU-MSL-002*
