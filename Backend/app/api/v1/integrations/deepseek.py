@@ -6,7 +6,11 @@ import logging
 
 from app.deepseek_client import DeepSeekClient
 from app.core.deps import CurrentUser, get_current_user
-from app.utils.redis_rate_limiter import get_redis_client, check_and_increment_rate, increment_usage
+from app.utils.redis_rate_limiter import (
+    get_redis_client,
+    increment_usage,
+    rate_allowed_or_fail_open,
+)
 
 router = APIRouter(prefix="/integrations/deepseek", tags=["Integrations"])
 
@@ -37,38 +41,40 @@ def generate(req: GenerateRequest, current: CurrentUser = Depends(get_current_us
     if not client.has_api_key():
         raise HTTPException(status_code=503, detail="DeepSeek API key not configured")
 
-    # Redis-backed rate limiting
-    redis_url = None
-    # read from env if provided by runtime
+    # Redis-backed rate limiting (graceful degradation when Redis is down)
     import os
 
     redis_url = os.getenv("REDIS_URL")
-    r = get_redis_client(redis_url)
+    r = None
+    try:
+        r = get_redis_client(redis_url)
+        r.ping()
+    except Exception:
+        logger.warning("Redis unavailable at %s; rate limiting disabled for this request", redis_url)
+        r = None
 
     # Global rate limit per minute
-    if not check_and_increment_rate(r, "deepseek:global:minute", RATE_LIMIT_PER_MINUTE, period=60):
+    if not rate_allowed_or_fail_open(r, "deepseek:global:minute", RATE_LIMIT_PER_MINUTE, period=60):
         raise HTTPException(status_code=429, detail="Global rate limit exceeded")
 
     # Per-tenant rate limit key
-    tenant_key = f"tenant:{current.tenant_id}"
     tenant_minute_key = f"deepseek:tenant:{current.tenant_id}:minute"
-    if not check_and_increment_rate(r, tenant_minute_key, int(RATE_LIMIT_PER_MINUTE / 10), period=60):
+    if not rate_allowed_or_fail_open(
+        r, tenant_minute_key, int(RATE_LIMIT_PER_MINUTE / 10), period=60
+    ):
         raise HTTPException(status_code=429, detail="Tenant rate limit exceeded")
 
-    # Check daily token quota (simple read)
-    today_key = f"deepseek:usage:current"
-    # This weekly/daily accounting is approximate; we will update after call
-    # Proceed to call
+    # Proceed to call upstream
     try:
         resp = client.generate(req.prompt, temperature=req.temperature, max_tokens=req.max_tokens)
     except Exception as exc:
         logger.exception("DeepSeek upstream error")
         raise HTTPException(status_code=502, detail=f"Upstream error: {exc}")
 
-    # Log and record token usage if present
+    # Log and record token usage if present (best effort)
     usage = resp.get("usage") or {}
     total_tokens = usage.get("total_tokens") or 0
-    if total_tokens:
+    if total_tokens and r is not None:
         try:
             increment_usage(r, str(current.tenant_id), int(total_tokens))
         except Exception:

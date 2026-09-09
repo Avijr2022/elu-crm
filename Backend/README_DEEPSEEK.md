@@ -37,6 +37,7 @@ Operational notes
 - The endpoint enforces distributed global and per-tenant rate limits using Redis. For production, run a Redis instance accessible to all API nodes.
 - Token usage is recorded daily into Redis hashes for billing/monitoring.
 - The endpoint requires a valid JWT access token (uses existing `get_current_user` dependency).
+- Graceful degradation: if Redis is unreachable the limiter fails OPEN (logs a warning and allows the request) so the endpoint does not crash with a 500. Run Redis for actual enforcement; the client uses short 2s connect/IO timeouts so a downed Redis does not stall requests.
 
 Testing
 - Quick local test (requires `DEEPSEEK_API_KEY` in env):
