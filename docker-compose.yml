@@ -39,6 +39,21 @@ services:
     volumes:
       - elinkup_minio:/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: elinkup-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - elinkup_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: ./Backend
@@ -50,6 +65,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://elinkup:elinkup_local@postgres:5432/elinkup
       APP_ENV: local
+      REDIS_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
     depends_on:
@@ -62,3 +78,4 @@ services:
 volumes:
   elinkup_pgdata:
   elinkup_minio:
+  elinkup_redis:
