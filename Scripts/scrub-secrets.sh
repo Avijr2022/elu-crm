@@ -43,8 +43,22 @@ trap 'rm -f "$TMP_RULES"' EXIT
 echo "Replacement rules prepared ($(wc -l <"$TMP_RULES") rule(s))."
 
 # 3) Rewrite history (requires git-filter-repo)
-echo "Running git filter-repo ..."
-git filter-repo --replace-text "$TMP_RULES"
+# Resolve git-filter-repo: prefer PATH, then the backend venv console script,
+# then the Python module.
+FILTER_REPO=""
+if command -v git-filter-repo >/dev/null 2>&1; then
+  FILTER_REPO="git-filter-repo"
+elif [[ -x "$REPO_ROOT/Backend/.venv/Scripts/git-filter-repo.exe" ]]; then
+  FILTER_REPO="$REPO_ROOT/Backend/.venv/Scripts/git-filter-repo.exe"
+elif [[ -x "$REPO_ROOT/Backend/.venv/bin/git-filter-repo" ]]; then
+  FILTER_REPO="$REPO_ROOT/Backend/.venv/bin/git-filter-repo"
+else
+  echo "git-filter-repo not found. Install with: pip install git-filter-repo" >&2
+  exit 1
+fi
+
+echo "Running git-filter-repo ($FILTER_REPO) ..."
+"$FILTER_REPO" --replace-text "$TMP_RULES"
 
 # 4) Force push (coordinate with team first!)
 echo ""
