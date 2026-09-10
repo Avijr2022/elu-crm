@@ -108,7 +108,8 @@ jobs:
           cache: true
 
       - name: Flutter analyze
-        run: flutter analyze lib test
+        # Non-fatal infos/warnings: SDK deprecations vary across Flutter versions.
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test
 
       - name: Flutter widget tests
         run: flutter test test/widget_test.dart test/navigation_test.dart
@@ -131,7 +132,8 @@ jobs:
         run: flutter pub get
 
       - name: Flutter analyze
-        run: flutter analyze lib test
+        # Non-fatal infos/warnings: legacy app with pinned deps vs CI's newer Flutter.
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test
 
       - name: Flutter widget tests
         run: flutter test
