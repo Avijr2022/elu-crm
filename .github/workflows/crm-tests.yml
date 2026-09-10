@@ -45,8 +45,19 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     env:
       DATABASE_URL: postgresql+psycopg://elinkup:elinkup_local@localhost:5432/elinkup
+      REDIS_URL: redis://localhost:6379/0
       JWT_SECRET_KEY: ci-elinkup-test-secret-key-min-32-chars
 
     steps:
