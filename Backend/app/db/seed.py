@@ -3,6 +3,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from sqlalchemy import select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -25,6 +26,19 @@ from app.models.pf import (
     TenantSettings,
     User,
 )
+
+def _link_role_permission(db: Session, role_id, permission_id) -> None:
+    """Idempotently ensure a (role_id, permission_id) link exists.
+
+    Uses ON CONFLICT DO NOTHING so re-seeding (e.g. multiple app lifespans on a
+    fresh database) never violates uk_role_permission.
+    """
+    db.execute(
+        pg_insert(RolePermission)
+        .values(role_id=role_id, permission_id=permission_id)
+        .on_conflict_do_nothing(constraint="uk_role_permission")
+    )
+
 
 # 1x1 JPEG for seeded tenant branding (PDF logo smoke test).
 _SEED_LOGO_JPEG = (
@@ -387,31 +401,19 @@ def seed_platform(db: Session) -> None:
     db.flush()
 
     for perm in perm_map.values():
-        db.add(
-            RolePermission(
-                role_id=role_map["PLATFORM_ADMIN"].role_id,
-                permission_id=perm.permission_id,
-            )
+        _link_role_permission(
+            db, role_map["PLATFORM_ADMIN"].role_id, perm.permission_id
         )
-        db.add(
-            RolePermission(
-                role_id=role_map["TENANT_ADMIN"].role_id,
-                permission_id=perm.permission_id,
-            )
+        _link_role_permission(
+            db, role_map["TENANT_ADMIN"].role_id, perm.permission_id
         )
     for code in ("lead.create", "lead.read", "lead.update", "customer.read", "customer.create", "activity.read", "activity.create", "opportunity.read", "opportunity.update"):
-        db.add(
-            RolePermission(
-                role_id=role_map["SALES_EXECUTIVE"].role_id,
-                permission_id=perm_map[code].permission_id,
-            )
+        _link_role_permission(
+            db, role_map["SALES_EXECUTIVE"].role_id, perm_map[code].permission_id
         )
     for code in ("lead.create", "lead.read", "lead.update", "lead.convert", "customer.read", "customer.create", "customer.update", "activity.read", "activity.create", "opportunity.read", "opportunity.update", "opportunity.approve"):
-        db.add(
-            RolePermission(
-                role_id=role_map["SALES_MANAGER"].role_id,
-                permission_id=perm_map[code].permission_id,
-            )
+        _link_role_permission(
+            db, role_map["SALES_MANAGER"].role_id, perm_map[code].permission_id
         )
     db.flush()
 
@@ -753,7 +755,7 @@ def _ensure_community_demo_tenant(db: Session, editions: dict[str, Edition]) -> 
     for code in CRM_COMMUNITY_PERMS:
         perm = db.scalars(select(Permission).where(Permission.permission_code == code)).first()
         if perm:
-            db.add(RolePermission(role_id=role.role_id, permission_id=perm.permission_id))
+            _link_role_permission(db, role.role_id, perm.permission_id)
     db.add(
         User(
             tenant_id=tenant.tenant_id,
