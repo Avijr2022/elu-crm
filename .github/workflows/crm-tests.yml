@@ -2,7 +2,7 @@ name: CRM Tests
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, 'cursor/**']
     paths:
       - 'Backend/**'
       - 'Frontend/**'
