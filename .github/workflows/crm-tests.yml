@@ -5,10 +5,14 @@ on:
     branches: [main, master, develop]
     paths:
       - 'Backend/**'
+      - 'Frontend/**'
+      - 'customertracker/**'
       - '.github/workflows/crm-tests.yml'
   pull_request:
     paths:
       - 'Backend/**'
+      - 'Frontend/**'
+      - 'customertracker/**'
       - '.github/workflows/crm-tests.yml'
   # Manual runs (any branch). Optionally run a DeepSeek smoke check that uses
   # the DEEPSEEK_API_KEY repository secret (default off to avoid token spend).
@@ -96,3 +100,26 @@ jobs:
 
       - name: Flutter widget tests
         run: flutter test test/widget_test.dart test/navigation_test.dart
+
+  customertracker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: customertracker
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Flutter analyze
+        run: flutter analyze lib test
+
+      - name: Flutter widget tests
+        run: flutter test
