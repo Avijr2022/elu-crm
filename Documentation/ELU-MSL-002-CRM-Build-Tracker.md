@@ -92,5 +92,6 @@
 | 4.43 | 2026-09-09 | Pushed commits through `13c07b8` to `origin/cursor/crm-opportunity-pipeline` (expanded CI workflow auto-triggers on push). Local `gh` CLI not installed, so CI run status must be checked in the GitHub Actions UI. |
 | 4.44 | 2026-09-10 | Daily re-verification: DeepSeek deliverables present (`deepseek_client.py`, `test_deepseek.py`, `README_DEEPSEEK.md`, `requirements.txt`), `.continue/config.yaml` uses `apiKeyEnv`, no `sk-…` secrets at HEAD, tree clean on `cursor/crm-opportunity-pipeline`, `DEEPSEEK_API_KEY` set (no API spend), `elinkup-redis` container healthy (`PONG` earlier). |
 | 4.45 | 2026-09-10 | Old DeepSeek keys deleted by owner (console) and **verified revoked**: `sk-f484a1d7…` → HTTP `401`, `sk-0a1d51c8…` → HTTP `401`. Rotated key still valid (`test_deepseek.py` → `completed`). Remaining: purge the old value from git history (`Scripts/scrub-secrets.sh`) + force-push, and persist the new key via `setx`. |
+| 4.46 | 2026-09-10 | Persisted the rotated DeepSeek key as a user-level environment variable (`setx DEEPSEEK_API_KEY`, verified via `[Environment]::GetEnvironmentVariable(...,'User')`). New terminals/restarts now inherit it automatically; no key stored in any file. History scrub (`Scripts/scrub-secrets.sh` + force-push) still pending explicit go-ahead. |
 
 *© Euphoria Infotech — ELU-MSL-002*
