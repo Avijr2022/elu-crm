@@ -58,7 +58,8 @@ else
 fi
 
 echo "Running git-filter-repo ($FILTER_REPO) ..."
-"$FILTER_REPO" --replace-text "$TMP_RULES"
+# --force: this repo is not a fresh clone, but we already made a mirror backup above.
+"$FILTER_REPO" --replace-text "$TMP_RULES" --force
 
 # 4) Force push (coordinate with team first!)
 echo ""
