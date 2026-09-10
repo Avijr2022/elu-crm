@@ -8,7 +8,16 @@ from app.models.crm import Lead
 from app.models.pf import Tenant
 from app.repositories.crm.lead_repository import LeadRepository
 from app.repositories.pf.user_repository import TenantRepository
-from app.schemas.crm.lead import LEAD_STATUSES, LeadCreate, LeadListResponse, LeadResponse, LeadUpdate
+from app.schemas.crm.lead import (
+    LEAD_STATUSES,
+    LeadCreate,
+    LeadListResponse,
+    LeadResponse,
+    LeadUpdate,
+)
+
+QUALIFY_FROM = frozenset({"NEW", "UNDER_QUALIFICATION", "NURTURE", "ON_HOLD"})
+TERMINAL_STATUSES = frozenset({"CONVERTED", "DISQUALIFIED"})
 
 
 class LeadService:
@@ -106,6 +115,47 @@ class LeadService:
         if "notes" in data:
             lead.notes = data["notes"]
 
+        return LeadResponse.model_validate(self.repo.save(lead))
+
+    def qualify_lead(self, tenant_id: UUID, lead_id: UUID) -> LeadResponse:
+        lead = self.repo.get_by_id(tenant_id, lead_id)
+        if lead is None:
+            raise NotFoundError("Lead not found", req_id="REQ-CRM-001")
+        status = lead.status.upper()
+        if status in TERMINAL_STATUSES:
+            raise AppError(
+                "VALIDATION_ERROR",
+                f"Cannot qualify lead in status '{status}'",
+                422,
+                req_id="REQ-CRM-001",
+            )
+        if status not in QUALIFY_FROM:
+            raise AppError(
+                "VALIDATION_ERROR",
+                f"Lead status '{status}' cannot transition to QUALIFIED",
+                422,
+                req_id="REQ-CRM-001",
+            )
+        lead.status = "QUALIFIED"
+        return LeadResponse.model_validate(self.repo.save(lead))
+
+    def disqualify_lead(
+        self, tenant_id: UUID, lead_id: UUID, reason: str
+    ) -> LeadResponse:
+        lead = self.repo.get_by_id(tenant_id, lead_id)
+        if lead is None:
+            raise NotFoundError("Lead not found", req_id="REQ-CRM-001")
+        status = lead.status.upper()
+        if status in TERMINAL_STATUSES:
+            raise AppError(
+                "VALIDATION_ERROR",
+                f"Cannot disqualify lead in status '{status}'",
+                422,
+                req_id="REQ-CRM-001",
+            )
+        lead.status = "DISQUALIFIED"
+        note = f"[Disqualified] {reason.strip()}"
+        lead.notes = f"{lead.notes}\n{note}".strip() if lead.notes else note
         return LeadResponse.model_validate(self.repo.save(lead))
 
     def delete_lead(self, tenant_id: UUID, lead_id: UUID) -> None:

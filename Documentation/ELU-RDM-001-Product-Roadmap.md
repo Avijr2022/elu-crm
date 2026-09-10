@@ -93,7 +93,7 @@ v3.0  Advanced AI, Deep Industry Packs, Marketplace / Ecosystem
 | PRJ | PRJ-006 | Change Request Management | High | |
 | FIN | FIN-001 | Invoice Management | Critical | |
 | FIN | FIN-002 | Payment Management | Critical | |
-| FIN | FIN-003 | Vendor Settlement | High | |
+| FIN | FIN-003 | Vendor Settlement | High | Professional+ (not Enterprise-only) |
 | FIN | FIN-004 | Tax Management | High | GST & TDS |
 
 ### 3.2 Explicitly Out of v1.0

@@ -11,6 +11,8 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
+from app.db.rls_context import bind_rls_context
+from app.repositories.pf.permission_repository import permissions_for_role
 from app.repositories.pf.user_repository import TenantRepository, UserRepository
 from app.schemas.pf.auth import TokenResponse, UserMeResponse
 
@@ -25,6 +27,8 @@ class AuthService:
     def login(
         self, email: str, password: str, tenant_code: str | None = None
     ) -> TokenResponse:
+        # Auth bootstrap: resolve tenant/user before JWT exists (ADR-015).
+        bind_rls_context(self.db, platform=True)
         tenant = None
         if tenant_code:
             tenant = self.tenants.get_by_code(tenant_code)
@@ -42,6 +46,11 @@ class AuthService:
             raise ForbiddenError("User account is not active", req_id="REQ-PF-051")
 
         if user.tenant.status not in {"ACTIVE", "TRIAL"}:
+            if user.tenant.status == "SUSPENDED":
+                raise ForbiddenError(
+                    "Tenant is suspended; login is blocked",
+                    req_id="BR-PF-014",
+                )
             raise ForbiddenError("Tenant is not active", req_id="REQ-PF-006")
 
         user.last_login = datetime.now(timezone.utc)
@@ -72,9 +81,18 @@ class AuthService:
 
         user_id = UUID(payload["sub"])
         tenant_id = UUID(payload["tenant_id"])
+        bind_rls_context(self.db, tenant_id=tenant_id, platform=False)
         user = self.users.get_by_id(user_id, tenant_id)
         if user is None or user.account_status != "ACTIVE":
             raise UnauthorizedError("User not found or inactive", req_id="REQ-PF-051")
+
+        if user.tenant.status not in {"ACTIVE", "TRIAL"}:
+            if user.tenant.status == "SUSPENDED":
+                raise ForbiddenError(
+                    "Tenant is suspended; login is blocked",
+                    req_id="BR-PF-014",
+                )
+            raise ForbiddenError("Tenant is not active", req_id="REQ-PF-006")
 
         access = create_access_token(
             user_id=user.user_id,
@@ -90,11 +108,13 @@ class AuthService:
         )
 
     def me(self, user_id: UUID, tenant_id: UUID) -> UserMeResponse:
+        bind_rls_context(self.db, tenant_id=tenant_id, platform=False)
         user = self.users.get_by_id(user_id, tenant_id)
         if user is None:
             raise UnauthorizedError("User not found", req_id="REQ-PF-051")
 
         settings = user.tenant.settings
+        perms = sorted(permissions_for_role(self.db, user.role_id))
         return UserMeResponse(
             user_id=user.user_id,
             tenant_id=user.tenant_id,
@@ -104,6 +124,7 @@ class AuthService:
             display_name=user.display_name,
             role_code=user.role.role_code,
             role_name=user.role.role_name,
+            permissions=perms,
             organization_name=user.organization.organization_name,
             currency_code=settings.currency_code if settings else "INR",
             time_zone=settings.time_zone if settings else "Asia/Kolkata",

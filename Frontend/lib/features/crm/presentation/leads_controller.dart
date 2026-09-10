@@ -4,7 +4,9 @@ import '../data/lead_model.dart';
 import '../data/lead_service.dart';
 
 class LeadsController extends ChangeNotifier {
-  LeadsController({LeadService? service}) : _service = service ?? LeadService();
+  LeadsController({
+    LeadService? service,
+  }) : _service = service ?? LeadService();
 
   final LeadService _service;
 
@@ -19,7 +21,8 @@ class LeadsController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final result = await _service.list(search: search.isEmpty ? null : search);
+      final result =
+          await _service.list(search: search.isEmpty ? null : search);
       items = result.items;
       total = result.total;
     } catch (e) {
@@ -55,6 +58,20 @@ class LeadsController extends ChangeNotifier {
       );
       await load();
       return lead;
+    } catch (e) {
+      error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<String?> convertLead(Lead lead) async {
+    error = null;
+    notifyListeners();
+    try {
+      final result = await _service.convert(lead.leadId);
+      await load();
+      return result.referenceNumber;
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();

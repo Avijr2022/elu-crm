@@ -63,3 +63,19 @@ class LeadListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class LeadDisqualifyRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class LeadConvertResponse(BaseModel):
+    convert_type: str
+    opportunity: Optional["OpportunityResponse"] = None
+    customer: Optional["CustomerResponse"] = None
+
+
+from app.schemas.crm.customer import CustomerResponse  # noqa: E402
+from app.schemas.crm.opportunity import OpportunityResponse  # noqa: E402
+
+LeadConvertResponse.model_rebuild()

@@ -1,7 +1,7 @@
 # E-LinkUp Documentation Framework
 **Document ID:** ELU-DF-001  
 **Document Name:** Enterprise Documentation Framework & Specification Template  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
@@ -9,8 +9,7 @@
 **Document Owner:** PMO  
 **SEH Alignment:** ELU-SEH-001 – Software Engineering Handbook  
 **Technology Stack:** Flutter (Web + Android) · Python FastAPI · PostgreSQL · JWT + Refresh Token · Docker · Linux VPS / Azure  
-**Related Documents:** ELU-DOC-001, ELU-SEH-001, ELU-CHR-001, ELU-BRD-001, ELU-HLD-001, ELU-SAD-001, ELU-STORY-001, ELU-EFS-001, ELU-RTM-001  
-
+**Related Documents:** ELU-CON-001, ELU-DOC-001, ELU-SEH-001, ELU-CHR-001, ELU-BRD-001, ELU-HLD-001, ELU-SAD-001, ELU-STORY-001, ELU-EFS-001, ELU-RTM-001, ELU-ADR-001, ELU-AI-001  
 ---
 
 ## Document Control
@@ -29,6 +28,7 @@
 | 1.1 | 2026-07-31 | EIIP / PMO | Formalized document numbering (CHR/SEH/BRD/BFS/EFS/DDD/ERD/API/UI/RTM/TST); Status model; Version History; cross-reference rules; aligned Field Dictionary → ELU-DDD and Test Pack → ELU-TST |
 | 1.2 | 2026-07-31 | EIIP / PMO | Added ELU-ADR Architecture Decision Log to numbering standard; decisions mandatory for significant architecture choices |
 | 1.3 | 2026-07-31 | EIIP / PMO | Added ELU-RDM, ELU-RSK, ELU-DEV, ELU-MSL document types |
+| 1.4 | 2026-08-06 | EIIP / PMO | Hierarchy: ELU-CON-001 Frozen first; ELU-AI / GOV-VAL pointers |
 
 ---
 
@@ -54,7 +54,10 @@ This document is written for commercial multi-tenant SaaS quality comparable to 
 ## 1. Documentation Hierarchy (SEH)
 
 ```text
-ELU-DOC-001  Documentation Master Index  ← start here
+ELU-CON-001  Enterprise Engineering Constitution (Frozen)  ← AI / humans start here
+ELU-AI-001   Cursor AI Governance (+ Cursor_Rules / .cursor/rules)
+ELU-GOV-VAL-001  Governance Validation Report (implementation gate)
+ELU-DOC-001  Documentation Master Index
 ELU-DF-001   Documentation Framework (this document)
 ELU-SEH-001  Software Engineering Handbook
 ELU-CHR-001  Project Charter
@@ -62,6 +65,7 @@ ELU-BRD-001  Business Requirements Document
 ELU-STORY-001 Business Story
 ELU-HLD-001  Platform Blueprint / HLD
 ELU-SAD-001  Software Architecture Document
+ELU-ADR-001  Architecture Decision Log
 ELU-EFS-001  Enterprise Functional Specification
 ELU-RTM-001  Requirements Traceability Matrix
         │

@@ -1,0 +1,40 @@
+#!/bin/sh
+# Lightweight pre-commit secret guard (no external deps).
+# Blocks commits whose staged diff introduces obvious secret patterns such as
+# DeepSeek/OpenAI-style `sk-...` keys or hard-coded `apiKey:` values.
+#
+# Enable (run once):
+#   git config core.hooksPath .githooks
+# Or via pre-commit framework (preferred): see .pre-commit-config.yaml
+
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+	against=HEAD
+else
+	# Initial commit: scan the whole tree that is staged.
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# Scan staged content, not working tree.
+staged=$(git diff --cached --diff-filter=ACM --name-only)
+
+# Regexes for common API-key shapes.
+patterns='sk-[A-Za-z0-9]{20,}|apiKey[[:space:]]*[:=][[:space:]]*["'"'"']sk-|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+
+fail=0
+for f in $staged; do
+	# Skip binary files and lockfiles that legitimately contain such tokens.
+	case "$f" in
+		*.lock|*package-lock.json|*pubspec.lock|*.min.js|*.min.css) continue ;;
+	esac
+	if git show ":$f" 2>/dev/null | grep -qE "$patterns"; then
+		echo "pre-commit: possible secret in $f" >&2
+		fail=1
+	fi
+done
+
+if [ "$fail" -ne 0 ]; then
+	echo "pre-commit: staged changes look like they contain a secret; commit blocked." >&2
+	echo "If this is a false positive, use: git commit --no-verify" >&2
+	exit 1
+fi
+exit 0

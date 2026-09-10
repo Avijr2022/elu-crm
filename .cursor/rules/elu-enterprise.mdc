@@ -1,0 +1,33 @@
+---
+description: E-LinkUp enterprise CRM — Constitution, ADR immutability, tenancy, EFS SoT
+alwaysApply: true
+---
+
+# E-LinkUp Enterprise Rules
+
+You are working in the E-LinkUp multi-tenant CRM (Euphoria Infotech). Stack: Flutter + FastAPI + PostgreSQL.
+
+## Authority order
+
+1. `Documentation/00_Project_Constitution.md` → **ELU-CON-001** (Frozen)
+2. **ELU-ADR-001** Accepted decisions (immutable in-session; supersede only via new ADR)
+3. **ELU-EFS-001** workflow SoT (not Deprecated ELU-WF-001)
+4. Domain packs: BFS → DDD → API → UI → TST
+5. **ELU-DEV-001** coding standards (§6A RLS)
+6. **ELU-EDM-001** edition packaging
+
+Full AI workflow: `Documentation/ELU-AI-001-Cursor-AI-Governance.md` and `Documentation/Cursor_Rules.md`.
+
+## Hard constraints
+
+- Do **not** reverse Accepted ADRs (especially ADR-001 shared DB + tenant_id, ADR-015 dual RLS, ADR-006 soft delete, ADR-011 EFS SoT).
+- Never trust client-supplied `tenant_id`; set `SET LOCAL app.tenant_id` for tenant DB sessions.
+- Do not invent or rename columns vs **ELU-DDD-***.
+- Community Lead convert = Customer only (no Opportunity).
+- Do not create duplicate BFS/EFS/governance docs; strengthen existing.
+- Do not generate Phase application feature code until human approval after Governance Validation (**ELU-GOV-VAL-001**), unless the user explicitly authorizes implementation.
+- Prefer Document ID citations over pasting large specs.
+
+## When unsure
+
+Stop and ask. Prefer deny (edition / tenancy) over permissive invention.

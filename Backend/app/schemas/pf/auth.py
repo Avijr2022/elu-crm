@@ -34,6 +34,7 @@ class UserMeResponse(BaseModel):
     display_name: str
     role_code: str
     role_name: str
+    permissions: list[str] = Field(default_factory=list)
     organization_name: str
     currency_code: str
     time_zone: str

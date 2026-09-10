@@ -1,0 +1,139 @@
+name: CRM Tests
+
+on:
+  push:
+    branches: [main, master, develop, 'cursor/**']
+    paths:
+      - 'Backend/**'
+      - 'Frontend/**'
+      - 'customertracker/**'
+      - '.github/workflows/crm-tests.yml'
+  pull_request:
+    paths:
+      - 'Backend/**'
+      - 'Frontend/**'
+      - 'customertracker/**'
+      - '.github/workflows/crm-tests.yml'
+  # Manual runs (any branch). Optionally run a DeepSeek smoke check that uses
+  # the DEEPSEEK_API_KEY repository secret (default off to avoid token spend).
+  workflow_dispatch:
+    inputs:
+      deepseek_smoke:
+        description: 'Run optional DeepSeek smoke check (uses DEEPSEEK_API_KEY secret)'
+        type: boolean
+        default: false
+
+jobs:
+  crm-api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: elinkup
+          POSTGRES_PASSWORD: elinkup_local
+          POSTGRES_DB: elinkup
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U elinkup -d elinkup"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://elinkup:elinkup_local@localhost:5432/elinkup
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: ci-elinkup-test-secret-key-min-32-chars
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: Backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Full backend suite: app lifespan bootstraps schema + seeds on TestClient
+      # startup, so a fresh Postgres service is sufficient. Covers CRM, SAL, FIN
+      # (payment receipts + partial allocation), PF (branding/editions/tenants/
+      # subscriptions/organizations), PRJ, and RLS tenant-isolation tests.
+      - name: Run backend test suite
+        run: python -m pytest -q --tb=short
+
+      # Optional, manually-triggered only (workflow_dispatch + deepseek_smoke=true).
+      # Skips gracefully if the secret is not configured.
+      - name: DeepSeek endpoint test (optional)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deepseek_smoke }}
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_E2E: '1'
+        run: |
+          if [ -z "$DEEPSEEK_API_KEY" ]; then
+            echo "DEEPSEEK_API_KEY not configured; skipping DeepSeek endpoint test."
+            exit 0
+          fi
+          python -m pytest tests/test_deepseek_endpoint.py -q --tb=short
+
+  flutter-widgets:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter analyze
+        # Non-fatal infos/warnings: SDK deprecations vary across Flutter versions.
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test
+
+      - name: Flutter widget tests
+        run: flutter test test/widget_test.dart test/navigation_test.dart
+
+  customertracker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: customertracker
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Flutter analyze
+        # Non-fatal infos/warnings: legacy app with pinned deps vs CI's newer Flutter.
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test
+
+      - name: Flutter widget tests
+        run: flutter test

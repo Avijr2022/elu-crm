@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.pf import Role, Tenant, User
@@ -52,11 +52,13 @@ class TenantRepository:
         self.db = db
 
     def get_by_code(self, tenant_code: str) -> Tenant | None:
+        """Case-insensitive lookup (BR-PF-009 lowercase + legacy seed codes)."""
+        code = tenant_code.strip()
         stmt = (
             select(Tenant)
             .options(joinedload(Tenant.edition), joinedload(Tenant.settings))
             .where(
-                Tenant.tenant_code == tenant_code.upper(),
+                func.lower(Tenant.tenant_code) == code.lower(),
                 Tenant.is_deleted.is_(False),
             )
         )

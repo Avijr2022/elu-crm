@@ -1,4 +1,4 @@
-/// Local API endpoint for host-run FastAPI.
+/// API base URL — override via `--dart-define=API_BASE_URL=http://host:port`.
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',

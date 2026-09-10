@@ -1,14 +1,14 @@
 # E-LinkUp Architecture Decision Log
 **Document ID:** ELU-ADR-001  
 **Document Name:** Architecture Decision Log (ADL)  
-**Version:** 1.0  
+**Version:** 1.3  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
 **Prepared By:** Enterprise Solution Architecture  
 **Document Owner:** Solution Architecture / PMO  
 **Example Tenant:** Euphoria  
-**Related Documents:** ELU-DOC-001, ELU-DF-001, ELU-SAD-001, ELU-EFS-001, ELU-CHR-001, ELU-SEH-001  
+**Related Documents:** ELU-CON-001, ELU-AI-001, ELU-DOC-001, ELU-DF-001, ELU-SAD-001, ELU-EFS-001, ELU-CHR-001, ELU-SEH-001  
 
 ---
 
@@ -17,6 +17,9 @@
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0 | 2026-07-31 | EIIP / Solution Architecture | Initial Decision Log; expanded ADR-001…009 from ELU-SAD-001; added ADR-010…014 |
+| 1.1 | 2026-08-06 | EIIP / Solution Architecture | ADR-015 dual tenant isolation (app filter + PostgreSQL RLS); ADR-001 clarified |
+| 1.2 | 2026-08-06 | EIIP / Solution Architecture | §7 AI immutability; CON / Cursor AI cross-links |
+| 1.3 | 2026-08-06 | EIIP / Solution Architecture | ADR-016 PF-003A implements ADR-015 (RLS + SET LOCAL + elu_app) |
 
 ---
 
@@ -82,6 +85,8 @@ Every new decision must use this structure:
 | ADR-012 | Document numbering & status governance (ELU-DOC-001) | 2026-07-31 | Accepted |
 | ADR-013 | Community / Professional / Enterprise packaging | 2026-07-30 | Accepted |
 | ADR-014 | Docker + Azure / Linux VPS hosting model | 2026-07-30 | Accepted |
+| ADR-015 | Dual tenant isolation: repository filters + PostgreSQL RLS | 2026-08-06 | Accepted |
+| ADR-016 | PF-003A implements ADR-015 (elu_app role + session GUCs) | 2026-08-06 | Accepted |
 
 ---
 
@@ -114,12 +119,13 @@ A tenancy model must be chosen before table design and API middleware are built.
 | C. Schema-per-tenant | Medium isolation | Migration complexity; tooling friction |
 
 **Final Decision**  
-**Alternative A** — Shared PostgreSQL database with mandatory `tenant_id` on tenant-scoped tables; enforce isolation in repository/middleware (and RLS where adopted). Platform-global masters (e.g. `edition`) may omit tenant scope.
+**Alternative A** — Shared PostgreSQL database with mandatory `tenant_id` on tenant-scoped tables. **Enforcement detail is binding in ADR-015** (application repository/middleware filters **plus** PostgreSQL Row Level Security as defense-in-depth). Platform-global masters (e.g. `edition`, `permission`) may omit tenant scope.
 
 **Impact**  
 - Every BFS/EFS/DDD artefact must mark tenant scope.  
 - Isolation tests are mandatory Acceptance Criteria.  
-- Revisit if a regulated customer requires physical isolation (possible Enterprise add-on later).
+- Revisit if a regulated customer requires physical isolation (possible Enterprise add-on later).  
+- See **ADR-015** for RLS session variable, bypass role, and migration rules.
 
 ---
 
@@ -549,6 +555,89 @@ Avoid lock-in while supporting Azure growth path.
 
 ---
 
+### ADR-015 — Dual Tenant Isolation: Repository Filters + PostgreSQL RLS
+
+| Field | Value |
+|-------|-------|
+| **Decision ID** | ADR-015 |
+| **Date** | 2026-08-06 |
+| **Status** | Accepted |
+| **Deciders** | Solution Architecture, Tech Lead, Security |
+| **Related Documents** | ELU-ADR-001 (ADR-001), ELU-SAD-001, ELU-DEV-001, ELU-EFS-001, ELU-DDD-*, ELU-TST-*, ELU-SEC-001 |
+
+**Context**  
+ADR-001 chose shared-DB + `tenant_id` but left PostgreSQL RLS as “where adopted.” EFS NFRs (e.g. NFR-SAL-004, NFR-FIN-005) already require RLS. Ambiguity would cause inconsistent implementations and isolation defects (**RSK-001**).
+
+**Reason**  
+Enterprise multi-tenant SaaS needs a single, binding isolation contract before schema freeze and coding sprints.
+
+**Alternatives Considered**
+
+| Alternative | Pros | Cons |
+|-------------|------|------|
+| A. App/repo filters only | Faster to ship | One missed filter = cross-tenant leak |
+| B. PostgreSQL RLS only | Strong DB guarantee | Easy to forget SET LOCAL; harder to debug; Platform Admin paths awkward |
+| C. Dual enforcement (repo filters + RLS) | Defense-in-depth; matches EFS NFRs | Slightly more migration/ops discipline |
+
+**Final Decision**  
+**Alternative C — Dual enforcement (mandatory for all tenant-scoped tables):**
+
+1. **Application layer (primary):** Every repository query filters `tenant_id` from the JWT claim (never from client body). Platform Admin cross-tenant APIs use an explicit platform context and are audited.  
+2. **Database layer (defense-in-depth):** Enable PostgreSQL **RLS** on every tenant-scoped table. Policies compare `tenant_id` to `current_setting('app.tenant_id', true)::uuid`.  
+3. **Session binding:** FastAPI middleware / DB session begin sets `SET LOCAL app.tenant_id = '<uuid>'` for tenant requests.  
+4. **Bypass role:** A dedicated DB role (e.g. `elu_platform_admin`) may use `BYPASSRLS` **or** policies that allow when `current_setting('app.platform_context', true) = 'true'`. Bypass is only for Platform Admin jobs and migrations; every use is audited.  
+5. **Platform-global tables** (`edition`, `permission`, `feature_catalogue`, etc.): no RLS; no `tenant_id`.  
+6. **Isolation tests:** Mandatory in **ELU-TST-*** (`tests/isolation/`) — cross-tenant GET returns 404; JWT spoof rejected; Platform Admin boundary verified.
+
+**Impact**  
+- Alembic migrations must enable RLS + create policies when adding tenant tables (**ELU-DDD-*** / **ELU-ERD-***).  
+- **ELU-DEV-001**, **ELU-SAD-001**, and EFS NFR wording align to this ADR.  
+- CI fails if isolation suite is skipped for a tenant entity API.
+
+---
+
+### ADR-016 — PF-003A Implements Dual Tenant Isolation (ADR-015)
+
+| Field | Value |
+|-------|-------|
+| **Decision ID** | ADR-016 |
+| **Date** | 2026-08-06 |
+| **Status** | Accepted |
+| **Deciders** | Solution Architecture, Security, Tech Lead |
+| **Related Documents** | ADR-015, ELU-DEV-001 §6A, ELU-SEC-001, ELU-TST-PF, ELU-PGR-001 |
+
+**Context**  
+Phase Gate ELU-PGR-001 found ADR-015 unimplemented in runtime (no RLS / no `SET LOCAL`). PF-004 Organization Management must not begin until dual isolation is delivered as **PF-003A**.
+
+**Reason**  
+Close CON §3 / ADR-015 P0 without redesigning baselined PF-001…003 business modules.
+
+**Alternatives Considered**
+
+| Alternative | Pros | Cons |
+|-------------|------|------|
+| A. App filters only (waive RLS) | Fast | Violates CON / ADR-015 |
+| B. BYPASSRLS superuser app login | Simple | RLS never enforced |
+| C. Non-bypass `elu_app` + GUC policies + Session.info rebind | Matches ADR-015; works with FORCE RLS | Requires SET ROLE + owner DDL path |
+
+**Final Decision**  
+**Alternative C — PF-003A delivery of ADR-015:**
+
+1. Role `elu_app` (NOSUPERUSER, NOBYPASSRLS); request sessions `SET LOCAL ROLE elu_app`.
+2. `ENABLE` + `FORCE ROW LEVEL SECURITY` + `tenant_isolation` policies on all tenant-scoped tables listed in `012_rls_pf003a.sql`.
+3. Session GUCs: `app.tenant_id`, `app.platform_context` via `set_config(..., is_local=true)`; rebound on every `Session.after_begin` from `Session.info` (survives commit / FastAPI threadpool).
+4. Platform Admin and auth bootstrap set `app.platform_context=true` (audited at API layer).
+5. Platform-global tables (`edition*`, `feature_catalogue`, `permission`) remain without RLS.
+6. Isolation suite in `tests/isolation/` is mandatory for release (`TC-PF-ISO-*`).
+7. DDL applicators run under owner role (`owner_role()`), not `elu_app`.
+
+**Impact**  
+- PF-004 blocked until PF-003A RELEASE APPROVED.  
+- TD-CRIT-01 / TD-CRIT-02 closed on release.  
+- Does not reverse ADR-015; implements it.
+
+---
+
 ## 5. How to Add a New Decision
 
 1. Allocate next **ADR-NNN** in §3 Index.  
@@ -564,6 +653,35 @@ Avoid lock-in while supporting Azure growth path.
 When a design choice is explained elsewhere, cite the Decision ID:
 
 > Tenancy uses shared DB isolation per **ADR-001** (see **ELU-ADR-001 – Architecture Decision Log**).
+
+Authority chain: **ELU-CON-001** (Frozen) → this Decision Log → domain specs. AI assistants: **ELU-AI-001**, **Cursor_Rules.md**.
+
+---
+
+## 7. AI Immutability & Supersession (Binding)
+
+**Purpose:** Prevent Cursor / other AI sessions from silently reversing **Accepted** decisions.
+
+| Rule | Binding |
+|------|---------|
+| **Accepted = law** | An Accepted ADR may not be “reinterpreted,” weakened, or ignored in generated code or docs |
+| **No silent reversal** | Agents must not change Status, Final Decision, or enforcement wording without human Architecture Review |
+| **Supersession only** | To change course: allocate next **ADR-NNN**, Status = Proposed → Accepted; mark prior ADR **Superseded** with successor ID |
+| **Clarify vs reverse** | Editorial clarification (e.g. ADR-001 pointing to ADR-015) is allowed; removing dual RLS or shared-DB tenancy without a new ADR is **forbidden** |
+| **Conflict handling** | If a BFS/EFS fragment conflicts with an Accepted ADR, **ADR wins**; open a BA/Architecture ticket — do not “fix” by inventing a third behaviour |
+| **Mandatory citations** | Plans and PRs that touch tenancy, auth, packaging, soft-delete, or workflow SoT must cite the Decision ID |
+
+### 7.1 High-sensitivity Accepted decisions (do not weaken)
+
+| Decision ID | Must not silently drop |
+|-------------|------------------------|
+| ADR-001 / ADR-015 | Shared DB + `tenant_id` **and** dual repo + RLS enforcement |
+| ADR-004 | JWT + Refresh model; SSO/MFA edition gating |
+| ADR-006 | Soft delete + `version_no` |
+| ADR-009 / ADR-013 | Edition matrix packaging |
+| ADR-011 | EFS as workflow implementation SoT |
+
+Governance validation: **ELU-GOV-VAL-001**.
 
 ---
 

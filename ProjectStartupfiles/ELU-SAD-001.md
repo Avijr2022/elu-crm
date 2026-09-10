@@ -1,15 +1,15 @@
 # E-LinkUp Software Architecture Document (SAD)
 **Document ID:** ELU-SAD-001  
 **Document Name:** Software Architecture Document  
-**Version:** 1.0  
-**Status:** In Review  
+**Version:** 1.1  
+**Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
 **Prepared By:** Euphoria Infotech (I) Limited  
 **Document Owner:** Solution Architecture / PMO  
 **Example Tenant:** Euphoria  
 **Tagline:** *"Connecting Business. Streamlining Growth."*  
-**Related Documents:** ELU-DOC-001, ELU-CHR-001, ELU-HLD-001, ELU-BRD-001, ELU-STORY-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001
+**Related Documents:** ELU-DOC-001, ELU-CHR-001, ELU-HLD-001, ELU-BRD-001, ELU-STORY-001, ELU-EFS-001, ELU-DF-001, ELU-ADR-001, ELU-EDM-001, ELU-SEC-001
 
 ---
 
@@ -17,8 +17,9 @@
 
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
-| 1.0 | 2026-07-30 | EIIP | Initial Software Architecture Document
+| 1.0 | 2026-07-30 | EIIP | Initial Software Architecture Document |
 | 1.0a | 2026-07-31 | EIIP / PMO | Status In Review; Version History; Related Documents aligned to ELU-DOC-001 |
+| 1.1 | 2026-08-06 | EIIP / Solution Architecture | Status Approved; dual isolation per ADR-015; edition matrix aligned to ELU-EDM-001 |
 
 > Catalogue entry: **ELU-DOC-001 – Documentation Master Index**. Cross-references must cite Document IDs (see **ELU-DF-001 – Documentation Framework**).
 
@@ -215,10 +216,12 @@ This keeps CRM user journeys configurable without code forks.
 
 | Aspect | Design |
 |--------|--------|
-| Strategy | Shared application + shared DB schema with **mandatory `tenant_id`** on business tables |
-| Enforcement | Middleware / repository filters; never trust client-supplied tenant alone |
-| Admin boundary | Platform Admin operates cross-tenant; Tenant Admin only within Euphoria |
+| Strategy | Shared application + shared DB schema with **mandatory `tenant_id`** on business tables (**ADR-001**) |
+| Enforcement | **Dual enforcement (ADR-015):** (1) repository/middleware filters from JWT claim; (2) PostgreSQL **RLS** on all tenant-scoped tables via `app.tenant_id` session variable. Never trust client-supplied tenant alone |
+| Session binding | FastAPI sets `SET LOCAL app.tenant_id = '<uuid>'` (and platform context when applicable) at DB session begin |
+| Admin boundary | Platform Admin operates cross-tenant via audited platform context / bypass role; Tenant Admin only within own tenant (e.g. Euphoria) |
 | Soft delete | Logical delete flags; no orphan hard deletes when transactions exist |
+| Isolation tests | Mandatory `tests/isolation/` suite for every tenant-scoped entity API |
 
 ### 5.2 Tenant Bootstrap (Architecture)
 
@@ -232,25 +235,26 @@ Aligned with WF-PF-001:
 
 ### 5.3 Edition Feature Gating
 
+**Authoritative matrix:** **ELU-EDM-001 – Edition × Module Matrix**. Summary:
+
 | Layer | Community | Professional | Enterprise |
 |-------|-----------|--------------|------------|
-| Auth | ✓ | ✓ | ✓ + SSO/MFA |
-| CRM | ✓ | ✓ | ✓ |
-| Sales | Basic | ✓ | ✓ |
+| Auth | ✓ | ✓ + MFA | ✓ + SSO/MFA |
+| CRM | Lead + basic Customer + Activity | Full CRM (incl. Opportunity) | Full CRM |
+| Sales | — | ✓ | ✓ |
 | Projects | — | ✓ | ✓ |
 | Finance | — | ✓ | ✓ |
-| Help Desk | — | ✓ | ✓ |
-| Workflow Engine | — | Limited | ✓ |
-| Rule Engine | — | Basic | ✓ |
+| Help Desk | — | ✓ (v1.1) | ✓ |
+| Workflow Engine | Stub | Limited (v1.1) | Full |
+| Rule Engine | Stub | Basic (v1.1) | ✓ |
 | Documents | Basic | ✓ | ✓ |
-| Reports | Basic | Advanced | Enterprise BI |
-| Audit | Basic | Standard | Advanced |
-| AI Services | — | Optional | ✓ |
-| API Gateway | — | — | ✓ |
-| Integrations | — | Basic | Enterprise |
-| Multi-tenancy | Single Tenant | Optional | Full SaaS |
+| Reports | Basic | Advanced | Enterprise BI (v2.0) |
+| Audit | 90 days | 1 year | 7 years |
+| AI Services | — | Optional (v2.0) | ✓ (v2.0) |
+| API Gateway / Webhooks | — | — | ✓ (v2.0) |
+| Multi-tenancy | Shared SaaS (isolated) | Shared SaaS | Shared SaaS (+ physical option later) |
 
-Feature flags resolve at login / module load from Edition + Subscription status.
+Feature flags resolve at login / module load from Edition + Subscription status; **server-side enforcement required** (**ADR-009**).
 
 ---
 
@@ -478,6 +482,7 @@ Authoritative decision records (Decision ID, Date, Reason, Alternatives, Final D
 | ADR-012 | Document numbering & status governance | Accepted | ELU-ADR-001 |
 | ADR-013 | Community / Professional / Enterprise packaging | Accepted | ELU-ADR-001 |
 | ADR-014 | Docker + Azure / Linux VPS hosting model | Accepted | ELU-ADR-001 |
+| ADR-015 | Dual tenant isolation: repository filters + PostgreSQL RLS | Accepted | ELU-ADR-001 |
 
 ---
 
@@ -523,10 +528,10 @@ Authoritative decision records (Decision ID, Date, Reason, Alternatives, Final D
 
 | Field | Value |
 |-------|-------|
-| Status | Draft v1.0 |
+| Status | Approved v1.1 |
 | Example Tenant | Euphoria |
 | Review Cycle | Architecture Review Board + PMO |
-| Next Artifacts | API Specification Pack, ERD Pack, Flutter Screen Inventory, Threat Model |
+| Next Artifacts | ELU-DDD-*, ELU-ERD-*, ELU-API-*, ELU-UI-*, ELU-TST-*, ELU-SEC-001, ELU-OPS-001, ELU-CMP-001 |
 
 ---
 

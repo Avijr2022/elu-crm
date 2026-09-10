@@ -1,7 +1,7 @@
 # E-LinkUp Development Standards
 **Document ID:** ELU-DEV-001  
 **Document Name:** Development Standards  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Approved  
 **Classification:** Internal Confidential  
 **Project:** E-LinkUp (By Euphoria Infotech)  
@@ -17,6 +17,7 @@
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0 | 2026-07-31 | EIIP / Tech Lead | Initial implementation standards for FastAPI + Flutter + PostgreSQL |
+| 1.1 | 2026-08-06 | EIIP / Tech Lead | Tenant session + PostgreSQL RLS dual enforcement (ADR-015) |
 
 ---
 
@@ -202,10 +203,54 @@ frontend/
 **Rules:**
 
 1. Never expose `password_hash` or secrets in `*Read`.  
-2. Never trust client-supplied `tenant_id` — take from JWT (**ADR-001**).  
+2. Never trust client-supplied `tenant_id` — take from JWT (**ADR-001**, **ADR-015**).  
 3. Map DTOs ↔ models in service or dedicated mapper — not in router sprawl.  
 4. Validate enums/states against EFS Allowed Transitions.  
 5. Document OpenAPI `operation_id` and link `REQ-*` in description.  
+
+---
+
+## 6A. Tenant Session & PostgreSQL RLS (ADR-015)
+
+Dual enforcement is **mandatory** for every tenant-scoped table.
+
+### 6A.1 Request lifecycle
+
+```text
+JWT validated
+  → extract tenant_id (and platform_admin flag if any)
+  → open DB session
+  → SET LOCAL app.tenant_id = '<uuid>'
+  → if Platform Admin cross-tenant job:
+       SET LOCAL app.platform_context = 'true'  (audited)
+  → repository queries ALSO filter tenant_id in SQLAlchemy
+  → RLS policy enforces tenant_id = current_setting('app.tenant_id')::uuid
+```
+
+### 6A.2 RLS policy pattern (Alembic)
+
+```sql
+ALTER TABLE lead ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lead FORCE ROW LEVEL SECURITY;
+CREATE POLICY lead_tenant_isolation ON lead
+  USING (
+    current_setting('app.platform_context', true) = 'true'
+    OR tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+  )
+  WITH CHECK (
+    current_setting('app.platform_context', true) = 'true'
+    OR tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+  );
+```
+
+Platform-global tables (`edition`, `permission`, `feature_catalogue`, …) have **no** `tenant_id` and **no** RLS.
+
+### 6A.3 Repository obligations (extended)
+
+- Every query filters `tenant_id` + `is_deleted = false` unless explicit platform context.  
+- Optimistic lock: update `WHERE version_no = :expected` then increment.  
+- Soft delete only.  
+- New tenant tables: migration must enable RLS + policy; isolation test required before merge.
 
 ---
 
@@ -298,11 +343,14 @@ get_db → get_current_user → get_tenant_context → get_lead_service
 ## 11. Security Coding Checklist (Every PR)
 
 - [ ] Tenant filter present on read/write  
+- [ ] `SET LOCAL app.tenant_id` applied for the request session (**ADR-015**)  
+- [ ] RLS enabled on new tenant-scoped tables (migration)  
 - [ ] Permission checked (`lead.create`, etc.)  
-- [ ] Edition gate for paid modules (**ADR-009**)  
+- [ ] Edition gate for paid modules (**ADR-009**, **ELU-EDM-001**)  
 - [ ] Soft delete; no hard delete of transactional data  
 - [ ] Secrets not committed  
 - [ ] Isolation test added/updated for new tenant-scoped entity  
+- [ ] Client cannot set `tenant_id` via DTO  
 
 ---
 

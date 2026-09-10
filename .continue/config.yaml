@@ -1,0 +1,22 @@
+name: DeepSeek Config
+version: 1.0.0
+schema: v1
+models:
+  - name: "DeepSeek Chat"
+    provider: "deepseek"
+    model: "deepseek-chat"
+    apiBase: "https://deepseek.com"
+    apiKeyEnv: "DEEPSEEK_API_KEY"
+    roles:
+      - chat
+      - edit
+      - apply
+      - summarize
+
+tabAutoCompleteModel:
+  name: "DeepSeek Autocomplete"
+  provider: "deepseek"
+  model: "deepseek-chat"
+  apiBase: "https://deepseek.com"
+  apiKeyEnv: "DEEPSEEK_API_KEY"
+
