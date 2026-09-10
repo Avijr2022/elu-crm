@@ -113,7 +113,7 @@ class _SearchPageState extends State<SearchPage> {
                     MaterialPageRoute(builder: (context) => const Leadstate()));
               },
               icon: const Icon(
-                FontAwesomeIcons.slidersH,
+                FontAwesomeIcons.sliders,
                 size: 15,
                 color: Color.fromARGB(255, 248, 247, 247),
               )),

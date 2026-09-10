@@ -133,7 +133,7 @@ class _InvoiceButtonRow extends StatefulWidget {
   final String salesOrderId;
 
   const _InvoiceButtonRow(
-      {super.key, required this.paymentReceiptId, required this.salesOrderId});
+      {required this.paymentReceiptId, required this.salesOrderId});
 
   @override
   State<_InvoiceButtonRow> createState() => _InvoiceButtonRowState();
@@ -154,6 +154,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
 
   Future<void> _generateInvoice() async {
     final token = await _getSavedToken();
+    if (!mounted) return;
     String? finalToken = token;
     if (finalToken == null) {
       final ctrl = TextEditingController();
@@ -184,6 +185,8 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
       }
     }
 
+    if (!mounted) return;
+
     setState(() => _loading = true);
     try {
       final salesOrderId =
@@ -194,6 +197,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
         'Authorization': 'Bearer $finalToken',
         'Content-Type': 'application/json',
       });
+      if (!mounted) return;
       if (resp.statusCode == 200) {
         final body = json.decode(resp.body);
         // show compact summary and then allocate receipt
@@ -214,6 +218,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
                     ]));
 
         // Now allocate this receipt to the invoice (ask user for full/partial)
+        if (!mounted) return;
         if (invoiceId != null) {
           final choice = await showDialog<String?>(
               context: context,
@@ -234,6 +239,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
                     ],
                   ));
 
+          if (!mounted) return;
           double? amount;
           if (choice == 'partial') {
             final ctrl = TextEditingController();
@@ -257,6 +263,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
                             child: const Text('OK')),
                       ],
                     ));
+            if (!mounted) return;
             if (got == true) {
               amount = double.tryParse(ctrl.text.trim());
             } else {
@@ -274,6 +281,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
                 'Content-Type': 'application/json',
               },
               body: json.encode(bodyMap));
+          if (!mounted) return;
           if (allocResp.statusCode == 200) {
             await showDialog<void>(
                 context: context,
@@ -314,6 +322,7 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
                     ]));
       }
     } catch (e) {
+      if (!mounted) return;
       await showDialog<void>(
           context: context,
           builder: (_) => AlertDialog(
@@ -325,7 +334,9 @@ class _InvoiceButtonRowState extends State<_InvoiceButtonRow> {
                         child: const Text('OK'))
                   ]));
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 

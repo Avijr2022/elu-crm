@@ -116,7 +116,7 @@ class _SearchPage2State extends State<SearchPage2> {
                         builder: (context) => const LeadCalendar()));
               },
               icon: const Icon(
-                FontAwesomeIcons.slidersH,
+                FontAwesomeIcons.sliders,
                 size: 15,
                 color: Color.fromARGB(255, 248, 247, 247),
               )),

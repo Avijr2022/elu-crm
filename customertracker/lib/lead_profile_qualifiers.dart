@@ -87,7 +87,7 @@ class LeadProfileQualifiersLayoutState
               padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
               child: const Row(
                 children: <Widget>[
-                  Icon(FontAwesomeIcons.starHalfAlt),
+                  Icon(FontAwesomeIcons.starHalfStroke),
                   SizedBox(width: 7, height: 10),
                   Text(
                     'Lead Potential',
@@ -162,7 +162,7 @@ class LeadProfileQualifiersLayoutState
               padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
               child: const Row(
                 children: <Widget>[
-                  Icon(FontAwesomeIcons.caretSquareDown),
+                  Icon(FontAwesomeIcons.squareCaretDown),
                   SizedBox(width: 7, height: 10),
                   Text(
                     'Lead Stage',
