@@ -305,10 +305,10 @@ packages:
     dependency: "direct main"
     description:
       name: font_awesome_flutter
-      sha256: f50ce90dbe26d977415b9540400d6778bef00894aced6358ae578abd92b14b10
+      sha256: "275ff26905134bcb59417cf60ad979136f1f8257f2f449914b2c3e05bbb4cd6f"
       url: "https://pub.dev"
     source: hosted
-    version: "10.9.0"
+    version: "10.7.0"
   freezed_annotation:
     dependency: transitive
     description:
@@ -718,34 +718,34 @@ packages:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_calendar
-      sha256: f817bd4ee96c4d34dd98d11c80be8703e8cea7e1dda13a99f5a8ee1e5cdc9b70
+      sha256: c501e463e69ed6f69323ead6b3b47873e5f25d00ec481fe2429f9ebbac92271b
       url: "https://pub.dev"
     source: hosted
-    version: "28.1.37"
+    version: "27.1.48"
   syncfusion_flutter_charts:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_charts
-      sha256: "8367eb7b9941e33158f34c3e903e19897542b19423f9a91897aaafe4228298ca"
+      sha256: cdc207291ad0caf34cb9e20caa8938ff65f67a413b3a86a14d3a7b341a772100
       url: "https://pub.dev"
     source: hosted
-    version: "28.2.12"
+    version: "27.1.48"
   syncfusion_flutter_core:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: f1d2b52697543e13bdefdc62d15868124a265987577f53224a7dbe176c8448f0
+      sha256: "325f519ce4ad8edd81811c21b853d72018529e353584490824da0555156ba076"
       url: "https://pub.dev"
     source: hosted
-    version: "28.2.12"
+    version: "27.2.5"
   syncfusion_flutter_datepicker:
     dependency: transitive
     description:
       name: syncfusion_flutter_datepicker
-      sha256: cfc91ebacee63b2c5220e541736f8df211d4f0bfbf34265778862ae20faf094f
+      sha256: "2177e49eb8a1c0fce7081e40f5613c986d00e5e63cbeb98a6012f65ca156bfc7"
       url: "https://pub.dev"
     source: hosted
-    version: "28.2.12"
+    version: "27.2.5"
   table_calendar:
     dependency: "direct main"
     description:
