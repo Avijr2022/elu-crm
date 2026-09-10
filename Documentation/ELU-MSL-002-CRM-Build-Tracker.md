@@ -114,5 +114,6 @@
 | 4.65 | 2026-09-10 | Opened **PR #2** (`cursor/crm-opportunity-pipeline` → `master`): https://github.com/Avijr2022/elu-crm/pull/2 (summary of FIN/branding/DeepSeek/CI/security work). PR triggers CI via `pull_request`; merging to `master` also enables manual `workflow_dispatch` (incl. the optional DeepSeek smoke). |
 | 4.66 | 2026-09-10 | PR #2 checks **green**: `pull_request` run `34477770144` → success (and the accompanying `push` run → success). PR is `MERGEABLE` / `mergeStateStatus: CLEAN`. Ready to merge to `master`. |
 | 4.67 | 2026-09-10 | **PR #2 merged to `master`** (squash commit `f760cf3c`). Post-merge `master` push CI run → **success** (1m56s). The workflow now exists on the default branch, so manual **`workflow_dispatch` is available** (including the optional `deepseek_smoke`). Local refs fetched. |
+| 4.68 | 2026-09-10 | **Manual dispatch + DeepSeek secret verified end-to-end.** Triggered `workflow_dispatch` on `master` with `deepseek_smoke=true` → run `34482201503` **success**; the `crm-api` job's *DeepSeek endpoint test (optional)* step ran (`success`, not skipped), confirming the `DEEPSEEK_API_KEY` GitHub secret works through the real endpoint (server + Redis). All three jobs green. |
 
 *© Euphoria Infotech — ELU-MSL-002*
