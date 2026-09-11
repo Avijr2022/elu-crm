@@ -106,10 +106,10 @@ CREATE TABLE IF NOT EXISTS core.tenant_status_history (
 CREATE TABLE IF NOT EXISTS core.tenant_branding (
     branding_id UUID PRIMARY KEY,
     tenant_id UUID NOT NULL UNIQUE REFERENCES core.tenant(tenant_id) ON DELETE CASCADE,
-    logo_url VARCHAR(2048),
+    logo_url TEXT,
     primary_color VARCHAR(16),
     secondary_color VARCHAR(16),
-    favicon_url VARCHAR(2048),
+    favicon_url TEXT,
     created_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_on TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -131,4 +131,22 @@ CREATE TABLE IF NOT EXISTS core.idempotency_key (
     ]
     for stmt in stmts:
         db.execute(text(stmt))
+    # Branding stores base64 data URLs; widen legacy VARCHAR columns once.
+    # Guarded so startup does not take an ACCESS EXCLUSIVE lock every boot.
+    for column in ("logo_url", "favicon_url"):
+        current_type = db.execute(
+            text(
+                "SELECT data_type FROM information_schema.columns "
+                "WHERE table_schema = 'core' AND table_name = 'tenant_branding' "
+                "AND column_name = :col"
+            ),
+            {"col": column},
+        ).scalar()
+        if current_type and current_type != "text":
+            db.execute(
+                text(
+                    f"ALTER TABLE core.tenant_branding "
+                    f"ALTER COLUMN {column} TYPE TEXT"
+                )
+            )
     db.commit()
