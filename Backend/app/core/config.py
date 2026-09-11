@@ -28,7 +28,8 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     cors_origins: str = (
-        "http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000"
+        "http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000,"
+        "http://localhost:8085,http://127.0.0.1:8085,http://[::1]:8080,http://[::1]:8085"
     )
 
     default_currency: str = "INR"
