@@ -1,11 +1,11 @@
 # Release Notes — PF-004 Organization Management
 **Document ID:** ELU-REL-PF004  
-**Release:** Phase-2-PF004 (proposed)  
-**Status:** **QA PASS — PENDING HUMAN RELEASE APPROVAL**  
+**Release:** Phase-2-PF004  
+**Status:** **QA PASS — RELEASE APPROVED**  
 **Date:** 2026-08-06  
-**Git tag:** *(apply `Phase-2-PF004` only after RELEASE APPROVED)*  
+**Git tag:** *(per HD-10: the existing `Phase-2-PF004` tag is preserved as a historical artefact; a **distinct annotated release tag** will be created on the approved release commit)*  
 **Prior baselines:** Phase-2-PF001 … Phase-2-PF003A  
-**QA:** ELU-QA-PF004 v1.0 PASS — PENDING HUMAN RELEASE APPROVAL  
+**QA:** ELU-QA-PF004 v1.0 PASS — RELEASE APPROVED  
 
 ---
 
@@ -38,7 +38,7 @@ PF-004 delivers tenant Organization Management: ROOT uniqueness, child create, p
 ## Approval
 
 - [x] QA Release Audit PASS  
-- [ ] Human **RELEASE APPROVED**  
+- [x] Human **RELEASE APPROVED**  
 - [ ] Git tag `Phase-2-PF004`  
 
 ## Tag disposition (HD-10) — 2026-09-11
