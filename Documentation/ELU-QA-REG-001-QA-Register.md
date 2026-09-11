@@ -10,7 +10,7 @@
 | PF-002 Tenant Management | ELU-QA-PF002 v1.1 | **RELEASE APPROVED** | `Phase-2-PF002` | Yes |
 | PF-003 Subscription Management | ELU-QA-PF003 v2.1 | **RELEASE APPROVED** | `Phase-2-PF003` | Yes |
 | PF-003A Enterprise Tenant Isolation | ELU-QA-PF003A v1.0 | **RELEASE APPROVED** | `Phase-2-PF003A` | Yes |
-| PF-004 Organization Management | ELU-QA-PF004 v1.0 | **RELEASE APPROVED** | `Phase-2-PF004` baseline — annotated release tag pending (HD-10) | Yes |
+| PF-004 Organization Management | ELU-QA-PF004 v1.0 | **RELEASE APPROVED** | `Phase-2-PF004-R1` | Yes |
 | Phase Gate PF-001…003 | ELU-PGR-001 | **AWAITING HUMAN SIGN-OFF** — both P0 conditions closed (see ELU-PGR-001 §15) | — | PF-004 QA PASS — pending human release approval |
 
 **Rule:** Locked modules change only on documented bug, approved Change Request (CR), or ADR requirement.  

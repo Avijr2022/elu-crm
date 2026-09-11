@@ -40,7 +40,7 @@ Human RELEASE APPROVED .... YES (2026-09-11)
 
 ## Freeze Rules (after approval)
 
-- Tag: existing `Phase-2-PF004` preserved as historical artefact; distinct annotated release tag pending per HD-10
+- Tag: **`Phase-2-PF004-R1`** (annotated) @ `3f30159a3ba73be1f09be791164982ec74ff8044` — created and pushed 2026-09-11; existing `Phase-2-PF004` preserved as historical artefact (HD-10 reconciled)
 - Change only on defect, approved CR, or ADR
 - Do not start PF-005+ without explicit RELEASE APPROVED + start instruction
 
