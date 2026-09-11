@@ -688,9 +688,9 @@ class TenantBranding(Base, TimestampMixin, SoftDeleteMixin):
         nullable=False,
         unique=True,
     )
-    logo_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    logo_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     primary_color: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     secondary_color: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
-    favicon_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    favicon_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     tenant: Mapped["Tenant"] = relationship(back_populates="branding")
