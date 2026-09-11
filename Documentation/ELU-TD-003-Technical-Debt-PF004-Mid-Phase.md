@@ -56,7 +56,7 @@ None open for PF-004 after mid-phase corrections.
 | AC-PF-004-04 / BR-PF-032 PDF name propagation (G-12) | **OPEN — deferred to Document Engine** (HD-05) |
 | RPT-PF-004-01 / -02 | **DEFERRED out of PF-004 v1.0** (HD-06) |
 | RPT-PF-004-03 / -04 | **NOT LOCATED / NOT IMPLEMENTED** — undefined in every source (HD-07) |
-| `Phase-2-PF004` tag governance | **UNCHANGED** — human decision pending (HD-10) |
+| `Phase-2-PF004` tag governance | **RECORDED (HD-10, 2026-09-11)** — existing Phase-2-PF004 / Phase-2-PF004-MidReview tags preserved unchanged as historical artefacts; neither is the approved PF-004 release tag; no tag created or moved while Human RELEASE APPROVED is PENDING (see ELU-REL-PF004 § Tag disposition) |
 | Alembic baseline | **OPEN** — platform-wide backlog |
 
 **Note:** PLATFORM_ADMIN retains a universal bypass in `app/core/rbac.has_permission`; any future PF-009 grain enforcement must special-case read-only modules, otherwise Platform Admin would regain create/update/delete/export.

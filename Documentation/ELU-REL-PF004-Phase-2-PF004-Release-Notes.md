@@ -41,6 +41,17 @@ PF-004 delivers tenant Organization Management: ROOT uniqueness, child create, p
 - [ ] Human **RELEASE APPROVED**  
 - [ ] Git tag `Phase-2-PF004`  
 
+## Tag disposition (HD-10) — 2026-09-11
+
+Decision recorded as governance documentation only — **no tag was created, moved or deleted**:
+
+- The existing `Phase-2-PF004` tag is **preserved unchanged** as a historical artefact (target `a3397b4`, the PF-004 mid-phase review snapshot; it does not contain the approved corrections merged via PR #7).
+- The existing `Phase-2-PF004-MidReview` tag is **preserved unchanged**.
+- **Neither existing tag is treated as the approved PF-004 release tag.**
+- **No tag is created or moved while Human RELEASE APPROVED is PENDING.**
+- After Human **RELEASE APPROVED** is formally recorded here and in `ELU-QA-PF004`, a **distinct annotated release tag** may be created against the actual approved release commit (proposed name: `Phase-2-PF004-R1`).
+- **PF-005 remains blocked** until that human release approval is recorded.
+
 ---
 
 *© Euphoria Infotech (I) Limited — ELU-REL-PF004*
