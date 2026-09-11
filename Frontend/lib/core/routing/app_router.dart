@@ -24,6 +24,8 @@ import '../../features/crm/presentation/opportunity_form_page.dart';
 import '../../features/crm/presentation/opportunity_stages_page.dart';
 import '../../features/crm/presentation/payment_receipt_detail_page.dart';
 import '../../features/crm/presentation/payment_receipts_page.dart';
+import '../../features/crm/presentation/invoice_detail_page.dart';
+import '../../features/crm/presentation/invoices_page.dart';
 import '../../features/crm/presentation/quotation_form_page.dart';
 import '../../features/crm/presentation/quotation_detail_page.dart';
 import '../../features/crm/presentation/quotations_page.dart';
@@ -182,6 +184,9 @@ GoRouter createAppRouter(AuthController auth, EditionController edition) {
               path: CrmRoutes.paymentReceipts,
               builder: (_, __) => const PaymentReceiptsPage()),
           GoRoute(
+              path: CrmRoutes.invoices,
+              builder: (_, __) => const InvoicesPage()),
+          GoRoute(
               path: CrmRoutes.workOrders,
               builder: (_, __) => const WorkOrdersPage()),
           GoRoute(
@@ -250,6 +255,12 @@ GoRouter createAppRouter(AuthController auth, EditionController edition) {
         path: '/crm/payment-receipts/:id',
         builder: (_, s) => PaymentReceiptDetailPage(
           paymentReceiptId: s.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/crm/invoices/:id',
+        builder: (_, s) => InvoiceDetailPage(
+          invoiceId: s.pathParameters['id']!,
         ),
       ),
       GoRoute(
