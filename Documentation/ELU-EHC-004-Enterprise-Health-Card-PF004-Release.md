@@ -4,7 +4,7 @@
 **Date:** 2026-08-06  
 **Module:** PF-004  
 **Related:** ELU-QA-PF004, ELU-MSL-001, ELU-RSK-001, ELU-TD-003, ELU-MPR-PF004  
-**Status:** **QA PASS — PENDING HUMAN RELEASE APPROVAL**
+**Status:** **RELEASE APPROVED** (human decision 2026-09-11)
 
 ---
 
@@ -27,20 +27,20 @@
 ## Scorecard
 
 ```text
-Platform Foundation ....... ~45% (4 of 11 modules complete pending PF-004 approve)
+Platform Foundation ....... ~45% (4 of 11 modules complete; PF-004 RELEASE APPROVED)
 PF-004 Completion ......... 100% (release candidate)
 PF-004 Tests .............. 13/13 module + org ISO
 Isolation Suite ........... 12/12 (incl. PF-004 org cross-tenant)
 Open High Gaps ............ 0
 Flutter Analyze ........... PASS
-Human RELEASE APPROVED .... PENDING
+Human RELEASE APPROVED .... YES (2026-09-11)
 ```
 
 ---
 
 ## Freeze Rules (after approval)
 
-- Tag proposed: `Phase-2-PF004`
+- Tag: existing `Phase-2-PF004` preserved as historical artefact; distinct annotated release tag pending per HD-10
 - Change only on defect, approved CR, or ADR
 - Do not start PF-005+ without explicit RELEASE APPROVED + start instruction
 
