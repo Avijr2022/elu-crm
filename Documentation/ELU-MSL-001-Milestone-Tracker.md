@@ -28,6 +28,7 @@
 | 1.9 | 2026-08-06 | EIIP / Security / QA | PF-003A Enterprise Tenant Isolation QA PASS — await RELEASE APPROVED before PF-004 |
 | 1.10 | 2026-08-06 | EIIP / PMO | Baseline **Phase-2-PF003A** RELEASE APPROVED; start PF-004 Organization Management |
 | 1.11 | 2026-08-06 | EIIP / Architecture | PF-004 Mid-Phase Review ELU-MPR-PF004; Health Card ELU-EHC-003; continue build |
+| 1.12 | 2026-09-11 | EIIP / PMO | **HD-09 status reconciliation** — PF-004 status records reconciled to `QA PASS — PENDING HUMAN RELEASE APPROVAL` (approved corrections merged `67b48c1`). Human RELEASE APPROVED, HD-10 tag disposition and the PF-001…003 phase-gate sign-off remain outstanding |
 
 ---
 
@@ -90,7 +91,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | **PF-002 Tenant Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF002` |
 | **PF-003 Subscription Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003` |
 | **PF-003A Enterprise Tenant Isolation** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003A` |
-| **PF-004 Organization Management** | 🟡 In Progress | 60% | Mid-phase CONDITIONAL PASS (ELU-MPR-PF004); gaps before QA |
+| **PF-004 Organization Management** | 🟡 QA PASS — PENDING HUMAN RELEASE APPROVAL | 100% (release candidate) | ELU-QA-PF004 PASS; approved corrections merged `67b48c1`; human RELEASE APPROVED pending |
 | Database (PostgreSQL schema) | 🟡 In Progress | 75% | RLS FORCE via PF-003A |
 | FastAPI implementation | 🟡 In Progress | 70% | PF-003A RLS session binding live |
 | Flutter implementation | 🟡 In Progress | 55% | Subscriptions + Tenants + Editions baselined |
@@ -104,12 +105,12 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-002 Tenant Management | **RELEASE APPROVED** | `Phase-2-PF002` | Frozen — bug / CR / ADR only |
 | PF-003 Subscription | **RELEASE APPROVED** | `Phase-2-PF003` | Frozen — bug / CR / ADR only |
 | PF-003A Tenant Isolation | **RELEASE APPROVED** | `Phase-2-PF003A` | Frozen — bug / CR / ADR only |
-| PF-004 Organization | In Progress | — | Started after PF-003A RELEASE APPROVED |
+| PF-004 Organization | **QA PASS — PENDING HUMAN RELEASE APPROVAL** | — | ELU-QA-PF004 PASS; corrections merged `67b48c1`; not locked until approved |
 | PF-005…011 | Not Started | — | Per BFS/RDM order |
 
 ### 3.2 One-Line Health
 
-> **Baselines locked:** PF-001…PF-003A. **PF-004 Organization Management** in progress under CON / BFS-PF-004 / RDM.
+> **Baselines locked:** PF-001…PF-003A. **PF-004 Organization Management** — QA PASS, pending human release approval (corrections merged `67b48c1`); not locked until approved.
 
 ### 3.3 Enterprise Progress Dashboard (Phase Gate)
 
@@ -122,7 +123,7 @@ PF-001 Edition              ██████████ 100%
 PF-002 Tenant               ██████████ 100%
 PF-003 Subscription         ██████████ 100%
 PF-003A Tenant Isolation    ██████████ 100% RELEASE APPROVED
-PF-004 Organization         ██████░░░░  60%   ← MID-PHASE REVIEW DONE
+PF-004 Organization         ██████████ 100%   ← QA PASS — PENDING HUMAN RELEASE APPROVAL
 PF-005 Branch               ░░░░░░░░░░   0%
 PF-006 Department           ░░░░░░░░░░   0%
 PF-007 Business Unit        ░░░░░░░░░░   0%

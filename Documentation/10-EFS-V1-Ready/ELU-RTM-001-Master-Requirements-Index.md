@@ -208,7 +208,7 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 
 ---
 
-## 10. Implementation Traceability — PF-004 Organization Management (in progress)
+## 10. Implementation Traceability — PF-004 Organization Management (QA PASS — PENDING HUMAN RELEASE APPROVAL)
 
 | Requirement | Artefact | API | Test |
 |-------------|----------|-----|------|
@@ -220,7 +220,7 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | List/Search/Export/Hierarchy | BFS §10 | `/api/v1/org/organizations*` | list + hierarchy tests |
 | Flutter §11 | Organizations tab | — | manual / analyze |
 
-**Status:** Implementation started after Phase-2-PF003A RELEASE APPROVED.  
+**Status:** Implemented; **QA PASS — PENDING HUMAN RELEASE APPROVAL** (ELU-QA-PF004). Approved corrections merged in `67b48c1`; human RELEASE APPROVED outstanding.  
 **Code:** `organizations.py`, `organization_service.py`, `migrate_pf004.py`  
 **SQL:** `013_organization_pf004.sql`  
 **Flutter:** `organizations_page.dart`  
