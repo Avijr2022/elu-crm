@@ -41,12 +41,18 @@
 
 ## Next jobs
 
-| # | Job | Module |
-|---|-----|--------|
-| 1 | Invoice list/detail API + Flutter view | FIN |
-| 2 | Issue invoice workflow (DRAFT → ISSUED) | FIN |
-| 3 | Payment receipt → SO detail deep link | UI / FIN |
-| 4 | Quotation PDF live preview in branding settings | UI / PF |
+| P | # | Job | Module |
+|---|---|-----|--------|
+| P1 | 1 | Close PF-004 Organization Management gaps → QA release audit + tag (blocks PF-005…011) | PF |
+| P1 | 2 | Phase Gate PF-001…003 human approval (ELU-PGR-001) — currently `AWAITING HUMAN APPROVAL` | GOV |
+| P2 | 3 | Invoice list/detail API + Flutter view | FIN |
+| P2 | 4 | Issue invoice workflow (DRAFT → ISSUED) | FIN |
+| P2 | 5 | TD-PF-003-01 hourly expire scheduler; TD-PF-003-03 seat check on user create | PF / TD |
+| P3 | 6 | v1.0 UAT — Euphoria happy path (Lead → Payment) | UAT |
+| P3 | 7 | Alembic migration baseline; ELU-SEH-001 handbook | ENG / DOC |
+| P4 | 8 | Payment receipt → SO detail deep link | UI / FIN |
+| P4 | 9 | Quotation PDF live preview in branding settings | UI / PF |
+| P4 | 10 | Hygiene: `HTTP_422_UNPROCESSABLE_ENTITY` deprecation cleanup (10 call sites) | ENG |
 
 ---
 
@@ -116,5 +122,7 @@
 | 4.67 | 2026-09-10 | **PR #2 merged to `master`** (squash commit `f760cf3c`). Post-merge `master` push CI run → **success** (1m56s). The workflow now exists on the default branch, so manual **`workflow_dispatch` is available** (including the optional `deepseek_smoke`). Local refs fetched. |
 | 4.68 | 2026-09-10 | **Manual dispatch + DeepSeek secret verified end-to-end.** Triggered `workflow_dispatch` on `master` with `deepseek_smoke=true` → run `34482201503` **success**; the `crm-api` job's *DeepSeek endpoint test (optional)* step ran (`success`, not skipped), confirming the `DEEPSEEK_API_KEY` GitHub secret works through the real endpoint (server + Redis). All three jobs green. |
 | 4.69 | 2026-09-10 | **Fixed: Tenant Branding → Upload Logo not working (HTTP 500).** Root cause: `core.tenant_branding.logo_url` / `favicon_url` were `VARCHAR(2048)`, far too small for a base64 data URL → `StringDataRightTruncation` on any real logo (the existing 1×1 PNG test at 118 chars masked it). Changed both columns to `TEXT` in the ORM (`app/models/pf/entities.py`), the DDL applicator (`app/db/migrate_pf002.py`) and the canonical script (`Database/03_PlatformFoundation/006_core_tenant_branding.sql`), plus a **guarded, idempotent** `ALTER COLUMN ... TYPE TEXT` for pre-existing DBs — the guard checks `information_schema.columns` first so startup no longer takes an `ACCESS EXCLUSIVE` lock on every boot (an unconditional ALTER caused a Postgres deadlock in the isolation suite). **Verified live:** 68,290-char data URL `PUT /api/v1/tenant/branding/logo` → **200**; `GET /api/v1/tenant/branding` returns the full value. Added regression test `test_upload_large_logo_round_trips` (valid ~9 KB PNG data URL, asserts `> 2048` chars + GET round-trip, restores the prior logo). Full backend suite → **117 passed, 1 skipped**. |
+| 4.70 | 2026-09-11 | **Release hygiene.** PR #3 (`cursor/crm-opportunity-pipeline` → `master`) was found **CONFLICTING with 698 changed files** because that branch still carried the pre-squash commits of PR #2 (already squashed into `f760cf3`). Superseded it: cherry-picked the branding fix onto a clean branch `cursor/pf-branding-logo-fix` off `origin/master`, resolved a tracker-doc conflict (master held 4.60…4.66, branch had 4.67…4.69), opened **PR #4** → CI green (6/6 checks) → **squash-merged as `cf0c264`**. PR #3 closed as superseded. **Lesson:** after a squash-merge, re-branch from `master` instead of reusing the old feature branch. |
+| 4.71 | 2026-09-11 | **Branding hardening (2nd-order causes of “upload not working”).** (a) Server CORS: `app/main.py` hard-coded six origins and ignored `settings.cors_origin_list`; Flutter web dev servers pick arbitrary ports, so preflight could fail before reaching the API. Now driven by `settings.cors_origin_list` (default widened to include `8085` and `[::1]` variants) plus a **non-prod-only** `allow_origin_regex` for any `localhost`/`127.0.0.1`/`[::1]` port (`_LOCAL_ENVS`; disabled in prod). (b) Client validation: `tenant_branding_page.dart::_pickAndUpload` now rejects empty files and **> 2 MB** with a clear snackbar instead of surfacing a raw API error. Verified: `pytest tests/test_pf_branding.py` → 2 passed; `flutter analyze` (Frontend) → no issues. |
 
 *© Euphoria Infotech — ELU-MSL-002*

@@ -23,7 +23,13 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
   String? _logoUrl;
   String? _primaryColor;
 
-  static const _colorPresets = ['#1565C0', '#2E7D32', '#6A1B9A', '#C62828', '#EF6C00'];
+  static const _colorPresets = [
+    '#1565C0',
+    '#2E7D32',
+    '#6A1B9A',
+    '#C62828',
+    '#EF6C00'
+  ];
 
   bool get _canUpload {
     final perms = context.read<AuthController>().profile?['permissions'];
@@ -74,6 +80,22 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not read selected file')),
+      );
+      return;
+    }
+    // Server accepts up to 2 MB; fail fast with a clear message instead of a 422/500.
+    const maxBytes = 2 * 1024 * 1024;
+    if (bytes.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The selected file is empty')),
+      );
+      return;
+    }
+    if (bytes.length > maxBytes) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logo must be 2 MB or smaller')),
       );
       return;
     }
@@ -131,14 +153,16 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
     if (_logoUrl == null || _logoUrl!.isEmpty) {
       return const Text('No logo configured');
     }
-    final match = RegExp(r'^data:image/(png|jpeg);base64,(.+)$', caseSensitive: false)
-        .firstMatch(_logoUrl!);
+    final match =
+        RegExp(r'^data:image/(png|jpeg);base64,(.+)$', caseSensitive: false)
+            .firstMatch(_logoUrl!);
     if (match == null) return const Text('Logo preview unavailable');
     try {
       final bytes = base64Decode(match.group(2)!);
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.memory(bytes, width: 120, height: 120, fit: BoxFit.contain),
+        child:
+            Image.memory(bytes, width: 120, height: 120, fit: BoxFit.contain),
       );
     } catch (_) {
       return const Text('Logo preview unavailable');
@@ -157,7 +181,9 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: CrmSpacing.md),
-                    child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    child: Text(_error!,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
                   ),
                 Card(
                   child: Padding(
@@ -165,7 +191,8 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Logo', style: Theme.of(context).textTheme.titleMedium),
+                        Text('Logo',
+                            style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: CrmSpacing.md),
                         _logoPreview(),
                         const SizedBox(height: CrmSpacing.md),
@@ -181,7 +208,8 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
                                 ? const SizedBox(
                                     width: 18,
                                     height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
                                   )
                                 : const Icon(Icons.upload_file),
                             label: const Text('Upload logo'),
@@ -205,7 +233,8 @@ class _TenantBrandingPageState extends State<TenantBrandingPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Primary color', style: Theme.of(context).textTheme.titleMedium),
+                        Text('Primary color',
+                            style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: CrmSpacing.sm),
                         Container(
                           height: 8,

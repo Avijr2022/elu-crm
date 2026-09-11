@@ -19,6 +19,9 @@ from app.models import sal as _sal_models  # noqa: F401 — register SAL models
 from app.schemas.pf.auth import HealthResponse
 
 
+_LOCAL_ENVS = {"local", "dev", "development", "test"}
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     configure_logging()
@@ -97,16 +100,17 @@ def create_app() -> FastAPI:
         ],
     )
     app.add_middleware(RequestIdMiddleware)
+    settings = get_settings()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:8085",
-            "http://localhost:8080",
-            "http://127.0.0.1:8085",
-            "http://127.0.0.1:8080",
-            "http://[::1]:8085",  
-            "http://[::1]:8080",
-        ], #settings.cors_origin_list,
+        allow_origins=settings.cors_origin_list,
+        # Dev convenience: Flutter web picks a random port; in non-prod allow any
+        # localhost / 127.0.0.1 / [::1] port so the browser preflight succeeds.
+        allow_origin_regex=(
+            r"^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$"
+            if settings.app_env.lower() in _LOCAL_ENVS
+            else None
+        ),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
