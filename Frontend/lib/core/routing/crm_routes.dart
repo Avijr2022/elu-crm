@@ -43,8 +43,11 @@ abstract final class CrmRoutes {
     if (q.isEmpty) return salesOrders;
     return Uri(path: salesOrders, queryParameters: q).toString();
   }
+
   static const tenantBranding = '/settings/branding';
   static const paymentReceipts = '/crm/payment-receipts';
   static String paymentReceiptDetail(String id) => '/crm/payment-receipts/$id';
+  static const invoices = '/crm/invoices';
+  static String invoiceDetail(String id) => '/crm/invoices/$id';
   static const upgrade = '/upgrade';
 }

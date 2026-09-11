@@ -1,6 +1,6 @@
 # E-LinkUp Phase Gate Review — Platform Foundation Slice (PF-001…003)
 **Document ID:** ELU-PGR-001  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** AWAITING HUMAN PHASE-GATE APPROVAL  
 **Gate:** Before PF-004 Organization Management  
 **Date:** 2026-08-06  
@@ -152,6 +152,38 @@ RECOMMENDATION:
 
 DO NOT START PF-004 UNTIL HUMAN PHASE-GATE APPROVAL.
 ```
+
+---
+
+## 15. Gate Readiness Update — 2026-09-11
+
+The two **P0** findings raised at review have since been **closed** by *PF-003A Enterprise Tenant Isolation* (`ELU-QA-PF003A`: verdict **PASS**, 43/43 tests, tag `Phase-2-PF003A`, *“Human RELEASE APPROVED: YES”*). The gate therefore awaits only the **formal human sign-off** — no open remediation.
+
+| Gap at review | Status now | Evidence |
+|---------------|-----------|----------|
+| GAP-PGR-01 (P0) — RLS + `SET LOCAL app.tenant_id` | **Closed** | PF-003A: RLS ENABLE + FORCE, `elu_app` NOBYPASSRLS, session binding — `ELU-QA-PF003A` PASS |
+| GAP-PGR-02 (P0) — isolation suite not automated | **Closed** | `Backend/tests/isolation/*` + PF-003A suites run in the `crm-api` CI job |
+| GAP-PGR-09 (P1) — no Flutter tests | **Closed** | `Frontend/test/` — 5 files / 25 tests in the `flutter-widgets` CI job |
+| GAP-PGR-18 (P1) — governance docs untracked | **Closed** | Working tree clean on `master`; docs committed |
+| GAP-PGR-03…06 (P1) | Tracked, owner-assigned | `ELU-TD-001` (PF-009 permission catalogue, PF-008 seat check, CPS notifications, scheduler) |
+
+Regression evidence at this update: **118 pytest passed, 1 skipped** (isolation + FIN v4.13 invoice suites included); **25 Flutter tests passed**; hosted CI green on `master` (`cf0c264`, `c9ec3fc`).
+
+### 15.1 Sign-off block — to be completed by a named human approver
+
+```text
+PHASE GATE (PF-001…003)
+DECISION:            [ APPROVED | APPROVED WITH CONDITIONS | REJECTED ]
+OPTION:              [ (a) CR for RLS/isolation parallel track
+                     | (b) temporary ADR waiver + hard deadline
+                     | (c) unconditional ]
+APPROVER (name):     ____________________
+ROLE:                ____________________   (QA Director / Product Owner / PMO)
+DATE:                ____________________
+CONDITIONS (if any): ____________________
+```
+
+> **AI-governance note (ELU-AI-001):** the assistant must **not** record the decision or the approver name. Once the block above is completed by the human approver, the assistant will: set this document to `APPROVED`, update `ELU-QA-REG-001` (gate row), `ELU-MSL-001` §3.1, `ELU-MSL-002`, `Documentation/CHANGELOG.md`, and create the **`Phase-Gate-PF001-003`** tag.
 
 ---
 

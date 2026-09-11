@@ -1,8 +1,8 @@
 # E-LinkUp CRM Build Tracker
 **Document ID:** ELU-MSL-002  
-**Version:** 4.12  
+**Version:** 4.13  
 **Status:** Active — SAL/PRJ/FIN v4  
-**Last synced:** 2026-09-07
+**Last synced:** 2026-09-11
 
 ---
 
@@ -11,9 +11,10 @@
 | Area | Remark |
 |------|--------|
 | FIN | Payment receipt list/detail API + Flutter pages; invoice stub from confirmed SO |
-| FIN | Payment allocation stub links receipt → invoice on invoice generation |
-| PF | Branding primary-color picker with PDF accent preview |
-| Tests | **18 pytest** (SAL/PRJ/PF/FIN slice) + **25 Flutter** |
+| FIN | **Invoice list/detail API + Flutter pages; issue workflow DRAFT → ISSUED (v4.13)** |
+| FIN | Payment allocation (receipt → invoice) with partial allocation support |
+| PF | Branding logo upload (root cause fixed) + primary-color picker with PDF accent preview |
+| Tests | **118 pytest** (1 skipped — optional DeepSeek) + **25 Flutter**; hosted CI green |
 
 ---
 
@@ -25,6 +26,9 @@
 | 2 | `POST /api/v1/sal/sales-orders/{id}/generate-invoice-stub` → `finance.invoice` (FIN_INVOICE) |
 | 3 | `PUT /api/v1/tenant/branding/primary-color`; Flutter color presets + preview bar |
 | 4 | `finance.payment_allocation` auto-created when invoice stub matches SO receipts |
+| 5 | `GET /api/v1/fin/invoices` + detail (`allocations[]`, `allocated_total`, `balance_due`) |
+| 6 | `POST /api/v1/fin/invoices/{id}/issue` — DRAFT → ISSUED with `issued_on` + `version_no` bump |
+| 7 | Flutter Invoices list (status filter) + detail with Issue action, routed under FIN nav |
 
 ---
 
@@ -36,6 +40,9 @@
 | `GET /api/v1/fin/payment-receipts/{id}` | Detail with `allocations[]` |
 | `POST /api/v1/sal/sales-orders/{id}/generate-invoice-stub` | Creates `INV-YYYY-####`, allocates receipts |
 | `PUT /api/v1/tenant/branding/primary-color` | Body `{ "primary_color": "#RRGGBB" }` |
+| `GET /api/v1/fin/invoices` | Paginated list; `status`, `customer_id`, `sales_order_id` filters; joins `customer_name`, `so_number`, allocation totals |
+| `GET /api/v1/fin/invoices/{id}` | Detail + `allocations[]` (with `receipt_number`), `allocated_total`, `balance_due` |
+| `POST /api/v1/fin/invoices/{id}/issue` | DRAFT → ISSUED; `409` if already issued, `422` if CANCELLED/non-DRAFT |
 
 ---
 
@@ -44,9 +51,9 @@
 | P | # | Job | Module |
 |---|---|-----|--------|
 | P1 | 1 | Close PF-004 Organization Management gaps → QA release audit + tag (blocks PF-005…011) | PF |
-| P1 | 2 | Phase Gate PF-001…003 human approval (ELU-PGR-001) — currently `AWAITING HUMAN APPROVAL` | GOV |
-| P2 | 3 | Invoice list/detail API + Flutter view | FIN |
-| P2 | 4 | Issue invoice workflow (DRAFT → ISSUED) | FIN |
+| P1 | 2 | Phase Gate PF-001…003 human sign-off — **both P0 conditions now closed**; only the named-approver block (ELU-PGR-001 §15.1) is outstanding | GOV |
+| P2 | 3 | ~~Invoice list/detail API + Flutter view~~ ✅ done (v4.13) | FIN |
+| P2 | 4 | ~~Issue invoice workflow (DRAFT → ISSUED)~~ ✅ done (v4.13) | FIN |
 | P2 | 5 | TD-PF-003-01 hourly expire scheduler; TD-PF-003-03 seat check on user create | PF / TD |
 | P3 | 6 | v1.0 UAT — Euphoria happy path (Lead → Payment) | UAT |
 | P3 | 7 | Alembic migration baseline; ELU-SEH-001 handbook | ENG / DOC |
@@ -125,5 +132,7 @@
 | 4.70 | 2026-09-11 | **Release hygiene.** PR #3 (`cursor/crm-opportunity-pipeline` → `master`) was found **CONFLICTING with 698 changed files** because that branch still carried the pre-squash commits of PR #2 (already squashed into `f760cf3`). Superseded it: cherry-picked the branding fix onto a clean branch `cursor/pf-branding-logo-fix` off `origin/master`, resolved a tracker-doc conflict (master held 4.60…4.66, branch had 4.67…4.69), opened **PR #4** → CI green (6/6 checks) → **squash-merged as `cf0c264`**. PR #3 closed as superseded. **Lesson:** after a squash-merge, re-branch from `master` instead of reusing the old feature branch. |
 | 4.71 | 2026-09-11 | **Branding hardening (2nd-order causes of “upload not working”).** (a) Server CORS: `app/main.py` hard-coded six origins and ignored `settings.cors_origin_list`; Flutter web dev servers pick arbitrary ports, so preflight could fail before reaching the API. Now driven by `settings.cors_origin_list` (default widened to include `8085` and `[::1]` variants) plus a **non-prod-only** `allow_origin_regex` for any `localhost`/`127.0.0.1`/`[::1]` port (`_LOCAL_ENVS`; disabled in prod). (b) Client validation: `tenant_branding_page.dart::_pickAndUpload` now rejects empty files and **> 2 MB** with a clear snackbar instead of surfacing a raw API error. Verified: `pytest tests/test_pf_branding.py` → 2 passed; `flutter analyze` (Frontend) → no issues. |
 | 4.72 | 2026-09-11 | **PR #5 squash-merged to `master`** as `c9ec3fc` after **6/6 checks green** (crm-api, flutter-widgets, customertracker — push + pull_request). Master now carries 4.70–4.72; repo state: branding logo upload works end-to-end (68 KB data URL) and CORS no longer blocks non-8080/8085 dev ports. Working branch cleaned up — future work should branch from `master`. |
+| 4.73 | 2026-09-11 | **Phase-gate records reconciled (no decision recorded — human sign-off still required).** `ELU-PGR-001` v1.1 adds **§15 Gate Readiness Update** + §15.1 *Sign-off block*: both **P0** findings (GAP-PGR-01 RLS/session binding, GAP-PGR-02 automated isolation tests) were closed by PF-003A, plus GAP-PGR-09 (Flutter tests) and GAP-PGR-18 (docs untracked). `ELU-QA-REG-001` v1.2 now carries the previously missing **PF-003A** row (`RELEASE APPROVED`, `Phase-2-PF003A`) and the gate row reads *AWAITING HUMAN SIGN-OFF* instead of *PF-004 blocked* (PF-004 is in fact 60% in progress). Per ELU-AI-001 the assistant did **not** invent an approver — the block stays blank until a named human (QA Director / Product Owner / PMO) fills it in. |
+| 4.74 | 2026-09-11 | **FIN v4.13 — invoice list / detail / issue shipped.** Backend: `GET /api/v1/fin/invoices` (paginated, `status`/`customer_id`/`sales_order_id` filters, joins `customer_name` + `so_number`, grouped allocation totals to avoid N+1), `GET /api/v1/fin/invoices/{id}` (detail + `allocations[]` carrying `receipt_number`, `allocated_total`, `balance_due`), `POST /api/v1/fin/invoices/{id}/issue` (**DRAFT → ISSUED**, sets `issued_on`, bumps `version_no`; `409` when already issued, `422` when CANCELLED/non-DRAFT). New: `schemas/fin/invoice.py`, `api/v1/fin/invoices.py`, `InvoiceRepository.list_invoices`, `PaymentAllocationRepository.list_for_invoice` / `allocated_totals_for_invoices`, service `list_invoices` / `get_invoice` / `issue_invoice`; router registered. Frontend: `invoice_service.dart`, `InvoicesPage` (status filter + refresh), `InvoiceDetailPage` (allocation breakdown + permission-gated **Issue invoice** action), routes `CrmRoutes.invoices` / `invoiceDetail`, nav entry under **FIN** gated on `edition.hasFinInvoice`. New test `tests/test_fin_invoices.py` covers list/filter/detail/404 + issue/409/404. **Verified:** backend **118 passed, 1 skipped**; `flutter analyze` clean; **25 Flutter tests** pass. |
 
 *© Euphoria Infotech — ELU-MSL-002*

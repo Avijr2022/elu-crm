@@ -12,6 +12,7 @@ from app.api.v1.pf import organizations as pf_organizations
 from app.api.v1.pf import subscriptions as pf_subscriptions
 from app.api.v1.pf import tenants as pf_tenants
 from app.api.v1.fin import payment_receipts as fin_payment_receipts
+from app.api.v1.fin import invoices as fin_invoices
 from app.api.v1.prj import handoffs as prj_handoffs
 from app.api.v1.prj import work_orders as prj_work_orders
 from app.api.v1.sal import quotations as sal_quotations
@@ -33,6 +34,7 @@ api_router.include_router(crm_lookups.router)
 api_router.include_router(sal_quotations.router)
 api_router.include_router(sal_sales_orders.router)
 api_router.include_router(fin_payment_receipts.router)
+api_router.include_router(fin_invoices.router)
 api_router.include_router(prj_handoffs.router)
 api_router.include_router(prj_work_orders.router)
 api_router.include_router(integrations_deepseek.router)

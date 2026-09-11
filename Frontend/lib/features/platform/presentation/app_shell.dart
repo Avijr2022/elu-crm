@@ -29,6 +29,7 @@ class _AppShellState extends State<AppShell> {
     if (path.startsWith(CrmRoutes.quotations)) return 'Quotations';
     if (path.startsWith(CrmRoutes.salesOrders)) return 'Sales Orders';
     if (path.startsWith(CrmRoutes.paymentReceipts)) return 'Payment Receipts';
+    if (path.startsWith(CrmRoutes.invoices)) return 'Invoices';
     if (path.startsWith(CrmRoutes.workOrders)) return 'Work Orders';
     if (path == CrmRoutes.l2cDemo) return 'L2C Demo';
     if (path.contains('tenants')) return 'Tenants';
@@ -48,34 +49,66 @@ class _AppShellState extends State<AppShell> {
     return 0;
   }
 
-  List<_NavItem> _items(bool admin, EditionController edition, Map<String, dynamic>? profile) {
+  List<_NavItem> _items(
+      bool admin, EditionController edition, Map<String, dynamic>? profile) {
     return [
-      const _NavItem('dashboard', 'Dashboard', Icons.dashboard_outlined, CrmRoutes.home),
+      const _NavItem(
+          'dashboard', 'Dashboard', Icons.dashboard_outlined, CrmRoutes.home),
       if (admin)
-        const _NavItem('tenants', 'Tenants', Icons.apartment_outlined, '/tenants', section: 'Platform'),
-      const _NavItem('organizations', 'Organizations', Icons.account_balance_outlined, '/organizations', section: 'Platform'),
-      const _NavItem('subscriptions', 'Subscriptions', Icons.card_membership_outlined, '/subscriptions', section: 'Platform'),
-      const _NavItem('editions', 'Editions', Icons.layers_outlined, '/editions', section: 'Platform'),
+        const _NavItem(
+            'tenants', 'Tenants', Icons.apartment_outlined, '/tenants',
+            section: 'Platform'),
+      const _NavItem('organizations', 'Organizations',
+          Icons.account_balance_outlined, '/organizations',
+          section: 'Platform'),
+      const _NavItem('subscriptions', 'Subscriptions',
+          Icons.card_membership_outlined, '/subscriptions',
+          section: 'Platform'),
+      const _NavItem('editions', 'Editions', Icons.layers_outlined, '/editions',
+          section: 'Platform'),
       if (edition.hasLead)
-        const _NavItem('l2c-demo', 'L2C Demo', Icons.route_outlined, CrmRoutes.l2cDemo, section: 'CRM'),
+        const _NavItem(
+            'l2c-demo', 'L2C Demo', Icons.route_outlined, CrmRoutes.l2cDemo,
+            section: 'CRM'),
       if (edition.hasLead)
-        const _NavItem('leads', 'Leads', Icons.people_outline, CrmRoutes.leads, section: 'CRM'),
+        const _NavItem('leads', 'Leads', Icons.people_outline, CrmRoutes.leads,
+            section: 'CRM'),
       if (edition.hasOpportunity) ...[
-        const _NavItem('opportunities', 'Opportunities', Icons.trending_up_outlined, CrmRoutes.opportunities, section: 'CRM'),
+        const _NavItem('opportunities', 'Opportunities',
+            Icons.trending_up_outlined, CrmRoutes.opportunities,
+            section: 'CRM'),
         if (CrmRbac.canViewPipeline(profile))
-          const _NavItem('pipeline', 'Pipeline Kanban', Icons.view_kanban_outlined, CrmRoutes.pipeline, section: 'CRM'),
+          const _NavItem('pipeline', 'Pipeline Kanban',
+              Icons.view_kanban_outlined, CrmRoutes.pipeline,
+              section: 'CRM'),
       ],
       if (edition.hasCustomer)
-        const _NavItem('customers', 'Customers', Icons.business_center_outlined, CrmRoutes.customers, section: 'CRM'),
+        const _NavItem('customers', 'Customers', Icons.business_center_outlined,
+            CrmRoutes.customers,
+            section: 'CRM'),
       if (edition.hasSalQuote) ...[
-        const _NavItem('quotations', 'Quotations', Icons.request_quote_outlined, CrmRoutes.quotations, section: 'SAL'),
-        const _NavItem('sales-orders', 'Sales Orders', Icons.receipt_long_outlined, CrmRoutes.salesOrders, section: 'SAL'),
-        const _NavItem('payment-receipts', 'Payment Receipts', Icons.payments_outlined, CrmRoutes.paymentReceipts, section: 'FIN'),
+        const _NavItem('quotations', 'Quotations', Icons.request_quote_outlined,
+            CrmRoutes.quotations,
+            section: 'SAL'),
+        const _NavItem('sales-orders', 'Sales Orders',
+            Icons.receipt_long_outlined, CrmRoutes.salesOrders,
+            section: 'SAL'),
+        const _NavItem('payment-receipts', 'Payment Receipts',
+            Icons.payments_outlined, CrmRoutes.paymentReceipts,
+            section: 'FIN'),
       ],
+      if (edition.hasFinInvoice)
+        const _NavItem('invoices', 'Invoices', Icons.request_page_outlined,
+            CrmRoutes.invoices,
+            section: 'FIN'),
       if (edition.hasPrjWo)
-        const _NavItem('work-orders', 'Work Orders', Icons.assignment_outlined, CrmRoutes.workOrders, section: 'PRJ'),
+        const _NavItem('work-orders', 'Work Orders', Icons.assignment_outlined,
+            CrmRoutes.workOrders,
+            section: 'PRJ'),
       if (edition.hasActivity)
-        const _NavItem('activities', 'Activities', Icons.timeline_outlined, CrmRoutes.activityTimeline, section: 'CRM', push: true),
+        const _NavItem('activities', 'Activities', Icons.timeline_outlined,
+            CrmRoutes.activityTimeline,
+            section: 'CRM', push: true),
     ];
   }
 
@@ -107,19 +140,31 @@ class _AppShellState extends State<AppShell> {
           if (wide)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: Text('${p['tenant_name'] ?? ''}', style: Theme.of(context).textTheme.bodySmall)),
+              child: Center(
+                  child: Text('${p['tenant_name'] ?? ''}',
+                      style: Theme.of(context).textTheme.bodySmall)),
             ),
-          IconButton(tooltip: 'Sign out', onPressed: auth.logout, icon: const Icon(Icons.logout)),
+          IconButton(
+              tooltip: 'Sign out',
+              onPressed: auth.logout,
+              icon: const Icon(Icons.logout)),
         ],
       ),
-      drawer: wide ? null : Drawer(child: Column(children: [_ProfileCard(profile: p), Expanded(child: nav)])),
+      drawer: wide
+          ? null
+          : Drawer(
+              child: Column(
+                  children: [_ProfileCard(profile: p), Expanded(child: nav)])),
       body: wide
           ? Row(children: [
               SizedBox(
                 width: 260,
                 child: Material(
                   color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  child: Column(children: [_ProfileCard(profile: p), Expanded(child: nav)]),
+                  child: Column(children: [
+                    _ProfileCard(profile: p),
+                    Expanded(child: nav)
+                  ]),
                 ),
               ),
               const VerticalDivider(width: 1),
@@ -131,7 +176,11 @@ class _AppShellState extends State<AppShell> {
           : NavigationBar(
               selectedIndex: _mobileTab(items, idx),
               onDestinationSelected: (t) {
-                const tabs = [CrmRoutes.home, CrmRoutes.leads, CrmRoutes.opportunities];
+                const tabs = [
+                  CrmRoutes.home,
+                  CrmRoutes.leads,
+                  CrmRoutes.opportunities
+                ];
                 final path = t < tabs.length ? tabs[t] : CrmRoutes.home;
                 final item = items.cast<_NavItem?>().firstWhere(
                       (e) => e!.path == path,
@@ -140,9 +189,12 @@ class _AppShellState extends State<AppShell> {
                 if (item != null) go(item);
               },
               destinations: const [
-                NavigationDestination(icon: Icon(Icons.dashboard_outlined), label: 'Home'),
-                NavigationDestination(icon: Icon(Icons.people_outline), label: 'Leads'),
-                NavigationDestination(icon: Icon(Icons.trending_up_outlined), label: 'Pipeline'),
+                NavigationDestination(
+                    icon: Icon(Icons.dashboard_outlined), label: 'Home'),
+                NavigationDestination(
+                    icon: Icon(Icons.people_outline), label: 'Leads'),
+                NavigationDestination(
+                    icon: Icon(Icons.trending_up_outlined), label: 'Pipeline'),
               ],
             ),
     );
@@ -157,7 +209,8 @@ class _AppShellState extends State<AppShell> {
 }
 
 class _NavItem {
-  const _NavItem(this.id, this.label, this.icon, this.path, {this.section, this.push = false});
+  const _NavItem(this.id, this.label, this.icon, this.path,
+      {this.section, this.push = false});
   final String id;
   final String label;
   final IconData icon;
@@ -167,7 +220,8 @@ class _NavItem {
 }
 
 class _NavList extends StatelessWidget {
-  const _NavList({required this.items, required this.selected, required this.onTap});
+  const _NavList(
+      {required this.items, required this.selected, required this.onTap});
   final List<_NavItem> items;
   final int selected;
   final void Function(_NavItem) onTap;
@@ -181,8 +235,10 @@ class _NavList extends StatelessWidget {
       if (e.section != null && e.section != last) {
         last = e.section;
         children.add(Padding(
-          padding: const EdgeInsets.fromLTRB(CrmSpacing.md, CrmSpacing.sm, CrmSpacing.md, CrmSpacing.xs),
-          child: Text(e.section!, style: Theme.of(context).textTheme.labelSmall),
+          padding: const EdgeInsets.fromLTRB(
+              CrmSpacing.md, CrmSpacing.sm, CrmSpacing.md, CrmSpacing.xs),
+          child:
+              Text(e.section!, style: Theme.of(context).textTheme.labelSmall),
         ));
       }
       children.add(ListTile(
@@ -192,7 +248,9 @@ class _NavList extends StatelessWidget {
         onTap: () => onTap(e),
       ));
     }
-    return ListView(padding: const EdgeInsets.symmetric(vertical: CrmSpacing.xs), children: children);
+    return ListView(
+        padding: const EdgeInsets.symmetric(vertical: CrmSpacing.xs),
+        children: children);
   }
 }
 
@@ -203,15 +261,26 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = (profile['display_name'] as String?) ?? '';
-    final initials = name.isEmpty ? '?' : name.trim().split(RegExp(r'\s+')).map((p) => p[0]).take(2).join().toUpperCase();
+    final initials = name.isEmpty
+        ? '?'
+        : name
+            .trim()
+            .split(RegExp(r'\s+'))
+            .map((p) => p[0])
+            .take(2)
+            .join()
+            .toUpperCase();
     return Container(
       padding: const EdgeInsets.all(CrmSpacing.md),
       child: Row(children: [
         CircleAvatar(child: Text(initials)),
         const SizedBox(width: CrmSpacing.sm),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text('${profile['tenant_name'] ?? ''}', style: Theme.of(context).textTheme.bodySmall),
+          Text('${profile['tenant_name'] ?? ''}',
+              style: Theme.of(context).textTheme.bodySmall),
         ])),
       ]),
     );
@@ -241,10 +310,16 @@ class _TenantEditionViewState extends State<TenantEditionView> {
     try {
       final e = await _service.tenantEdition();
       if (!mounted) return;
-      setState(() { _edition = e; _loading = false; });
+      setState(() {
+        _edition = e;
+        _loading = false;
+      });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = '$e'; _loading = false; });
+      setState(() {
+        _error = '$e';
+        _loading = false;
+      });
     }
   }
 
