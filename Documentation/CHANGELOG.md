@@ -22,7 +22,7 @@ All notable E-LinkUp implementation milestones.
 - `flutter analyze` → no issues; `flutter test test/organization_nav_test.dart` → 6 passed
 
 ### Notes
-- **HUMAN APPROVAL REQUIRED:** PF-004 release decision (ELU-QA-PF004 §5 blank) and the PF-001…003 phase gate (ELU-PGR-001 §15.1 blank). No release status is claimed here.
+- **Status reconciled (HD-09, 2026-09-11):** PF-004 records now read **QA PASS — PENDING HUMAN RELEASE APPROVAL**; corrections merged to `master` via PR #7 (merge commit `67b48c1`). **HUMAN APPROVAL REQUIRED:** PF-004 release decision (ELU-QA-PF004 §5 blank) and the PF-001…003 phase gate (ELU-PGR-001 §15.1 blank). PF-004 is NOT released.
 - **HD-10** `Phase-2-PF004` tag left unchanged pending human decision.
 
 ---
