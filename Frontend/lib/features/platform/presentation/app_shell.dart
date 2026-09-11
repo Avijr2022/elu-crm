@@ -58,9 +58,10 @@ class _AppShellState extends State<AppShell> {
         const _NavItem(
             'tenants', 'Tenants', Icons.apartment_outlined, '/tenants',
             section: 'Platform'),
-      const _NavItem('organizations', 'Organizations',
-          Icons.account_balance_outlined, '/organizations',
-          section: 'Platform'),
+      if (CrmRbac.canManageOrganizations(profile))
+        const _NavItem('organizations', 'Organizations',
+            Icons.account_balance_outlined, CrmRoutes.organizations,
+            section: 'Platform'),
       const _NavItem('subscriptions', 'Subscriptions',
           Icons.card_membership_outlined, '/subscriptions',
           section: 'Platform'),

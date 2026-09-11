@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
-from sqlalchemy import select, text
+from sqlalchemy import delete, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -38,6 +38,66 @@ def _link_role_permission(db: Session, role_id, permission_id) -> None:
         .values(role_id=role_id, permission_id=permission_id)
         .on_conflict_do_nothing(constraint="uk_role_permission")
     )
+
+
+# PF-004 organization capability matrix — BFS-PF-004 §12 (HD-01).
+# Runtime-wide permission-grain enforcement for the PF surface is still deferred
+# to PF-009; this only makes the *seeded* map match the approved matrix.
+ORG_PERMISSION_MATRIX: dict[str, tuple[str, ...]] = {
+    "TENANT_ADMIN": (
+        "organization.create",
+        "organization.read",
+        "organization.update",
+        "organization.delete",
+        "organization.export",
+    ),
+    "FINANCE_USER": ("organization.read", "organization.export"),
+    "SALES_MANAGER": ("organization.read",),
+    "PLATFORM_ADMIN": ("organization.read",),  # read-only per BFS-PF-004 §12
+    "PROJECT_MANAGER": (),
+}
+
+
+def _sync_org_permission_matrix(db: Session, tenant_id) -> None:
+    """Align seeded ``organization.*`` grants with the approved matrix (idempotent).
+
+    Grants the approved codes and revokes any ``organization.*`` grain that is not
+    approved for the role — needed because the generic platform seeding grants the
+    whole permission catalogue to PLATFORM_ADMIN/TENANT_ADMIN.
+    """
+    org_perm_ids = {
+        code: permission_id
+        for code, permission_id in db.execute(
+            select(Permission.permission_code, Permission.permission_id).where(
+                Permission.permission_code.like("organization.%")
+            )
+        ).all()
+    }
+    if not org_perm_ids:
+        return
+    for role_code, allowed_codes in ORG_PERMISSION_MATRIX.items():
+        role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code == role_code,
+            )
+        ).first()
+        if role is None:
+            continue
+        allowed_ids = {
+            org_perm_ids[code] for code in allowed_codes if code in org_perm_ids
+        }
+        for permission_id in allowed_ids:
+            _link_role_permission(db, role.role_id, permission_id)
+        stale_ids = [pid for pid in org_perm_ids.values() if pid not in allowed_ids]
+        if stale_ids:
+            db.execute(
+                delete(RolePermission).where(
+                    RolePermission.role_id == role.role_id,
+                    RolePermission.permission_id.in_(stale_ids),
+                )
+            )
+    db.flush()
 
 
 # 1x1 JPEG for seeded tenant branding (PDF logo smoke test).
@@ -417,6 +477,9 @@ def seed_platform(db: Session) -> None:
         )
     db.flush()
 
+    # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
+    _sync_org_permission_matrix(db, tenant.tenant_id)
+
     # Seed admin acts as Platform Admin for PF-001 ops (Euphoria demo)
     admin = User(
         tenant_id=tenant.tenant_id,
@@ -459,36 +522,8 @@ def _ensure_platform_admin(
             )
     db.flush()
 
-    # Grant PF-004 organization permissions to admin roles (idempotent)
-    org_perm_codes = [c for c, _, _ in PERMISSIONS if c.startswith("organization.")]
-    for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
-        role = db.scalars(
-            select(Role).where(
-                Role.tenant_id == tenant.tenant_id,
-                Role.role_code == role_code,
-            )
-        ).first()
-        if role is None:
-            continue
-        for pcode in org_perm_codes:
-            perm = db.scalars(
-                select(Permission).where(Permission.permission_code == pcode)
-            ).first()
-            if perm is None:
-                continue
-            linked = db.scalars(
-                select(RolePermission).where(
-                    RolePermission.role_id == role.role_id,
-                    RolePermission.permission_id == perm.permission_id,
-                )
-            ).first()
-            if linked is None:
-                db.add(
-                    RolePermission(
-                        role_id=role.role_id,
-                        permission_id=perm.permission_id,
-                    )
-                )
+    # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
+    _sync_org_permission_matrix(db, tenant.tenant_id)
 
     platform_role = db.scalars(
         select(Role).where(
@@ -612,6 +647,8 @@ def provision_tenant_roles(db: Session, tenant_id) -> None:
         _grant_role_permissions(db, tenant_id, role_code, all_codes)
     _grant_role_permissions(db, tenant_id, "SALES_EXECUTIVE", CRM_SALES_EXEC_PERMS)
     _grant_role_permissions(db, tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
+    # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
+    _sync_org_permission_matrix(db, tenant_id)
 
 
 def _upgrade_sal_permissions(db: Session, tenant: Tenant) -> None:

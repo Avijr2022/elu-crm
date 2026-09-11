@@ -2,6 +2,30 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-004] — 2026-09-11 — APPROVED CORRECTIONS IMPLEMENTED (NOT RELEASED)
+
+### Changed (IMPLEMENTED)
+- **HD-01** Seeded `organization.*` grants corrected to the BFS-PF-004 §12 matrix via `ORG_PERMISSION_MATRIX` + `_sync_org_permission_matrix()` in `Backend/app/db/seed.py` (applied in all three tenant role-provisioning paths); Tenant Admin all 5, Finance User read+export, Sales Manager read, Platform Admin read, Project Manager none. Runtime grain enforcement remains deferred to PF-009.
+- **HD-02** `GET /api/v1/org/organizations/export` now gated by `require_org_export()` — Tenant Admin + Finance User only (403 for Platform Admin, Sales Manager, Project Manager).
+- **HD-03** Export masks GSTIN/PAN using the existing audit convention (`***`); stored database values are untouched.
+- **HD-11** Organization navigation and route are Tenant-Admin-only (`CrmRbac.canManageOrganizations`, nav item + router `redirect` guard); `ELU-UI-PF` route row aligned to `/organizations` / `OrganizationsPage`.
+
+### Deferred (recorded)
+- **HD-05** AC-PF-004-04 / BR-PF-032 PDF organization-name propagation → Document Engine
+- **HD-06 / HD-07** RPT-PF-004-01/02 out of PF-004 v1.0; RPT-PF-004-03/04 undefined and not implemented
+- **HD-08** NTF-PF-004-01..03 → CPS-003
+- **HD-04** JSON export retained (no CSV/XLSX)
+- Platform-wide: PF-009 runtime permission-grain enforcement; Alembic baseline
+
+### Verification
+- `pytest tests/test_pf004_org_export.py` → 7 passed; with `test_pf004_organizations.py` → 20 passed
+- `flutter analyze` → no issues; `flutter test test/organization_nav_test.dart` → 6 passed
+
+### Notes
+- **HUMAN APPROVAL REQUIRED:** PF-004 release decision (ELU-QA-PF004 §5 blank) and the PF-001…003 phase gate (ELU-PGR-001 §15.1 blank). No release status is claimed here.
+- **HD-10** `Phase-2-PF004` tag left unchanged pending human decision.
+
+---
 ## [PF-004 Mid-Phase] — 2026-08-06 — REVIEW COMPLETE
 
 ### Added

@@ -45,6 +45,7 @@ abstract final class CrmRoutes {
   }
 
   static const tenantBranding = '/settings/branding';
+  static const organizations = '/organizations';
   static const paymentReceipts = '/crm/payment-receipts';
   static String paymentReceiptDetail(String id) => '/crm/payment-receipts/$id';
   static const invoices = '/crm/invoices';

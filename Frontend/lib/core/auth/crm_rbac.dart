@@ -11,6 +11,12 @@ class CrmRbac {
     'PLATFORM_ADMIN',
   };
 
+  /// BFS-PF-004 §12 / ELU-UI-PF §1: organization management is Tenant Admin only.
+  /// Deliberately a role set (not a permission check) because [hasPermission]
+  /// grants PLATFORM_ADMIN a universal bypass, which would contradict the
+  /// read-only Platform Admin rule for this module.
+  static const organizationRoles = {'TENANT_ADMIN'};
+
   static bool hasPermission(Map<String, dynamic>? profile, String code) {
     if (profile == null) return false;
     if (profile['role_code'] == 'PLATFORM_ADMIN') return true;
@@ -21,8 +27,10 @@ class CrmRbac {
     return false;
   }
 
-  static bool isSales(String? role) => role != null && salesRoles.contains(role);
-  static bool isManager(String? role) => role != null && managerRoles.contains(role);
+  static bool isSales(String? role) =>
+      role != null && salesRoles.contains(role);
+  static bool isManager(String? role) =>
+      role != null && managerRoles.contains(role);
 
   static bool canCloseWon(Map<String, dynamic>? profile) =>
       hasPermission(profile, 'opportunity.approve') ||
@@ -38,6 +46,9 @@ class CrmRbac {
   static bool canCreateActivity(Map<String, dynamic>? profile) =>
       hasPermission(profile, 'activity.create') ||
       isSales(profile?['role_code'] as String?);
+
+  static bool canManageOrganizations(Map<String, dynamic>? profile) =>
+      organizationRoles.contains(profile?['role_code'] as String?);
 
   static bool canUpdateCustomer(Map<String, dynamic>? profile) =>
       hasPermission(profile, 'customer.update') ||
