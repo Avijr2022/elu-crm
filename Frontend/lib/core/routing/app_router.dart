@@ -126,6 +126,10 @@ GoRouter createAppRouter(AuthController auth, EditionController edition) {
           !CrmRbac.canViewPipeline(auth.profile)) {
         return CrmRoutes.home;
       }
+      if (state.matchedLocation == CrmRoutes.organizations &&
+          !CrmRbac.canManageOrganizations(auth.profile)) {
+        return CrmRoutes.home;
+      }
       return null;
     },
     routes: [
@@ -147,7 +151,7 @@ GoRouter createAppRouter(AuthController auth, EditionController edition) {
           ),
           GoRoute(path: '/tenants', builder: (_, __) => const TenantsPage()),
           GoRoute(
-              path: '/organizations',
+              path: CrmRoutes.organizations,
               builder: (_, __) => const OrganizationsPage()),
           GoRoute(
             path: '/subscriptions',

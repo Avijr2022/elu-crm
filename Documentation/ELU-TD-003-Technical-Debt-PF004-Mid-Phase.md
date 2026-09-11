@@ -42,4 +42,25 @@ None open for PF-004 after mid-phase corrections.
 
 ---
 
+## PF-004 Approved Corrections — 2026-09-11 (HD-01…HD-11)
+
+| Item | Status |
+|------|--------|
+| **TD-PF004-M01** Permission-grain RBAC for `organization.*` | **PARTIAL** — seeded map corrected to BFS-PF-004 §12 (`ORG_PERMISSION_MATRIX`); **runtime enforcement still deferred to PF-009** (HD-01) |
+| **TD-PF004-M04** No Flutter automated tests for org UI | **CLOSED** — `Frontend/test/organization_nav_test.dart` (nav visibility, route guard, page load) |
+| Export authorization (new) | **CLOSED** — `require_org_export()`: Tenant Admin + Finance User only (HD-02) |
+| Export tax masking (new) | **CLOSED** — GSTIN/PAN masked `***` in the exported representation; stored values unchanged (HD-03) |
+| Nav/route authorization (new) | **CLOSED** — organization nav + `/organizations` route are Tenant-Admin-only (HD-11) |
+| **TD-PF004-L02** Export 500-row cap / no CSV headers | **OPEN — accepted** for v1.0: JSON retained (HD-04); cap unchanged |
+| **TD-PF004-L03** NTF-PF-004-* unwired | **OPEN — deferred to CPS-003** (HD-08) |
+| AC-PF-004-04 / BR-PF-032 PDF name propagation (G-12) | **OPEN — deferred to Document Engine** (HD-05) |
+| RPT-PF-004-01 / -02 | **DEFERRED out of PF-004 v1.0** (HD-06) |
+| RPT-PF-004-03 / -04 | **NOT LOCATED / NOT IMPLEMENTED** — undefined in every source (HD-07) |
+| `Phase-2-PF004` tag governance | **UNCHANGED** — human decision pending (HD-10) |
+| Alembic baseline | **OPEN** — platform-wide backlog |
+
+**Note:** PLATFORM_ADMIN retains a universal bypass in `app/core/rbac.has_permission`; any future PF-009 grain enforcement must special-case read-only modules, otherwise Platform Admin would regain create/update/delete/export.
+
+---
+
 *© Euphoria Infotech (I) Limited — ELU-TD-003*

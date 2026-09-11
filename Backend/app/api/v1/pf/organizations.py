@@ -19,6 +19,7 @@ from app.schemas.pf.organization import (
 )
 from app.services.pf.organization_service import (
     OrganizationService,
+    require_org_export,
     require_org_read,
     require_org_write,
 )
@@ -72,7 +73,7 @@ def export_organizations(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> list[dict]:
-    require_org_read(current.role_code)
+    require_org_export(current.role_code)
     try:
         return OrganizationService(db).export_rows(current.tenant_id)
     except AppError as exc:

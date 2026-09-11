@@ -24,6 +24,15 @@ from app.services.pf.audit_service import write_audit_event
 
 _TAX_KEYS = ("gstin", "pan", "tan")
 
+# HD-03: exported tax identifiers are masked; the value chosen matches the existing
+# audit-payload convention (``_mask_tax_payload`` replaces GSTIN/PAN/TAN with ***).
+MASKED_TAX_VALUE = "***"
+
+
+def _mask_tax_value(value: Any) -> Any:
+    """Return the masking token for a present tax identifier, else the value as-is."""
+    return MASKED_TAX_VALUE if value else value
+
 
 def _mask_tax_payload(payload: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
     if not payload:
@@ -44,6 +53,22 @@ def require_org_write(role_code: str) -> None:
     # BFS-PF-004 §12: Platform Admin is read-only; Tenant Admin mutates.
     if role_code != "TENANT_ADMIN":
         raise ForbiddenError("Organization write not permitted", req_id="PF-004")
+
+
+# HD-02: organization export is permitted for Tenant Admin and Finance User only.
+_ORG_EXPORT_ROLES = frozenset({"TENANT_ADMIN", "FINANCE_USER"})
+
+
+def require_org_export(role_code: str) -> None:
+    """Organization export matrix (BFS-PF-004 §12 / HD-02).
+
+    Implemented as an explicit role gate rather than ``require_permission`` because
+    ``app.core.rbac.has_permission`` grants PLATFORM_ADMIN a universal bypass, which
+    would contradict the read-only Platform Admin rule. Runtime permission-grain
+    enforcement for the PF surface remains deferred to PF-009 (HD-01).
+    """
+    if role_code not in _ORG_EXPORT_ROLES:
+        raise ForbiddenError("Organization export not permitted", req_id="PF-004")
 
 
 class OrganizationService:
@@ -457,8 +482,8 @@ class OrganizationService:
                 "legal_name": i.legal_name,
                 "is_root": i.is_root,
                 "status": i.status,
-                "gstin": i.gstin,
-                "pan": i.pan,
+                "gstin": _mask_tax_value(i.gstin),
+                "pan": _mask_tax_value(i.pan),
                 "currency": i.default_currency_code,
                 "fy_start_month": i.fiscal_year_start_month,
             }
