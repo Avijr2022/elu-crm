@@ -74,7 +74,7 @@ Summaries align to **V1-PF-CRM** and **ELU-BFS-PF §10**:
 
 OpenAPI YAML to be generated from FastAPI routers; this document is the checklist SoT until YAML is published.
 
-**PF-005 Branch (specified — NOT implemented; ELU-BFS-PF-005 §10):**
+**PF-005 Branch (implemented — ELU-BFS-PF-005 §10; Batch 2, not released):**
 
 | Method | Endpoint | Purpose | Permission |
 |--------|----------|---------|------------|
@@ -88,7 +88,7 @@ OpenAPI YAML to be generated from FastAPI routers; this document is the checklis
 | GET | `/api/v1/org/branches/export` | Export | `branch.export` |
 | GET | `/api/v1/org/branches/hierarchy` | Branch tree | `branch.read` |
 
-Edition gate: Professional+ (feature `BRANCH`); limit `MAX_BRANCHES` = 10 (Professional) / 999999 (Enterprise). `branch.export` follows the PF-004 precedent of a **role gate** (Tenant Admin) rather than runtime permission-grain enforcement (deferred to PF-009). **No branch router exists yet** — groundwork only.
+Edition gate: Professional+ (feature `BRANCH` — Community is rejected with 403). Limit `MAX_BRANCHES` = 10 (Professional) / 999999 (Enterprise), enforced on branch create and counting **non-deleted** branches (retained `ARCHIVED`/`CANCELLED` rows included). `branch.export` follows the PF-004 precedent of a **role gate** (Tenant Admin) rather than runtime permission-grain enforcement (deferred to PF-009). Implemented in `app/api/v1/pf/branches.py` (router registered in `app/api/v1/router.py`); the branch audit history is **service-only** (`BranchService.history()`) because BFS-PF-005 §10 defines no history endpoint. **PF-005 is not released** — no release baseline and no tag.
 
 **PF-001 implementation (2026-08-06):** Live OpenAPI at `/openapi.json`; exported snapshot `Backend/openapi/openapi.json` and edition path extract `Backend/openapi/pf001-editions-paths.json`. Edition endpoints implemented per BFS-PF §10.
 
