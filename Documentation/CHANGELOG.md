@@ -2,7 +2,7 @@
 
 All notable E-LinkUp implementation milestones.
 
-## [PF-005] — 2026-09-12 — START AUTHORIZED (GOVERNANCE ONLY — NOT IMPLEMENTED)
+## [PF-005] — 2026-09-12 — IMPLEMENTED (BACKEND FUNCTIONAL LAYER) — NOT RELEASED
 
 ### Decision (human, recorded)
 - **PF-005 Branch Management — START AUTHORIZED**; approver **Avijit**, role **Project Coordinator**, date **2026-09-12**.
@@ -11,16 +11,24 @@ All notable E-LinkUp implementation milestones.
 - **RPT-PF-005-01/02** reports → **DEFERRED**.
 - Values were human-supplied and transcribed verbatim; the assistant originated nothing (ELU-AI-001). This is a **start authorisation / scope decision**, not a QA sign-off or release approval.
 
+### Implementation (delivered — NOT released)
+
+1. **Start authorization / governance — 2026-09-12.** Human start authorisation recorded (approver **Avijit / Project Coordinator**) with the scope decisions above. Governance records only — no code at that point. **Not a release, QA-approval or sign-off event.**
+2. **Batch 1 — groundwork (docs + DDL + RLS + ORM + seed).** `Database/03_PlatformFoundation/014_branch_pf005.sql` (+ `_rollback.sql`) creating `core.branch` / `core.branch_address` idempotently (organization FK RESTRICT, nullable parent self-FK RESTRICT, `branch_head_user_id` nullable with **no FK**, `branch_address` → branch CASCADE, branch → address SET NULL, partial UK `uk_branch_tenant_code_active`, `ck_branch_status`, `ck_branch_type`, partial indexes); `Backend/app/db/migrate_pf005.py`; RLS **enable + force** for both tables (ADR-015 loop in `012_rls_pf003a.sql` / `migrate_pf003a.py::RLS_TABLES`); `Branch` / `BranchAddress` ORM models; seed `branch.create/read/update/delete/export` + `BRANCH_PERMISSION_MATRIX` + `MAX_BRANCHES` (Professional 10 / Enterprise 999999); `BRANCH` edition feature already present. **Implementation only — no API, service or UI.**
+3. **Batch 2 — backend functional layer, delivered to `master` at `4430f9d2b9eedc51dede1ca1cf6183508a756dac`.** `app/schemas/pf/branch.py`, `app/services/pf/branch_service.py`, `app/api/v1/pf/branches.py` (+ router registration), `app/core/edition_gating.py` (`BRANCH` constant), `app/models/pf/__init__.py` exports, `Backend/tests/test_pf005_branches.py`, `TC-PF-ISO-05`. Scope: branch CRUD / PUT / PATCH / soft delete; lifecycle transitions (BFS-PF-005 §5); hierarchy + cycle protection; address 1:1 upsert; search; JSON export; **BR-PF-034** edition gate (Community → 403); **BR-PF-039** `MAX_BRANCHES` enforced on create (counts **non-deleted** branches, retained `ARCHIVED`/`CANCELLED` rows included); **BR-PF-036** advisory HEAD_OFFICE warning (non-blocking); role gates; audit events; exactly the 9 approved endpoints (**hierarchy = `GET /api/v1/org/branches/hierarchy`**); branch history is **service-only** (no API endpoint). **Verified:** PF-005 tests **15 passed**; tenant isolation **13 passed**; full backend suite **141 passed, 1 skipped**; no PF-001…PF-004 regression. **Implementation only — NOT a release.**
+
 ### Changed (documentation only)
 - `ELU-MSL-001` — history row **1.15** added; §3.1 module row PF-005 → **START AUTHORIZED — IN PROGRESS** (PF-006…011 remain Not Started); §3.2 one-line health and §3.3 dashboard updated.
 - `ELU-MSL-002` — P1 next-job added (PF-005 start; documentation/DDL groundwork first); change-log **4.78** added.
 - `ELU-QA-REG-001` v1.5 → **v1.6** — PF-005 row added: `START AUTHORIZED — IN PROGRESS`, no audit, no tag.
 - `ELU-PGR-001` — **§16 PF-005 Start Authorization — 2026-09-12** added (scope-decision table).
 - `ELU-RDM-001` — PF-005 roadmap row notes the authorisation and deferrals.
+- Later status reconciliations (documentation only): `ELU-RTM-001` §11, `ELU-API-PF` §4, `ELU-TST-PF` **v1.4**, `ELU-QA-REG-001` **v1.7**, `ELU-MSL-001` history **1.16** + §3.1/§3.2/§3.3, `ELU-MSL-002` **4.80** — PF-005 status recorded as **IMPLEMENTED — NOT RELEASED**; `ELU-RDM-001` roadmap row reconciled in this change.
 
-### Not done
-- **No PF-005 implementation** — no application code, database objects, migrations, tests, UI, APIs, notifications, or reports.
-- **No release tag** created, moved, or modified; PF-005 has **no tag**.
+### Not done / NOT released
+- **Status: IMPLEMENTED — NOT RELEASED.** No QA release audit, **no release approval**, **no phase-gate approval for PF-005**, **no human sign-off**, **no release baseline**.
+- **No release tag** created, moved, or modified; PF-005 has **no tag**, and no tag points at `4430f9d` or `56f201e8`.
+- **Not implemented (deferred by approved decision):** Flutter/UI screens (**Batch 3 — UI release scope remains a governance decision**); **NTF-PF-005-\*** notifications; **RPT-PF-005-\*** reports; branch-head assignment + `users.branch_id` (**→ PF-008**); department linkage (**→ PF-006**); **BR-PF-037** project→branch enforcement; runtime permission-grain enforcement (**→ PF-009**); branch history API (service-only).
 
 ## [Phase Gate PF-001…003] — 2026-09-12 — GATE APPROVED — OPTION (c) UNCONDITIONAL
 
