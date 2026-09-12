@@ -1,5 +1,7 @@
 from app.models.pf.entities import (
     AuditEvent,
+    Branch,
+    BranchAddress,
     Edition,
     EditionFeature,
     EditionLimit,
@@ -24,6 +26,8 @@ from app.models.pf.entities import (
 
 __all__ = [
     "AuditEvent",
+    "Branch",
+    "BranchAddress",
     "Edition",
     "EditionFeature",
     "EditionLimit",

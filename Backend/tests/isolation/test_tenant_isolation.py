@@ -15,7 +15,7 @@ from app.db.migrate_pf003a import RLS_TABLES, apply_pf003a_ddl, rls_enabled
 from app.db.rls_context import bind_rls_context, clear_rls_context
 from app.db.session import SessionLocal
 from app.main import app
-from app.models.pf import Organization, Role, Tenant, User
+from app.models.pf import Branch, BranchAddress, Organization, Role, Tenant, User
 from tests.conftest import platform_session
 
 
@@ -417,3 +417,124 @@ def test_pf004_cross_tenant_organization_get(
 
     own = client.get(f"/api/v1/org/organizations/{org_b_id}", headers=hdr_b)
     assert own.status_code == 200, own.text
+
+
+def test_tc_pf_iso_05_branch_cross_tenant(
+    client: TestClient, auth_header: dict
+) -> None:
+    """TC-PF-ISO-05 (ADR-015): branch / branch_address never cross tenants."""
+    code_a = _unique_code("ba")
+    code_b = _unique_code("bb")
+    tenant_a = _register_and_approve(client, auth_header, code_a)
+    tenant_b = _register_and_approve(client, auth_header, code_b)
+    tid_a = uuid.UUID(tenant_a["id"])
+    tid_b = uuid.UUID(tenant_b["id"])
+    pwd = "IsoTest!234"
+    email_a = f"admin-{code_a}@example.com"
+    email_b = f"admin-{code_b}@example.com"
+    _provision_tenant_admin(tid_a, email_a, pwd)
+    _provision_tenant_admin(tid_b, email_b, pwd)
+    hdr_a = {"Authorization": f"Bearer {_login_tenant(client, email_a, pwd, code_a)}"}
+    hdr_b = {"Authorization": f"Bearer {_login_tenant(client, email_b, pwd, code_b)}"}
+
+    # Tenant B owns one branch (with address)
+    org_b = client.get("/api/v1/org/organizations/root", headers=hdr_b)
+    assert org_b.status_code == 200, org_b.text
+    created = client.post(
+        "/api/v1/org/branches",
+        headers=hdr_b,
+        json={
+            "code": "ISOB-01",
+            "name": "Iso Branch B",
+            "branch_type": "HEAD_OFFICE",
+            "organization_id": org_b.json()["id"],
+            "status": "ACTIVE",
+            "address": {
+                "address_line_1": "1 Isolation Street",
+                "city": "Kolkata",
+                "country_code": "IN",
+            },
+        },
+    )
+    assert created.status_code == 201, created.text
+    branch_id = created.json()["id"]
+    version_no = created.json()["version_no"]
+
+    # Tenant A cannot read, mutate or delete tenant B's branch (404, not a leak)
+    assert client.get(f"/api/v1/org/branches/{branch_id}", headers=hdr_a).status_code == 404
+    assert (
+        client.patch(
+            f"/api/v1/org/branches/{branch_id}",
+            headers=hdr_a,
+            json={"name": "Stolen", "version_no": version_no},
+        ).status_code
+        == 404
+    )
+    assert client.delete(f"/api/v1/org/branches/{branch_id}", headers=hdr_a).status_code == 404
+
+    # Tenant A's list never contains tenant B's branch
+    listing_a = client.get("/api/v1/org/branches", headers=hdr_a)
+    assert listing_a.status_code == 200, listing_a.text
+    assert all(i["id"] != branch_id for i in listing_a.json()["items"])
+
+    # Tenant A cannot attach tenant B's organization to its own branch
+    foreign_org = client.post(
+        "/api/v1/org/branches",
+        headers=hdr_a,
+        json={
+            "code": "ISOA-01",
+            "name": "Iso Branch A",
+            "branch_type": "BRANCH",
+            "organization_id": org_b.json()["id"],
+        },
+    )
+    assert foreign_org.status_code == 404, foreign_org.text
+
+    # RLS evidence: tenant A's SQL context sees neither B's branch nor its address,
+    # while tenant B's context sees both.
+    db = SessionLocal()
+    try:
+        bind_rls_context(db, tenant_id=tid_a, platform=False)
+        assert (
+            db.execute(
+                text("SELECT count(*) FROM core.branch WHERE branch_id = :b"),
+                {"b": branch_id},
+            ).scalar()
+            == 0
+        )
+        assert (
+            db.execute(
+                text("SELECT count(*) FROM core.branch_address WHERE tenant_id = :t"),
+                {"t": tid_b},
+            ).scalar()
+            == 0
+        )
+
+        bind_rls_context(db, tenant_id=tid_b, platform=False)
+        assert (
+            db.execute(
+                text("SELECT count(*) FROM core.branch WHERE branch_id = :b"),
+                {"b": branch_id},
+            ).scalar()
+            == 1
+        )
+        assert (
+            db.execute(
+                text("SELECT count(*) FROM core.branch_address WHERE tenant_id = :t"),
+                {"t": tid_b},
+            ).scalar()
+            == 1
+        )
+    finally:
+        clear_rls_context(db)
+        db.close()
+
+    with platform_session() as db:
+        rows = db.scalars(
+            select(Branch).where(Branch.tenant_id == tid_b, Branch.branch_code == "ISOB-01")
+        ).all()
+        assert len(rows) == 1
+        addresses = db.scalars(
+            select(BranchAddress).where(BranchAddress.tenant_id == tid_b)
+        ).all()
+        assert len(addresses) == 1

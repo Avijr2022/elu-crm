@@ -15,6 +15,7 @@ CRM_ACTIVITY = "CRM_ACTIVITY"
 SAL_QUOTE = "SAL_QUOTE"
 PRJ_WO = "PRJ_WO"
 FIN_INVOICE = "FIN_INVOICE"
+BRANCH = "BRANCH"  # PF-005 (ELU-BFS-PF-005 BR-PF-034; ELU-EDM-001)
 
 
 def enabled_features(db: Session, tenant_id: UUID) -> frozenset[str]:
