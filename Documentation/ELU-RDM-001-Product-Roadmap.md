@@ -70,7 +70,7 @@ v3.0  Advanced AI, Deep Industry Packs, Marketplace / Ecosystem
 | PF | PF-002 | Tenant Management | Critical | Tenant isolation root |
 | PF | PF-003 | Subscription Management | High | Trial / Active / Suspended / Expired |
 | PF | PF-004 | Organization Management | Critical | Org hierarchy |
-| PF | PF-005 | Branch Management | High | **START AUTHORIZED 2026-09-12** (Avijit / Project Coordinator); AC-PF-005-04 deferred to PF-008; NTF/RPT deferred |
+| PF | PF-005 | Branch Management | High | **IMPLEMENTED — NOT RELEASED** (backend functional layer; start authorisation 2026-09-12, Avijit / Project Coordinator); no release approval, no tag; AC-PF-005-04 deferred to PF-008; NTF/RPT deferred; Flutter UI (Batch 3) outstanding |
 | PF | PF-006 | Department Management | High | |
 | PF | PF-007 | Business Unit Management | Medium | |
 | PF | PF-008 | User & Identity Management | Critical | JWT + Refresh (**ADR-004**) |
