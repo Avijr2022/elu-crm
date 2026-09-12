@@ -1,6 +1,6 @@
 # E-LinkUp Test Specification — Platform Foundation
 **Document ID:** ELU-TST-PF  
-**Version:** 1.3  
+**Version:** 1.4  
 **Status:** Approved  
 **Related Documents:** ELU-RTM-001, ELU-API-PF, ELU-EFS-001, ELU-SEC-001, ELU-DOC-001  
 
@@ -14,6 +14,7 @@
 | 1.1 | 2026-08-06 | EIIP / QA | PF-001 edition automated tests mapped |
 | 1.2 | 2026-08-06 | EIIP / QA | PF-003A isolation suite automated (`tests/isolation/`) |
 | 1.3 | 2026-09-12 | EIIP / QA | PF-005 branch groundwork test structure (§2.2, planned cases — not implemented) |
+| 1.4 | 2026-09-12 | EIIP / QA | PF-005 branch functional layer implemented — §2.2 cases automated (15 PF-005 + 13 isolation; full suite 141 passed, 1 skipped; no PF-001…PF-004 regression) |
 
 ---
 
@@ -46,23 +47,25 @@ Every `REQ-PF-*` in V1-PF-CRM maps to ≥1 `TC-PF-*`. Isolation tests are mandat
 | TC-PF-ED-05 | RBAC | Tenant current edition read | `test_get_tenant_edition` | 200 PROFESSIONAL |
 | TC-PF-ED-06 | API SoT | OpenAPI includes edition paths | `test_openapi_includes_editions` | paths present |
 
-### 2.2 PF-005 Branch Management (authorised — NOT implemented; planned cases)
+### 2.2 PF-005 Branch Management (implemented — Batch 2; automated)
 
-Groundwork status: specification, schema (`014_branch_pf005.sql`), RLS, ORM models and seed only. **No API, service, repository or UI code exists yet**, so every case below is **planned** and has no automated test. Automation targets: `Backend/tests/test_pf005_branches.py` and `Backend/tests/isolation/test_tenant_isolation.py`.
+Implementation status: specification, schema (`014_branch_pf005.sql`), RLS, ORM models and seed (**groundwork Batch 1**) plus the backend functional layer — schemas, service, the 9-endpoint API and tests (**Batch 2**, delivered directly to `master` at `4430f9d2b9eedc51dede1ca1cf6183508a756dac`). The branch audit history is **service-only** (no API endpoint); no Flutter/UI, notifications or reports. Automation: `Backend/tests/test_pf005_branches.py` and `Backend/tests/isolation/test_tenant_isolation.py`.
 
-| TC ID | Rule | Scenario | Planned automated test | Expected |
-|-------|------|----------|------------------------|----------|
-| TC-PF-BR-01 | BR-PF-034 | Community edition calls branch create | `test_tc_pf_br_01_community_forbidden` | 403 EDITION_FORBIDDEN |
-| TC-PF-BR-02 | BR-PF-035 | Duplicate branch code (non-deleted) in same tenant | `test_tc_pf_br_02_duplicate_code` | 409 / 422 |
-| TC-PF-BR-03 | BR-PF-036 | No HEAD_OFFICE branch present | `test_tc_pf_br_03_head_office_warning` | 201 + warning |
-| TC-PF-BR-04 | BR-PF-039 | Professional tenant creates 11th branch | `test_tc_pf_br_04_branch_limit` | 403 / 422 (limit) |
+| TC ID | Rule | Scenario | Automated test | Expected |
+|-------|------|----------|----------------|----------|
+| TC-PF-BR-01 | BR-PF-034 | Community edition calls branch create | `test_tc_pf_br_01_community_forbidden` | 403 (edition gate; error code `FORBIDDEN`) |
+| TC-PF-BR-02 | BR-PF-035 | Duplicate branch code (non-deleted) in same tenant | `test_tc_pf_br_02_duplicate_code` | 409 (BR-PF-035) |
+| TC-PF-BR-03 | BR-PF-036 | No HEAD_OFFICE branch present | `test_tc_pf_br_03_head_office_warning` | 201 + advisory warning (non-blocking) |
+| TC-PF-BR-04 | BR-PF-039 | Professional tenant creates 11th branch | `test_tc_pf_br_04_branch_limit` | 422 (BR-PF-039) |
 | TC-PF-BR-05 | BFS §8 | Parent/child hierarchy; cycle rejected | `test_tc_pf_br_05_hierarchy` | 200 / 422 |
-| TC-PF-BR-06 | BFS §7/§9 | Address 1:1 create / update / cascade on delete | `test_tc_pf_br_06_address` | 200; address cascades |
+| TC-PF-BR-06 | BFS §7/§9 | Address 1:1 create / update / cascade on delete | `test_tc_pf_br_06_address` | 200; address soft-deleted with the branch |
 | TC-PF-BR-07 | BR-PF-037 | Delete branch with open projects | *(deferred — no project→branch linkage)* | — |
 | TC-PF-BR-08 | RBAC | Sales Manager / Project Manager write attempt | `test_tc_pf_br_08_readonly_roles` | 403 |
 | TC-PF-ISO-05 | ADR-015 | Cross-tenant branch / branch_address read | `test_tc_pf_iso_05_branch_cross_tenant` | 404 / 0 rows |
 
-**Deferred test scope (must NOT be implemented now):** AC-PF-005-04 / BR-PF-038 branch-head assignment and `users.branch_id` (**PF-008**); department linkage (**PF-006**); NTF-PF-005-* notifications; RPT-PF-005-* reports.
+**Batch 2 verification (executed 2026-09-12):** PF-005 tests **15 passed** (`test_pf005_branches.py`); tenant isolation **13 passed** (`tests/isolation/test_tenant_isolation.py`, incl. TC-PF-ISO-05); full backend suite **141 passed, 1 skipped**; **no PF-001…PF-004 regression identified**.
+
+**Deferred test scope (recorded deferrals — not implemented):** AC-PF-005-04 / BR-PF-038 branch-head assignment and `users.branch_id` (**PF-008**); department linkage (**PF-006**); BR-PF-037 project→branch delete restriction (no project→branch linkage yet, so TC-PF-BR-07 stays deferred); NTF-PF-005-* notifications; RPT-PF-005-* reports; runtime permission-grain enforcement (**PF-009**).
 
 ---
 

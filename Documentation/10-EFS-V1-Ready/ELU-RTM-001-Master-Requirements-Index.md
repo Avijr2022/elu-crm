@@ -228,32 +228,37 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 
 ---
 
-## 11. Implementation Traceability — PF-005 Branch Management (AUTHORIZED — NOT IMPLEMENTED)
+## 11. Implementation Traceability — PF-005 Branch Management (IMPLEMENTED — NOT RELEASED)
 
 Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.sql` · RLS: `012_rls_pf003a.sql` (ADR-015) · Test spec: `ELU-TST-PF` §2.2.
 
-| Requirement | Artefact | API (specified) | Test (planned) |
-|-------------|----------|-----------------|----------------|
-| BR-PF-034 edition gate (Professional+) | edition feature `BRANCH` (already seeded) | POST create | TC-PF-BR-01 |
+| Requirement | Artefact | API (implemented) | Test (implemented) |
+|-------------|----------|-------------------|--------------------|
+| BR-PF-034 edition gate (Professional+) | edition feature `BRANCH` (seeded; Community blocked) | all 9 endpoints (edition gate) | TC-PF-BR-01 |
 | BR-PF-035 branch code unique per tenant | `uk_branch_tenant_code_active` (partial) | POST create | TC-PF-BR-02 |
-| BR-PF-036 at least one HEAD_OFFICE (warning) | API warning (not enforced) | POST create | TC-PF-BR-03 |
-| BR-PF-037 no delete with active projects | **DEFERRED** — needs project → branch linkage | DELETE | — |
-| BR-PF-038 branch head must be ACTIVE user | **DEFERRED to PF-008** — `branch_head_user_id` nullable, no FK, no validation | — | — |
-| BR-PF-039 max branches per edition | `MAX_BRANCHES` limit (Professional 10 / Enterprise 999999) | POST create | TC-PF-BR-04 |
-| AC-PF-005-04 user branch assignment | **DEFERRED to PF-008** — no `users.branch_id` | — | — |
-| Hierarchy (parent/child, Restrict) | `fk_branch_parent` | GET `/{id}/hierarchy` | TC-PF-BR-05 |
+| BR-PF-036 at least one HEAD_OFFICE (warning) | Advisory `warnings[]` in the response — **never blocks** | POST create | TC-PF-BR-03 |
+| BR-PF-037 no delete with active projects | **DEFERRED** — needs project → branch linkage | DELETE | *(deferred)* |
+| BR-PF-038 branch head must be ACTIVE user | **DEFERRED to PF-008** — `branch_head_user_id` nullable, **no FK, no assignment logic** | — | *(deferred)* |
+| BR-PF-039 max branches per edition | `MAX_BRANCHES` limit (Professional 10 / Enterprise 999999); counts **non-deleted** branches, including retained terminal-state (`ARCHIVED`/`CANCELLED`) rows | POST create | TC-PF-BR-04 |
+| AC-PF-005-04 user branch assignment | **DEFERRED to PF-008** — no `users.branch_id` | — | *(deferred)* |
+| Hierarchy (parent/child, Restrict) | `fk_branch_parent`; self-parenting and circular ancestry rejected | `GET /api/v1/org/branches/hierarchy` | TC-PF-BR-05 |
 | Address 1:1 | `branch_address` (`uk_branch_address_branch`, CASCADE) + `fk_branch_address` (SET NULL) | PUT/PATCH | TC-PF-BR-06 |
+| Lifecycle states | BFS-PF-005 §5 transitions (`DRAFT→{ACTIVE,CANCELLED}`, `ACTIVE→INACTIVE`, `INACTIVE→{ACTIVE,ARCHIVED}`, terminal `ARCHIVED`/`CANCELLED`) | PATCH | `test_crud_put_patch_lifecycle_and_audit` |
+| Branch history | `BranchService.history()` + schemas — **service-only, no API endpoint** (BFS §10 defines none) | — | service-level assertions |
 | Tenant isolation | FORCE RLS + `tenant_isolation` on `core.branch`, `core.branch_address` | — | TC-PF-ISO-05 |
 
-**Status:** **AUTHORIZED — NOT IMPLEMENTED.** Groundwork only (specification, schema, RLS, ORM, seed). No APIs, services, repositories, UI, notifications, or reports.
+**Status:** **IMPLEMENTED — NOT RELEASED.** Groundwork Batch 1 (specification, schema, RLS, ORM, seed) **plus Batch 2 — backend functional layer**, delivered directly to `master` at `4430f9d2b9eedc51dede1ca1cf6183508a756dac` (2026-09-12): `app/schemas/pf/branch.py`, `app/services/pf/branch_service.py`, `app/api/v1/pf/branches.py` (+ router registration), `tests/test_pf005_branches.py`, `TC-PF-ISO-05`. No Flutter/UI, notifications or reports.
 **SQL:** `014_branch_pf005.sql`, `014_branch_pf005_rollback.sql`  
 **RLS:** `012_rls_pf003a.sql` (tables added to the PF-003A loop), `migrate_pf003a.py::RLS_TABLES`  
 **ORM:** `app/models/pf/entities.py` — `Branch`, `BranchAddress`  
 **Seed:** `BRANCH_PERMISSION_MATRIX`, `branch.*` permissions, `MAX_BRANCHES` limits  
-**Tests:** *planned — see `ELU-TST-PF` §2.2*  
-**Baseline:** none — no release approval and no tag (not authorised)
+**API:** 9 endpoints under `/api/v1/org/branches` (create, list, detail, PUT, PATCH, soft delete, search, export, hierarchy) — see `ELU-API-PF` §4.
 
-**Deferred (recorded):** AC-PF-005-04 / BR-PF-038 and `users.branch_id` and branch-head assignment/validation → **PF-008**; `department` linkage → **PF-006**; BR-PF-037 project→branch enforcement → deferred until a project→branch linkage exists; **NTF-PF-005-\*** and **RPT-PF-005-\*** → deferred.
+**Tests:** implemented — `Backend/tests/test_pf005_branches.py` (15) + `TC-PF-ISO-05` in `Backend/tests/isolation/test_tenant_isolation.py` (13 isolation tests); full backend suite **141 passed, 1 skipped**; no PF-001…PF-004 regression. See `ELU-TST-PF` §2.2.
+
+**Baseline:** **none — PF-005 is NOT released**: no release approval, no QA release audit, no tag.
+
+**Deferred (recorded):** AC-PF-005-04 / BR-PF-038 and `users.branch_id` and branch-head assignment/validation → **PF-008**; `department` linkage → **PF-006**; BR-PF-037 project→branch enforcement → deferred until a project→branch linkage exists; **NTF-PF-005-\*** and **RPT-PF-005-\*** → deferred; runtime permission-grain enforcement → **PF-009** (role gates only for now); branch audit history → service-only, no API endpoint.
 
 ---
 
