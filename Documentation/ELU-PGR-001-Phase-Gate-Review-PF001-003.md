@@ -190,7 +190,21 @@ RETROSPECTIVE DEVIATION: Accepted
 >
 > **AI-governance note (ELU-AI-001):** the assistant must **not** originate or record an approval on its own authority. Downstream reconciliation recorded with this decision: this document → `APPROVED`; `ELU-QA-REG-001` (gate row); `ELU-MSL-001` §3 / §3.1 / §3.2; `ELU-MSL-002`; `Documentation/CHANGELOG.md`.
 >
-> **Gate tag `Phase-Gate-PF001-003`:** **not created** — requires separate explicit human authorisation.
+> **Gate tag `Phase-Gate-PF001-003`:** **created (annotated)** and pushed 2026-09-12 — tag object `28f999c9a14b8bc222fd3a4afb3ea2b691fff65f` → target commit `68578dd9c9ffba493308f2b110ba17ae55abb6e9` (recorded in `ELU-QA-REG-001`, phase-gate row). *(Superseding the wording drafted with this section: at that point the tag was "not created" and required separate explicit human authorisation.)*
+
+## 16. PF-005 Start Authorization — 2026-09-12
+
+Explicit human instruction recorded: **PF-005 Branch Management — START AUTHORIZED**. Approver **Avijit**, role **Project Coordinator**, date **2026-09-12**.
+
+| Scope decision | Recorded outcome |
+|----------------|------------------|
+| **AC-PF-005-04 / BR-PF-038** — user branch assignment (`user.branch_id`; branch head must be an ACTIVE user) | **DEFERRED** until **PF-008 Users & Identity** |
+| **NTF-PF-005-01..03** — notifications | **DEFERRED** |
+| **RPT-PF-005-01/02** — reports | **DEFERRED** |
+
+- This section records an **authorisation and scope decision only**. No PF-005 implementation (application code, database objects, migrations, tests, UI, APIs, notifications, reports) is started by this record.
+- **PF-005 has no release tag** and none may be created without a separate human authorisation after a QA release audit.
+- Values were human-supplied and transcribed verbatim; the assistant originated nothing (ELU-AI-001).
 
 ---
 

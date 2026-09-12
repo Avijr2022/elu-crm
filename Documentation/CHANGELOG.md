@@ -2,6 +2,26 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-005] — 2026-09-12 — START AUTHORIZED (GOVERNANCE ONLY — NOT IMPLEMENTED)
+
+### Decision (human, recorded)
+- **PF-005 Branch Management — START AUTHORIZED**; approver **Avijit**, role **Project Coordinator**, date **2026-09-12**.
+- **AC-PF-005-04 / BR-PF-038** user branch assignment (`user.branch_id`; branch head must be an ACTIVE user in the same tenant) → **DEFERRED** to **PF-008 Users & Identity**.
+- **NTF-PF-005-01..03** notifications → **DEFERRED**.
+- **RPT-PF-005-01/02** reports → **DEFERRED**.
+- Values were human-supplied and transcribed verbatim; the assistant originated nothing (ELU-AI-001). This is a **start authorisation / scope decision**, not a QA sign-off or release approval.
+
+### Changed (documentation only)
+- `ELU-MSL-001` — history row **1.15** added; §3.1 module row PF-005 → **START AUTHORIZED — IN PROGRESS** (PF-006…011 remain Not Started); §3.2 one-line health and §3.3 dashboard updated.
+- `ELU-MSL-002` — P1 next-job added (PF-005 start; documentation/DDL groundwork first); change-log **4.78** added.
+- `ELU-QA-REG-001` v1.5 → **v1.6** — PF-005 row added: `START AUTHORIZED — IN PROGRESS`, no audit, no tag.
+- `ELU-PGR-001` — **§16 PF-005 Start Authorization — 2026-09-12** added (scope-decision table).
+- `ELU-RDM-001` — PF-005 roadmap row notes the authorisation and deferrals.
+
+### Not done
+- **No PF-005 implementation** — no application code, database objects, migrations, tests, UI, APIs, notifications, or reports.
+- **No release tag** created, moved, or modified; PF-005 has **no tag**.
+
 ## [Phase Gate PF-001…003] — 2026-09-12 — GATE APPROVED — OPTION (c) UNCONDITIONAL
 
 ### Decision (human, recorded)
