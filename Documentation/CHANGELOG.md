@@ -2,6 +2,24 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [Phase Gate PF-001…003] — 2026-09-12 — GATE APPROVED — OPTION (c) UNCONDITIONAL
+
+### Decision (human, recorded)
+- **Reference:** `ELU-PGR-001` v1.2 §15.1 — sign-off block completed by the named human approver.
+- `DECISION: APPROVED` · `OPTION: (c) unconditional` · `APPROVER: Avijit` · `ROLE: Project Coordinator` · `DATE: 2026-09-12` · `CONDITIONS: None`.
+- **Retrospective deviation: Accepted** — PF-004 Organization Management was delivered, corrected, human release-approved (2026-09-11) and release-tagged (`Phase-2-PF004-R1`) before the gate block was completed, notwithstanding the §0/§14 directive *"Do not start PF-004 until Human Phase-Gate Approval"*. No remediation required.
+- Values were **human-supplied** and transcribed verbatim; the assistant did not originate the decision, option, approver identity, role, or date (ELU-AI-001).
+
+### Changed (documentation only)
+- `ELU-PGR-001` v1.1 → **v1.2**; status `AWAITING HUMAN PHASE-GATE APPROVAL` → **`APPROVED`**; §14 request marked *Resolved*; §15.1 block completed; decision provenance + retrospective-deviation record added.
+- `ELU-QA-REG-001` v1.4 → **v1.5**; phase-gate row → **APPROVED** (option (c), 2026-09-12); stale trailing cell corrected to PF-004 `RELEASE APPROVED` — tag `Phase-2-PF004-R1`.
+- `ELU-MSL-001` — history row **1.14** added; §3 PF-004 row, §3.1 PF-004 release tag (`Phase-2-PF004-R1`), §3.2 baselines line updated.
+- `ELU-MSL-002` — P1 next-jobs 1 & 2 closed; change-log **4.77** added.
+
+### Not done (requires separate authorisation)
+- Gate tag **`Phase-Gate-PF001-003`** — **not created**.
+- **PF-005 Branch Management** — not started; no PF-005 start instruction issued.
+
 ## [PF-004] — 2026-09-11 — APPROVED CORRECTIONS IMPLEMENTED (NOT RELEASED)
 
 ### Changed (IMPLEMENTED)

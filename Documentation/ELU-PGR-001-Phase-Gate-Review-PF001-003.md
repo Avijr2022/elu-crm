@@ -1,7 +1,7 @@
 # E-LinkUp Phase Gate Review — Platform Foundation Slice (PF-001…003)
 **Document ID:** ELU-PGR-001  
-**Version:** 1.1  
-**Status:** AWAITING HUMAN PHASE-GATE APPROVAL  
+**Version:** 1.2  
+**Status:** **APPROVED** — phase gate closed by human decision 2026-09-12 (see §15.1)  
 **Gate:** Before PF-004 Organization Management  
 **Date:** 2026-08-06  
 **Authority:** Enterprise Constitution (ELU-CON-001)  
@@ -153,6 +153,8 @@ RECOMMENDATION:
 DO NOT START PF-004 UNTIL HUMAN PHASE-GATE APPROVAL.
 ```
 
+> **Resolved (2026-09-12):** the gate was **APPROVED** under **option (c) unconditional** by the named human approver — see §15.1. The request above is retained verbatim as the historical decision request.
+
 ---
 
 ## 15. Gate Readiness Update — 2026-09-11
@@ -169,21 +171,26 @@ The two **P0** findings raised at review have since been **closed** by *PF-003A 
 
 Regression evidence at this update: **118 pytest passed, 1 skipped** (isolation + FIN v4.13 invoice suites included); **25 Flutter tests passed**; hosted CI green on `master` (`cf0c264`, `c9ec3fc`).
 
-### 15.1 Sign-off block — to be completed by a named human approver
+### 15.1 Sign-off block — completed by a named human approver (2026-09-12)
 
 ```text
 PHASE GATE (PF-001…003)
-DECISION:            [ APPROVED | APPROVED WITH CONDITIONS | REJECTED ]
-OPTION:              [ (a) CR for RLS/isolation parallel track
-                     | (b) temporary ADR waiver + hard deadline
-                     | (c) unconditional ]
-APPROVER (name):     ____________________
-ROLE:                ____________________   (QA Director / Product Owner / PMO)
-DATE:                ____________________
-CONDITIONS (if any): ____________________
+DECISION:            APPROVED
+OPTION:              (c) unconditional
+APPROVER (name):     Avijit
+ROLE:                Project Coordinator
+DATE:                2026-09-12
+CONDITIONS (if any): None
+RETROSPECTIVE DEVIATION: Accepted
 ```
 
-> **AI-governance note (ELU-AI-001):** the assistant must **not** record the decision or the approver name. Once the block above is completed by the human approver, the assistant will: set this document to `APPROVED`, update `ELU-QA-REG-001` (gate row), `ELU-MSL-001` §3.1, `ELU-MSL-002`, `Documentation/CHANGELOG.md`, and create the **`Phase-Gate-PF001-003`** tag.
+> **Decision provenance:** the values in the block above were supplied by the human approver. The assistant transcribed them verbatim; it did not originate the decision, the option choice, the approver identity, the role, or the date.
+>
+> **Retrospective deviation (Accepted):** PF-004 Organization Management was designed, delivered, corrected, human release-approved (2026-09-11) and release-tagged (`Phase-2-PF004-R1` → `3f30159a…`) while this block was still blank, notwithstanding the §0/§14 directive *"Do not start PF-004 until Human Phase-Gate Approval"*. The approver recorded this sequencing as **Accepted** — no remediation required.
+>
+> **AI-governance note (ELU-AI-001):** the assistant must **not** originate or record an approval on its own authority. Downstream reconciliation recorded with this decision: this document → `APPROVED`; `ELU-QA-REG-001` (gate row); `ELU-MSL-001` §3 / §3.1 / §3.2; `ELU-MSL-002`; `Documentation/CHANGELOG.md`.
+>
+> **Gate tag `Phase-Gate-PF001-003`:** **not created** — requires separate explicit human authorisation.
 
 ---
 

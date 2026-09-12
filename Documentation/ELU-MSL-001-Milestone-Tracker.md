@@ -30,6 +30,7 @@
 | 1.11 | 2026-08-06 | EIIP / Architecture | PF-004 Mid-Phase Review ELU-MPR-PF004; Health Card ELU-EHC-003; continue build |
 | 1.12 | 2026-09-11 | EIIP / PMO | **HD-09 status reconciliation** — PF-004 status records reconciled to `QA PASS — PENDING HUMAN RELEASE APPROVAL` (approved corrections merged `67b48c1`). Human RELEASE APPROVED, HD-10 tag disposition and the PF-001…003 phase-gate sign-off remain outstanding |
 | 1.13 | 2026-09-11 | EIIP / QA Director | **PF-004 RELEASE APPROVED: YES** (explicit human decision) — PF-004 baselined; HD-10 tag disposition recorded; PF-005+ may start only on explicit human instruction |
+| 1.14 | 2026-09-12 | Avijit / Project Coordinator | **Phase Gate PF-001…003 APPROVED** — option (c) unconditional, conditions: none; retrospective deviation accepted (PF-004 delivered, released and tagged before sign-off). Gate tag `Phase-Gate-PF001-003` not created (pending separate authorisation) |
 
 ---
 
@@ -92,7 +93,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | **PF-002 Tenant Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF002` |
 | **PF-003 Subscription Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003` |
 | **PF-003A Enterprise Tenant Isolation** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003A` |
-| **PF-004 Organization Management** | ✅ Done | 100% | **RELEASE APPROVED** — 2026-09-11 (annotated release tag pending per HD-10) |
+| **PF-004 Organization Management** | ✅ Done | 100% | **RELEASE APPROVED** — 2026-09-11; release tag `Phase-2-PF004-R1` (annotated) |
 | Database (PostgreSQL schema) | 🟡 In Progress | 75% | RLS FORCE via PF-003A |
 | FastAPI implementation | 🟡 In Progress | 70% | PF-003A RLS session binding live |
 | Flutter implementation | 🟡 In Progress | 55% | Subscriptions + Tenants + Editions baselined |
@@ -106,12 +107,13 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-002 Tenant Management | **RELEASE APPROVED** | `Phase-2-PF002` | Frozen — bug / CR / ADR only |
 | PF-003 Subscription | **RELEASE APPROVED** | `Phase-2-PF003` | Frozen — bug / CR / ADR only |
 | PF-003A Tenant Isolation | **RELEASE APPROVED** | `Phase-2-PF003A` | Frozen — bug / CR / ADR only |
-| PF-004 Organization | **RELEASE APPROVED** | — (annotated release tag pending, HD-10) | Frozen — bug / CR / ADR only |
+| PF-004 Organization | **RELEASE APPROVED** | `Phase-2-PF004-R1` | Frozen — bug / CR / ADR only |
 | PF-005…011 | Not Started | — | Per BFS/RDM order |
 
 ### 3.2 One-Line Health
 
-> **Baselines locked:** PF-001…PF-004 (PF-004 **RELEASE APPROVED** 2026-09-11, human decision). Frozen — change only on documented bug, approved CR, or ADR.
+> **Baselines locked:** PF-001…PF-004 (PF-004 **RELEASE APPROVED** 2026-09-11, human decision). Frozen — change only on documented bug, approved CR, or ADR.  
+> **Phase Gate PF-001…003:** **APPROVED** — option (c) unconditional, conditions: none (human decision 2026-09-12; `ELU-PGR-001` v1.2 §15.1).
 
 ### 3.3 Enterprise Progress Dashboard (Phase Gate)
 
