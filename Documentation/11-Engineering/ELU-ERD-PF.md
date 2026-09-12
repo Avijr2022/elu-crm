@@ -34,6 +34,7 @@ erDiagram
     tenant ||--o{ role : has
     tenant ||--o{ audit_event : logs
     organization ||--o{ branch : has
+    branch ||--o| branch_address : located_at
     organization ||--o{ department : has
     organization ||--o{ business_unit : has
     branch ||--o{ users : home
@@ -70,12 +71,16 @@ erDiagram
 | edition | tenant | 1:N | Restrict |
 | tenant | organization | 1:N | Restrict |
 | organization | branch | 1:N | Restrict |
+| branch | branch | 1:N | Restrict (hierarchy) |
+| branch | branch_address | 1:1 | Cascade |
 | organization | department | 1:N | Restrict |
 | tenant | users | 1:N | Restrict |
 | users | user_credentials | 1:1 | Cascade |
 | role | role_permission | 1:N | Cascade |
 | tenant | subscription | 1:N | Restrict |
 | tenant | audit_event | 1:N | Restrict (purge via retention job) |
+
+**PF-005 groundwork (2026-09-12):** `branch` and `branch_address` are specified and schema-prepared (`014_branch_pf005.sql`, `branch.branch_address_id` → `core.branch_address` ON DELETE **SET NULL**; `branch_address.branch_id` → `core.branch` ON DELETE **CASCADE**). The `organization →|| department`, `branch ||--o{ users : home` and `department → users` relationships remain **documentary only** — PF-006 (department) and PF-008 (users / `users.branch_id`) are not implemented and must not be created now.
 
 ---
 

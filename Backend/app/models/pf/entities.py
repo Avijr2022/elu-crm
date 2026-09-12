@@ -453,6 +453,104 @@ class Organization(Base, TimestampMixin, SoftDeleteMixin):
     tenant: Mapped["Tenant"] = relationship(back_populates="organizations")
 
 
+class Branch(Base, TimestampMixin, SoftDeleteMixin):
+    """Tenant branch profile (ELU-BFS-PF-005 §7/§9 / ELU-DDD-PF §5).
+
+    Groundwork scope only. Deferred: ``users.branch_id`` and branch-head
+    assignment/validation (PF-008, BR-PF-038 / AC-PF-005-04), department linkage
+    (PF-006), project -> branch linkage (BR-PF-037). ``branch_head_user_id`` is
+    therefore a plain nullable column with no FK and no validation.
+    """
+
+    __tablename__ = "branch"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "branch_code", name="uk_branch_tenant_code"),
+        {"schema": "core"},
+    )
+
+    branch_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("core.tenant.tenant_id"), nullable=False, index=True
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.organization.organization_id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    parent_branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.branch.branch_id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    branch_code: Mapped[str] = mapped_column(String(30), nullable=False)
+    branch_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    branch_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    branch_head_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    email: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    branch_address_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        # ``use_alter`` breaks the branch <-> branch_address create_all FK cycle:
+        # this constraint is emitted as a separate ALTER after both tables exist.
+        ForeignKey(
+            "core.branch_address.branch_address_id",
+            ondelete="SET NULL",
+            use_alter=True,
+            name="fk_branch_address",
+        ),
+        nullable=True,
+        index=True,
+    )
+    timezone_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    working_hours: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="DRAFT"
+    )
+    opened_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    closed_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
+
+class BranchAddress(Base, TimestampMixin, SoftDeleteMixin):
+    """Branch address (ELU-BFS-PF-005 §9 / ELU-DDD-PF §5). One row per branch."""
+
+    __tablename__ = "branch_address"
+    __table_args__ = (
+        UniqueConstraint("branch_id", name="uk_branch_address_branch"),
+        {"schema": "core"},
+    )
+
+    branch_address_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("core.tenant.tenant_id"), nullable=False, index=True
+    )
+    branch_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.branch.branch_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    address_line_1: Mapped[str] = mapped_column(String(255), nullable=False)
+    address_line_2: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    city: Mapped[str] = mapped_column(String(100), nullable=False)
+    state: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    country_code: Mapped[str] = mapped_column(
+        String(3), nullable=False, server_default="IN"
+    )
+    latitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(9, 6), nullable=True)
+    longitude: Mapped[Optional[Decimal]] = mapped_column(Numeric(9, 6), nullable=True)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
+
 class Role(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "role"
     __table_args__ = (

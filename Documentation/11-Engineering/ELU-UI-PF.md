@@ -38,6 +38,8 @@
 | `/settings/branding` | TenantBrandingPage | Tenant Admin | Edition-gated |
 | `/audit` | AuditEventListPage | Tenant Admin | Retention banner |
 
+**PF-005 Branch screens (specified — NOT implemented; ELU-BFS-PF-005 §11):** Branch List · Branch Create · Branch Edit · Branch View · Branch Search · Branch Hierarchy · Branch History — Tenant Admin, Professional+ (BR-PF-034). The `/org/branches` → `BranchListPage` route above is **specification only**; no branch pages exist under `Frontend/lib/` yet.
+
 ---
 
 ## 2. UX Rules

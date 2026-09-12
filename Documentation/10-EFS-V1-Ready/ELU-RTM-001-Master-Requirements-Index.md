@@ -228,4 +228,33 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 
 ---
 
+## 11. Implementation Traceability — PF-005 Branch Management (AUTHORIZED — NOT IMPLEMENTED)
+
+Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.sql` · RLS: `012_rls_pf003a.sql` (ADR-015) · Test spec: `ELU-TST-PF` §2.2.
+
+| Requirement | Artefact | API (specified) | Test (planned) |
+|-------------|----------|-----------------|----------------|
+| BR-PF-034 edition gate (Professional+) | edition feature `BRANCH` (already seeded) | POST create | TC-PF-BR-01 |
+| BR-PF-035 branch code unique per tenant | `uk_branch_tenant_code_active` (partial) | POST create | TC-PF-BR-02 |
+| BR-PF-036 at least one HEAD_OFFICE (warning) | API warning (not enforced) | POST create | TC-PF-BR-03 |
+| BR-PF-037 no delete with active projects | **DEFERRED** — needs project → branch linkage | DELETE | — |
+| BR-PF-038 branch head must be ACTIVE user | **DEFERRED to PF-008** — `branch_head_user_id` nullable, no FK, no validation | — | — |
+| BR-PF-039 max branches per edition | `MAX_BRANCHES` limit (Professional 10 / Enterprise 999999) | POST create | TC-PF-BR-04 |
+| AC-PF-005-04 user branch assignment | **DEFERRED to PF-008** — no `users.branch_id` | — | — |
+| Hierarchy (parent/child, Restrict) | `fk_branch_parent` | GET `/{id}/hierarchy` | TC-PF-BR-05 |
+| Address 1:1 | `branch_address` (`uk_branch_address_branch`, CASCADE) + `fk_branch_address` (SET NULL) | PUT/PATCH | TC-PF-BR-06 |
+| Tenant isolation | FORCE RLS + `tenant_isolation` on `core.branch`, `core.branch_address` | — | TC-PF-ISO-05 |
+
+**Status:** **AUTHORIZED — NOT IMPLEMENTED.** Groundwork only (specification, schema, RLS, ORM, seed). No APIs, services, repositories, UI, notifications, or reports.
+**SQL:** `014_branch_pf005.sql`, `014_branch_pf005_rollback.sql`  
+**RLS:** `012_rls_pf003a.sql` (tables added to the PF-003A loop), `migrate_pf003a.py::RLS_TABLES`  
+**ORM:** `app/models/pf/entities.py` — `Branch`, `BranchAddress`  
+**Seed:** `BRANCH_PERMISSION_MATRIX`, `branch.*` permissions, `MAX_BRANCHES` limits  
+**Tests:** *planned — see `ELU-TST-PF` §2.2*  
+**Baseline:** none — no release approval and no tag (not authorised)
+
+**Deferred (recorded):** AC-PF-005-04 / BR-PF-038 and `users.branch_id` and branch-head assignment/validation → **PF-008**; `department` linkage → **PF-006**; BR-PF-037 project→branch enforcement → deferred until a project→branch linkage exists; **NTF-PF-005-\*** and **RPT-PF-005-\*** → deferred.
+
+---
+
 *© Euphoria Infotech (I) Limited — ELU-RTM-001*
