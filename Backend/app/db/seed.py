@@ -58,6 +58,27 @@ ORG_PERMISSION_MATRIX: dict[str, tuple[str, ...]] = {
 }
 
 
+# PF-005 branch capability matrix — BFS-PF-005 §12 (basis) + §2 actors.
+# Runtime-wide permission-grain enforcement for the PF surface is still deferred
+# to PF-009; this only makes the *seeded* map match the approved matrix.
+# TENANT_ADMIN / SALES_MANAGER / PROJECT_MANAGER are exactly BFS-PF-005 §12;
+# FINANCE_USER (viewer for invoicing) and PLATFORM_ADMIN (read-only, same convention
+# as BFS-PF-004 §12) are the §2 actor-list viewers.
+BRANCH_PERMISSION_MATRIX: dict[str, tuple[str, ...]] = {
+    "TENANT_ADMIN": (
+        "branch.create",
+        "branch.read",
+        "branch.update",
+        "branch.delete",
+        "branch.export",
+    ),
+    "FINANCE_USER": ("branch.read",),
+    "SALES_MANAGER": ("branch.read",),
+    "PROJECT_MANAGER": ("branch.read",),
+    "PLATFORM_ADMIN": ("branch.read",),  # read-only
+}
+
+
 def _sync_org_permission_matrix(db: Session, tenant_id) -> None:
     """Align seeded ``organization.*`` grants with the approved matrix (idempotent).
 
@@ -100,6 +121,50 @@ def _sync_org_permission_matrix(db: Session, tenant_id) -> None:
     db.flush()
 
 
+def _sync_branch_permission_matrix(db: Session, tenant_id) -> None:
+    """Align seeded ``branch.*`` grants with the approved matrix (idempotent).
+
+    PF-005 equivalent of ``_sync_org_permission_matrix`` (HD-01 pattern): grants the
+    approved codes and revokes any ``branch.*`` grain that is not approved for the
+    role. Runtime permission-grain enforcement remains deferred to PF-009.
+    """
+    branch_perm_ids = {
+        code: permission_id
+        for code, permission_id in db.execute(
+            select(Permission.permission_code, Permission.permission_id).where(
+                Permission.permission_code.like("branch.%")
+            )
+        ).all()
+    }
+    if not branch_perm_ids:
+        return
+    for role_code, allowed_codes in BRANCH_PERMISSION_MATRIX.items():
+        role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code == role_code,
+            )
+        ).first()
+        if role is None:
+            continue
+        allowed_ids = {
+            branch_perm_ids[code] for code in allowed_codes if code in branch_perm_ids
+        }
+        for permission_id in allowed_ids:
+            _link_role_permission(db, role.role_id, permission_id)
+        stale_ids = [
+            pid for pid in branch_perm_ids.values() if pid not in allowed_ids
+        ]
+        if stale_ids:
+            db.execute(
+                delete(RolePermission).where(
+                    RolePermission.role_id == role.role_id,
+                    RolePermission.permission_id.in_(stale_ids),
+                )
+            )
+    db.flush()
+
+
 # 1x1 JPEG for seeded tenant branding (PDF logo smoke test).
 _SEED_LOGO_JPEG = (
     "data:image/jpeg;base64,"
@@ -131,6 +196,11 @@ PERMISSIONS = [
     ("organization.update", "Update organization", "PF"),
     ("organization.delete", "Delete organization", "PF"),
     ("organization.export", "Export organizations", "PF"),
+    ("branch.create", "Create branch", "PF"),
+    ("branch.read", "View branch", "PF"),
+    ("branch.update", "Update branch", "PF"),
+    ("branch.delete", "Delete branch", "PF"),
+    ("branch.export", "Export branches", "PF"),
     ("lead.create", "Create lead", "CRM"),
     ("lead.read", "View lead", "CRM"),
     ("lead.update", "Update lead", "CRM"),
@@ -217,6 +287,7 @@ EDITION_SPECS = {
             ("MAX_USERS", "Maximum users", Decimal("50"), "users"),
             ("MAX_STORAGE_GB", "Maximum storage", Decimal("100"), "GB"),
             ("MAX_ROLES", "Maximum custom roles", Decimal("25"), "roles"),
+            ("MAX_BRANCHES", "Maximum branches", Decimal("10"), "branches"),
         ],
     },
     "ENTERPRISE": {
@@ -242,6 +313,7 @@ EDITION_SPECS = {
             ("MAX_USERS", "Maximum users", Decimal("999999"), "users"),
             ("MAX_STORAGE_GB", "Maximum storage", Decimal("999999"), "GB"),
             ("MAX_ROLES", "Maximum custom roles", Decimal("999999"), "roles"),
+            ("MAX_BRANCHES", "Maximum branches", Decimal("999999"), "branches"),
         ],
     },
 }
@@ -480,6 +552,9 @@ def seed_platform(db: Session) -> None:
     # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
     _sync_org_permission_matrix(db, tenant.tenant_id)
 
+    # PF-005 branch grants per BFS-PF-005 §12 (groundwork; no runtime grain enforcement).
+    _sync_branch_permission_matrix(db, tenant.tenant_id)
+
     # Seed admin acts as Platform Admin for PF-001 ops (Euphoria demo)
     admin = User(
         tenant_id=tenant.tenant_id,
@@ -524,6 +599,9 @@ def _ensure_platform_admin(
 
     # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
     _sync_org_permission_matrix(db, tenant.tenant_id)
+
+    # PF-005 branch grants per BFS-PF-005 §12 (groundwork; no runtime grain enforcement).
+    _sync_branch_permission_matrix(db, tenant.tenant_id)
 
     platform_role = db.scalars(
         select(Role).where(
@@ -649,6 +727,8 @@ def provision_tenant_roles(db: Session, tenant_id) -> None:
     _grant_role_permissions(db, tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
     # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
     _sync_org_permission_matrix(db, tenant_id)
+    # PF-005 branch grants per BFS-PF-005 §12 (groundwork; no runtime grain enforcement).
+    _sync_branch_permission_matrix(db, tenant_id)
 
 
 def _upgrade_sal_permissions(db: Session, tenant: Tenant) -> None:

@@ -51,6 +51,8 @@ BEGIN
       ('core', 'tenant_status_history', false),
       ('core', 'tenant_settings', false),
       ('core', 'organization', false),
+      ('core', 'branch', false),
+      ('core', 'branch_address', false),
       ('core', 'users', false),
       ('core', 'subscription', false),
       ('core', 'subscription_history', false),

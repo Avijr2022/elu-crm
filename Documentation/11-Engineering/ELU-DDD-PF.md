@@ -125,10 +125,12 @@ Partial unique indexes must exclude `is_deleted = true` rows.
 | Table | Key fields |
 |-------|------------|
 | organization | tenant_id, code, name, legal_name, organization_type, parent_organization_id, gstin, pan, status + common |
-| branch | tenant_id, organization_id, code, name, branch_type, parent_branch_id + common |
-| branch_address | tenant_id, branch_id UK, address fields |
+| branch | tenant_id, organization_id, parent_branch_id N, branch_code, branch_name, branch_type (HEAD_OFFICE/BRANCH/REGIONAL_OFFICE), branch_head_user_id N †, email, phone, branch_address_id N, timezone_id, working_hours, status (DRAFT/ACTIVE/INACTIVE/ARCHIVED/CANCELLED), opened_date, closed_date + common |
+| branch_address | tenant_id, branch_id UK, address_line_1/2, city, state, postal_code, country_code, latitude, longitude + common |
 | department | tenant_id, organization_id, branch_id N, code, name, parent_department_id, department_head_user_id + common |
 | business_unit | tenant_id, organization_id, code, name, bu_manager_user_id, cost_centre_code + common |
+
+† **PF-005 groundwork note (2026-09-12):** `branch.branch_head_user_id` is created **nullable with no FK and no validation** — branch-head assignment/validation (BR-PF-038 / AC-PF-005-04) is **deferred to PF-008 Users & Identity**. `users.branch_id` (see §7) is **NOT** created — also deferred to PF-008. `department.branch_id` is **documentary only** (**PF-006**, not implemented).
 
 ---
 

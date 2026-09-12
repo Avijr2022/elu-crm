@@ -74,6 +74,22 @@ Summaries align to **V1-PF-CRM** and **ELU-BFS-PF §10**:
 
 OpenAPI YAML to be generated from FastAPI routers; this document is the checklist SoT until YAML is published.
 
+**PF-005 Branch (specified — NOT implemented; ELU-BFS-PF-005 §10):**
+
+| Method | Endpoint | Purpose | Permission |
+|--------|----------|---------|------------|
+| POST | `/api/v1/org/branches` | Create branch | `branch.create` |
+| GET | `/api/v1/org/branches` | List | `branch.read` |
+| GET | `/api/v1/org/branches/{id}` | Detail | `branch.read` |
+| PUT | `/api/v1/org/branches/{id}` | Full update | `branch.update` |
+| PATCH | `/api/v1/org/branches/{id}` | Partial / status | `branch.update` |
+| DELETE | `/api/v1/org/branches/{id}` | Soft delete | `branch.delete` |
+| GET | `/api/v1/org/branches/search` | Search | `branch.read` |
+| GET | `/api/v1/org/branches/export` | Export | `branch.export` |
+| GET | `/api/v1/org/branches/hierarchy` | Branch tree | `branch.read` |
+
+Edition gate: Professional+ (feature `BRANCH`); limit `MAX_BRANCHES` = 10 (Professional) / 999999 (Enterprise). `branch.export` follows the PF-004 precedent of a **role gate** (Tenant Admin) rather than runtime permission-grain enforcement (deferred to PF-009). **No branch router exists yet** — groundwork only.
+
 **PF-001 implementation (2026-08-06):** Live OpenAPI at `/openapi.json`; exported snapshot `Backend/openapi/openapi.json` and edition path extract `Backend/openapi/pf001-editions-paths.json`. Edition endpoints implemented per BFS-PF §10.
 
 ---
