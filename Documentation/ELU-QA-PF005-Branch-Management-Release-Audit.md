@@ -1,16 +1,16 @@
 # E-LinkUp QA Release Audit — PF-005 Branch Management
 
 **Document ID:** ELU-QA-PF005
-**Version:** 1.0 — **RELEASE APPROVED (tag pending)**
+**Version:** 1.0 — **RELEASED (2026-09-14)**
 **Module:** PF-005 — Branch Management
 **Audit Date:** 2026-09-14 (evidence compiled from repository evidence and recorded runtime observations; no new test execution performed)
 **Auditor:** **PENDING** — independent reviewer name/role not recorded in the authorising instruction (ELU-AI-001: no AI-originated approval; the human decision below is transcribed verbatim)
 **Related Documents:** ELU-CON-001, ELU-BFS-PF-005, ELU-RTM-001 §11, ELU-API-PF §4, ELU-TST-PF §2.2 (v1.4), ELU-DDD-PF, ELU-ERD-PF, ELU-UI-PF, ELU-MSL-001, ELU-MSL-002, ELU-QA-REG-001, ELU-QA-PF003A, ADR-015
-**Content / implementation baseline:** `219bb6c8b026797fef56e3c3a46f6a17c0218787` (`master` = `origin/master`) — declared content baseline, **not** the tag target
+**Content / implementation baseline:** `219bb6c8b026797fef56e3c3a46f6a17c0218787` — declared content baseline, **not** the tag target; unchanged
 **Release decision:** **`PF-005 RELEASE APPROVED: YES`** — human decision recorded **2026-09-14** (approver name/role pending record)
-**Release status:** **RELEASE APPROVED**
-**Proposed tag:** `Phase-2-PF005` (annotated) — **APPROVED, NOT YET CREATED**
-**Final release-tag target:** the PF-005 governance merge commit created by this approval change set — **SHA pending** (no dedicated no-change baseline commit)
+**Release status:** **RELEASED** (2026-09-14)
+**Release tag:** **`Phase-2-PF005`** (annotated) — **created and pushed 2026-09-14**; tag object `8f0502ce507da62de25f8105c06ac3185da83c97`
+**Release-tag target:** `bdc188c8ff1c89c3e0578830ef73c9934536b495` — the PF-005 governance merge commit ("Merge pull request #18"); no dedicated no-change baseline commit
 **Verdict:** **PASS — RELEASE APPROVED**
 
 ---
@@ -23,15 +23,15 @@
 | Implementation integrated into `master` | **VERIFIED** — both commits are ancestors of `master` |
 | PF-005 documentation reconciliation | **VERIFIED** — `56f201e` (PR #16), `219bb6c` (PR #17) |
 | Endpoint surface exists and is auth-protected | **VERIFIED** — 9 endpoints under `/api/v1/org/branches`; unauthenticated access returns 401 |
-| Automated test evidence | **VERIFIED AS DOCUMENTED** — recorded in `ELU-TST-PF` §2.2 v1.4 (executed 2026-09-12); not re-executed for this draft |
+| Automated test evidence | **VERIFIED AS DOCUMENTED** — recorded in `ELU-TST-PF` §2.2 v1.4 (executed 2026-09-12); not re-executed for this audit |
 | Tenant-isolation evidence | **VERIFIED AS DOCUMENTED** — `TC-PF-ISO-05` within the isolation suite (13 tests) |
 | AC-PF-005-01, AC-PF-005-03 | **VERIFIED AS IMPLEMENTED AND AUTOMATED** |
 | AC-PF-005-02, AC-PF-005-04 | **NON-DEMONSTRABLE AT THIS BASELINE** (recorded deferrals) |
 | Flutter UI acceptance criteria | **NOT IN RELEASE SCOPE** — no UI delivered |
 | Human **RELEASE APPROVED** | **YES** — `PF-005 RELEASE APPROVED: YES`, 2026-09-14 (approver name/role pending record) |
-| Release status | **RELEASE APPROVED** — PF-005 backend functional layer |
-| Release tag | `Phase-2-PF005` (annotated) — **APPROVED, NOT YET CREATED**; no tag object SHA exists and no push has been performed |
-| Governance change set | Prepared 2026-09-14 (`ELU-QA-PF005`, `ELU-REL-PF005`, `ELU-QA-REG-001`, `ELU-MSL-001`, `ELU-MSL-002`, `Documentation/CHANGELOG.md`) — **not committed at the time of writing** |
+| Release status | **RELEASED** — PF-005 backend functional layer (2026-09-14) |
+| Release tag | **`Phase-2-PF005`** (annotated) — **created and pushed 2026-09-14**; tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495` |
+| Governance change set | Merged via PR #18 at governance merge `bdc188c8ff1c89c3e0578830ef73c9934536b495`; post-tag reconciliation records updated 2026-09-14 (`ELU-REL-PF005`, `ELU-QA-REG-001` v1.9, `ELU-MSL-001` 1.18, `ELU-MSL-002` 4.82, `Documentation/CHANGELOG.md`) |
 
 **Approval provenance:** the human decision `PF-005 RELEASE APPROVED: YES` (2026-09-14) was human-supplied and is transcribed verbatim; the assistant originated no approval (ELU-AI-001). The independent-reviewer signature remains **PENDING** and is recorded as such rather than fabricated. **AC-PF-005-02 and AC-PF-005-04 remain NON-DEMONSTRABLE** — release approval does not convert them to verified.
 
@@ -154,13 +154,14 @@ The following five configuration/documentation files (**Option B** infrastructur
 
 ---
 
-## 9. Release decision (Human) — RECORDED
+## 9. Release decision (Human) — RECORDED; RELEASED 2026-09-14
 
 ```text
 PF-005 BRANCH MANAGEMENT — RELEASE APPROVED: YES
-STATUS: RELEASE APPROVED — ANNOTATED TAG Phase-2-PF005 NOT YET CREATED
+STATUS: RELEASED — ANNOTATED TAG Phase-2-PF005 CREATED AND PUSHED 2026-09-14
 CONTENT BASELINE: 219bb6c8b026797fef56e3c3a46f6a17c0218787
-FINAL TAG TARGET: PF-005 governance merge commit — SHA PENDING
+TAG OBJECT SHA: 8f0502ce507da62de25f8105c06ac3185da83c97
+FINAL TAG TARGET: bdc188c8ff1c89c3e0578830ef73c9934536b495
 APPROVAL DATE: 2026-09-14
 APPROVER: PENDING — name/role not recorded in the authorising instruction
 SCOPE: PF-005 backend functional layer only
@@ -168,7 +169,7 @@ EXCLUDED: Flutter UI (Batch 3); NTF-*; RPT-*; AC-PF-005-02; AC-PF-005-04
 NOT CLAIMED: Docker /Database mount defect, config.py fallback, Redis (pre-existing, out of scope)
 ```
 
-Approval recorded from the human decision transcribed above (values human-supplied; ELU-AI-001 — no AI-originated approval). **No tag has been created or pushed, no tag object SHA exists, and no governance merge SHA is yet known.** AC-PF-005-02 and AC-PF-005-04 remain **NON-DEMONSTRABLE** at this baseline.
+Approval recorded from the human decision transcribed above (values human-supplied; ELU-AI-001 — no AI-originated approval). **Historical note (pre-tag state at the approval step): no tag had been created or pushed and no tag object SHA existed then.** The annotated tag was subsequently created and pushed on 2026-09-14 — tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`. AC-PF-005-02 and AC-PF-005-04 remain **NON-DEMONSTRABLE** at this baseline.
 
 ---
 
@@ -179,15 +180,15 @@ Approval recorded from the human decision transcribed above (values human-suppli
 | ELU-QA-PF005 (this document) | Auditor / reviewer identity | **PENDING** — not recorded in the authorising instruction |
 | ELU-QA-PF005 (this document) | Verdict | **RECORDED** — `PASS — RELEASE APPROVED` |
 | ELU-QA-PF005 (this document) | Human RELEASE APPROVED | **RECORDED** — `PF-005 RELEASE APPROVED: YES`, 2026-09-14 |
-| `ELU-QA-REG-001` PF-005 row | Audit Doc reference | **RECORDED** — `ELU-QA-PF005 v1.0` (register v1.7 → v1.8) |
+| `ELU-QA-REG-001` PF-005 row | Audit Doc reference | **RECORDED** — `ELU-QA-PF005 v1.0` (register v1.7 → v1.9) |
 | `ELU-QA-REG-001` PF-005 row | Verdict | **RECORDED** — `RELEASE APPROVED` |
-| `ELU-QA-REG-001` PF-005 row | Release Tag | **RECORDED** — `Phase-2-PF005` (annotated), approved, **not yet created** |
+| `ELU-QA-REG-001` PF-005 row | Release Tag | **RECORDED** — `Phase-2-PF005` (annotated), tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`, created/pushed 2026-09-14 (register v1.8 → v1.9) |
 | `ELU-QA-REG-001` PF-005 row | Locked | **RECORDED** — `Yes` (recorded at approval per the PF-004 convention; the PF-004 register showed `Locked = Yes` with the tag cell marked pending before the tag existed) |
-| `ELU-REL-PF005` | Git tag line | **RECORDED as approved / NOT YET CREATED**; tag object SHA and created/pushed date remain to be recorded post-tag |
-| `ELU-REL-PF005` | Approval checklist | Approval items checked; tag-creation and post-tag reconciliation items remain unchecked |
-| `ELU-MSL-001` / `ELU-MSL-002` / `Documentation/CHANGELOG.md` | PF-005 release history rows | **RECORDED** in this change set (MSL-001 history 1.17; MSL-002 change log 4.81) |
-| Post-tag reconciliation | Tag object SHA, peeled commit SHA, final tag target SHA, created/pushed date | **PENDING** — to be recorded after authorised tag creation |
+| `ELU-REL-PF005` | Git tag line | **RECORDED** — `RELEASED — ANNOTATED TAG Phase-2-PF005 CREATED AND PUSHED 2026-09-14`; tag object and target recorded |
+| `ELU-REL-PF005` | Approval checklist | Approval items checked; tag-creation and post-tag reconciliation items now closed |
+| `ELU-MSL-001` / `ELU-MSL-002` / `Documentation/CHANGELOG.md` | PF-005 release history rows | **RECORDED** — MSL-001 history 1.17 (approval) and **1.18** (tag created/pushed); MSL-002 change log 4.81 (approval) and **4.82** (post-tag reconciliation) |
+| Post-tag reconciliation | Tag object SHA, peeled commit SHA, final tag target SHA, created/pushed date | **RECORDED 2026-09-14** — tag object `8f0502ce507da62de25f8105c06ac3185da83c97`, target `bdc188c8ff1c89c3e0578830ef73c9934536b495` |
 
 ---
 
-*© Euphoria Infotech (I) Limited — ELU-QA-PF005 v1.0 (RELEASE APPROVED 2026-09-14 — annotated tag Phase-2-PF005 not yet created)*
+*© Euphoria Infotech (I) Limited — ELU-QA-PF005 v1.0 (RELEASED 2026-09-14 — annotated tag Phase-2-PF005, tag object 8f0502ce507da62de25f8105c06ac3185da83c97, target bdc188c8ff1c89c3e0578830ef73c9934536b495)*
