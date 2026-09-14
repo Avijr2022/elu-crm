@@ -33,6 +33,7 @@
 | 1.14 | 2026-09-12 | Avijit / Project Coordinator | **Phase Gate PF-001…003 APPROVED** — option (c) unconditional, conditions: none; retrospective deviation accepted (PF-004 delivered, released and tagged before sign-off). Gate tag `Phase-Gate-PF001-003` not created (pending separate authorisation). **Superseded 2026-09-12:** the annotated gate tag was subsequently created and pushed — see row 1.15 and `ELU-QA-REG-001` |
 | 1.15 | 2026-09-12 | Avijit / Project Coordinator | **PF-005 Branch Management — START AUTHORIZED** (explicit human instruction, 2026-09-12) with three scope decisions: **AC-PF-005-04 / BR-PF-038** user branch assignment **DEFERRED to PF-008 Users & Identity**; **NTF-PF-005-*** **DEFERRED**; **RPT-PF-005-*** **DEFERRED**. Governance records updated only — no PF-005 implementation started. (Gate tag `Phase-Gate-PF001-003` was subsequently created and pushed 2026-09-12 and is recorded in `ELU-QA-REG-001`, phase-gate row.) |
 | 1.16 | 2026-09-12 | EIIP / Engineering | **PF-005 Branch Management Batch 2 delivered — NOT released.** Backend functional layer (schemas, service, 9-endpoint API, tests) implemented and pushed directly to `master` at `4430f9d2b9eedc51dede1ca1cf6183508a756dac` (8 files). Verified: PF-005 tests 15 passed; isolation 13 passed; full backend suite **141 passed, 1 skipped**; no PF-001…PF-004 regression. Status reconciled in `ELU-RTM-001` §11, `ELU-API-PF` §4, `ELU-TST-PF` v1.4, `ELU-QA-REG-001` v1.7, `ELU-MSL-002` 4.80. **Not done:** no QA release audit, no release approval, no tag, no Flutter UI (Batch 3 outstanding) |
+| 1.17 | 2026-09-14 | PENDING — approver name/role not recorded in the authorising instruction | **PF-005 RELEASE APPROVED: YES** (explicit human decision, transcribed verbatim; ELU-AI-001 — no AI-originated approval). Approved model: **content baseline** `219bb6c8b026797fef56e3c3a46f6a17c0218787`; **final tag target = the PF-005 governance merge commit created by the approval change set (SHA pending)**; proposed **annotated tag `Phase-2-PF005` — NOT YET CREATED, not pushed**; no dedicated no-change baseline commit. Scope: **backend functional layer only**; Flutter UI (Batch 3) excluded; **AC-PF-005-02 / AC-PF-005-04 remain NON-DEMONSTRABLE**; Option B infrastructure excluded. Records: `ELU-QA-PF005` (v1.0 `PASS — RELEASE APPROVED`), `ELU-REL-PF005`, `ELU-QA-REG-001` v1.7 → **v1.8**, `ELU-MSL-002` **4.81**, `Documentation/CHANGELOG.md`. **Not done:** tag not created, not pushed; post-tag reconciliation pending |
 
 ---
 
@@ -96,6 +97,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | **PF-003 Subscription Management** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003` |
 | **PF-003A Enterprise Tenant Isolation** | ✅ Done | 100% | **RELEASE APPROVED** — tag `Phase-2-PF003A` |
 | **PF-004 Organization Management** | ✅ Done | 100% | **RELEASE APPROVED** — 2026-09-11; release tag `Phase-2-PF004-R1` (annotated) |
+| **PF-005 Branch Management (released backend scope)** | ✅ Done | 100% (released scope) | **RELEASE APPROVED** — 2026-09-14; annotated release tag `Phase-2-PF005` **approved, not yet created**; Flutter UI (Batch 3) excluded |
 | Database (PostgreSQL schema) | 🟡 In Progress | 75% | RLS FORCE via PF-003A |
 | FastAPI implementation | 🟡 In Progress | 70% | PF-003A RLS session binding live |
 | Flutter implementation | 🟡 In Progress | 55% | Subscriptions + Tenants + Editions baselined |
@@ -110,15 +112,15 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-003 Subscription | **RELEASE APPROVED** | `Phase-2-PF003` | Frozen — bug / CR / ADR only |
 | PF-003A Tenant Isolation | **RELEASE APPROVED** | `Phase-2-PF003A` | Frozen — bug / CR / ADR only |
 | PF-004 Organization | **RELEASE APPROVED** | `Phase-2-PF004-R1` | Frozen — bug / CR / ADR only |
-| PF-005 Branch | **IMPLEMENTED — NOT RELEASED** | — (no release tag) | Groundwork + Batch 2 backend (schemas/service/9 endpoints/tests) delivered direct to `master` @ `4430f9d` 2026-09-12; QA release audit, release approval and tag outstanding; AC-PF-005-04 deferred to PF-008; NTF/RPT deferred; Flutter UI (Batch 3) outstanding |
+| PF-005 Branch | **RELEASE APPROVED** | `Phase-2-PF005` (annotated) — **approved, not yet created** | Backend functional layer approved 2026-09-14 (content baseline `219bb6c`); tag target = PF-005 governance merge commit (SHA pending); Locked per approval — bug / CR / ADR only; AC-PF-005-02 / AC-PF-005-04 **NON-DEMONSTRABLE**; AC-PF-005-04 / BR-PF-038 deferred to PF-008; NTF/RPT deferred; Flutter UI (Batch 3) outstanding |
 | PF-006…011 | Not Started | — | Per BFS/RDM order |
 
 ### 3.2 One-Line Health
 
-> **Baselines locked:** PF-001…PF-004 (PF-004 **RELEASE APPROVED** 2026-09-11, human decision). Frozen — change only on documented bug, approved CR, or ADR.  
+> **Baselines locked:** PF-001…PF-005 (PF-004 **RELEASE APPROVED** 2026-09-11; **PF-005 RELEASE APPROVED** 2026-09-14 — backend scope, annotated tag `Phase-2-PF005` not yet created). Frozen — change only on documented bug, approved CR, or ADR.
 > **Phase Gate PF-001…003:** **APPROVED** — option (c) unconditional, conditions: none (human decision 2026-09-12; `ELU-PGR-001` v1.2 §15.1).
 >
-> **PF-005 Branch Management:** **IMPLEMENTED — NOT RELEASED.** Groundwork Batch 1 (docs/DDL/RLS/ORM/seed) + **Batch 2 backend functional layer** (schemas, service, 9 endpoints, tests) delivered directly to `master` at `4430f9d` (2026-09-12). Deferred by decision: AC-PF-005-04 / BR-PF-038 + `users.branch_id` (→ PF-008), department (→ PF-006), BR-PF-037 project→branch, NTF/RPT, runtime permission-grain (→ PF-009). Outstanding: QA release audit, release approval, release tag, Flutter UI (Batch 3).
+> **PF-005 Branch Management:** **RELEASE APPROVED (2026-09-14)** — backend functional layer only; content baseline `219bb6c`. Groundwork Batch 1 (docs/DDL/RLS/ORM/seed) + **Batch 2 backend functional layer** (schemas, service, 9 endpoints, tests, `4430f9d`) approved. **Annotated tag `Phase-2-PF005` approved but NOT YET CREATED** (target = PF-005 governance merge commit, SHA pending). Deferred by decision: AC-PF-005-04 / BR-PF-038 + `users.branch_id` (→ PF-008), department (→ PF-006), BR-PF-037 project→branch, NTF/RPT, runtime permission-grain (→ PF-009). **AC-PF-005-02 and AC-PF-005-04 remain NON-DEMONSTRABLE.** Outstanding: release tag, Flutter UI (Batch 3).
 
 ### 3.3 Enterprise Progress Dashboard (Phase Gate)
 
@@ -132,7 +134,7 @@ PF-002 Tenant               ██████████ 100%
 PF-003 Subscription         ██████████ 100%
 PF-003A Tenant Isolation    ██████████ 100% RELEASE APPROVED
 PF-004 Organization         ██████████ 100%   ← RELEASE APPROVED (2026-09-11)
-PF-005 Branch               ██████░░░░ 60%   ← IMPLEMENTED (backend only) — NOT RELEASED; Flutter Batch 3 outstanding
+PF-005 Branch               ██████████ 100%   ← RELEASE APPROVED (2026-09-14, backend scope); tag Phase-2-PF005 pending creation
 PF-006 Department           ░░░░░░░░░░   0%
 PF-007 Business Unit        ░░░░░░░░░░   0%
 PF-008 Users & Identity     ░░░░░░░░░░   0%
