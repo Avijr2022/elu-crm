@@ -2,6 +2,31 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-005] — 2026-09-14 — RELEASE APPROVED (ANNOTATED TAG `Phase-2-PF005` NOT YET CREATED)
+
+### Decision (human, recorded)
+- **`PF-005 RELEASE APPROVED: YES`** — explicit human release approval for **PF-005 Branch Management, backend functional layer only** (2026-09-14).
+- **Content / implementation baseline:** `219bb6c8b026797fef56e3c3a46f6a17c0218787`.
+- **Final release-tag target:** the **PF-005 governance merge commit created by this change set** — SHA **pending**; **no dedicated no-change baseline commit** (the PF-004 dedicated-baseline-commit pattern is not applied).
+- **Proposed annotated tag `Phase-2-PF005`: NOT YET CREATED and NOT PUSHED** — no tag object SHA exists; tag creation requires a separate authorised step.
+- **Scope:** backend functional layer only. **Excluded:** Flutter UI (Batch 3), `NTF-PF-005-*`, `RPT-PF-005-*`.
+- **`AC-PF-005-02` and `AC-PF-005-04` remain NON-DEMONSTRABLE** at this baseline — release approval does not convert them to verified.
+- **Approver:** PENDING — name/role not recorded in the authorising instruction; the decision string is transcribed verbatim (ELU-AI-001 — no AI-originated approval).
+- **Option B infrastructure** (`.env.example`, `README.md`, `docker-compose.yml`, `Scripts/start-api-host.bat`, `Scripts/start-infra.bat`) remains **excluded from PF-005** and uncommitted.
+
+### Changed (documentation only)
+- `ELU-QA-PF005` v0.1 draft → **v1.0** (`PASS — RELEASE APPROVED`; reviewer identity PENDING).
+- `ELU-REL-PF005` — release notes finalised: approval recorded, tag line `APPROVED, NOT YET CREATED`, checkout updated.
+- `ELU-QA-REG-001` v1.7 → **v1.8** — PF-005 row: audit doc `ELU-QA-PF005 v1.0`, verdict **RELEASE APPROVED**, Release Tag `Phase-2-PF005` (approved, not yet created), Locked **Yes** (recorded at approval, per the PF-004 precedent).
+- `ELU-MSL-001` — history row **1.17** added; §3 PF-005 row; §3.1 PF-005 row → **RELEASE APPROVED**; §3.2 baselines line; §3.3 dashboard.
+- `ELU-MSL-002` — P1 job 11 updated; new P1 job 12 (tag step); change log **4.81**.
+
+### Not done / NOT tag-created (requires separate authorisation)
+- Annotated tag `Phase-2-PF005` — **not created, not pushed**; no tag object SHA exists; governance merge SHA not yet known.
+- Post-tag reconciliation (tag object SHA, peeled commit, created/pushed date; register Release Tag finalisation) — **pending**.
+- Flutter UI (Batch 3) — outstanding.
+- **Pre-existing advisories, unchanged and NOT fixed by PF-005:** Docker `/Database` mount defect; `Backend/app/core/config.py` `localhost:55432` fallback; Redis container not running.
+
 ## [PF-005] — 2026-09-12 — IMPLEMENTED (BACKEND FUNCTIONAL LAYER) — NOT RELEASED
 
 ### Decision (human, recorded)

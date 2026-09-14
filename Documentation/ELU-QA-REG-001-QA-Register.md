@@ -1,6 +1,6 @@
 # E-LinkUp QA Register
 **Document ID:** ELU-QA-REG-001  
-**Version:** 1.7  
+**Version:** 1.8
 **Status:** Approved  
 **Owner:** QA Director  
 
@@ -11,7 +11,7 @@
 | PF-003 Subscription Management | ELU-QA-PF003 v2.1 | **RELEASE APPROVED** | `Phase-2-PF003` | Yes |
 | PF-003A Enterprise Tenant Isolation | ELU-QA-PF003A v1.0 | **RELEASE APPROVED** | `Phase-2-PF003A` | Yes |
 | PF-004 Organization Management | ELU-QA-PF004 v1.0 | **RELEASE APPROVED** | `Phase-2-PF004-R1` | Yes |
-| PF-005 Branch Management | — (QA release audit not yet performed) | **IMPLEMENTED — NOT RELEASED** (groundwork + Batch 2 backend functional layer delivered directly to `master` at `4430f9d`, 2026-09-12); AC-PF-005-04 / BR-PF-038 deferred to PF-008; NTF/RPT deferred | — (no release tag) | No |
+| PF-005 Branch Management | ELU-QA-PF005 v1.0 | **RELEASE APPROVED** — human decision `PF-005 RELEASE APPROVED: YES`, 2026-09-14 (approver name/role pending record); AC-PF-005-02 / AC-PF-005-04 **NON-DEMONSTRABLE**; Flutter UI (Batch 3) excluded; Option B infrastructure excluded | `Phase-2-PF005` (annotated) — **approved, not yet created**; content baseline `219bb6c`; tag target = PF-005 governance merge commit (SHA pending) | Yes |
 | Phase Gate PF-001…003 | ELU-PGR-001 v1.2 | **APPROVED** — option (c) unconditional, conditions: none; human decision 2026-09-12 (see ELU-PGR-001 §15.1) | `Phase-Gate-PF001-003` — **created (annotated)** 2026-09-12 on human gate approval 2026-09-12; tag object `28f999c9a14b8bc222fd3a4afb3ea2b691fff65f` → target commit `68578dd9c9ffba493308f2b110ba17ae55abb6e9` | PF-004 **RELEASE APPROVED** — tag `Phase-2-PF004-R1` |
 
 **Rule:** Locked modules change only on documented bug, approved Change Request (CR), or ADR requirement.  
