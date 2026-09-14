@@ -2,10 +2,10 @@
 
 **Document ID:** ELU-REL-PF005
 **Release:** Phase-2-PF005
-**Status:** **RELEASE APPROVED — ANNOTATED TAG `Phase-2-PF005` NOT YET CREATED**
-**Date:** 2026-09-14 (release approval recorded)
+**Status:** **RELEASED — ANNOTATED TAG `Phase-2-PF005` CREATED AND PUSHED 2026-09-14**
+**Date:** 2026-09-14 (release approval recorded; tag created and pushed)
 **Human approval:** **`PF-005 RELEASE APPROVED: YES`** (2026-09-14; approver name/role pending record)
-**Git tag:** `Phase-2-PF005` (annotated) — **APPROVED, NOT YET CREATED**; no tag object SHA exists and no push has been performed. Final tag target = the PF-005 governance merge commit (SHA pending)
+**Git tag:** **`Phase-2-PF005`** (annotated) — **created and pushed 2026-09-14**; tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target commit `bdc188c8ff1c89c3e0578830ef73c9934536b495`
 **Prior baselines:** Phase-2-PF001 … Phase-2-PF003A, Phase-2-PF004-R1
 **QA:** ELU-QA-PF005 v1.0 — **PASS — RELEASE APPROVED** (2026-09-14)
 
@@ -15,12 +15,12 @@
 
 | Item | Value |
 |------|-------|
-| Content / implementation baseline | `219bb6c8b026797fef56e3c3a46f6a17c0218787` (declared content baseline; **not** the tag target) |
-| Commit identity | Merge commit — "Merge pull request #17 from Avijr2022/cursor/pf005-doc-status-reconciliation" |
-| Branch state | `master` = `origin/master` = `219bb6c8b026797fef56e3c3a46f6a17c0218787` |
-| Final release-tag target | **The PF-005 governance merge commit created by this approval change set — SHA PENDING** (no dedicated no-change baseline commit) |
+| Content / implementation baseline | `219bb6c8b026797fef56e3c3a46f6a17c0218787` (the PF-005 content baseline; **not** the tag target; unchanged) |
+| Commit identity (content baseline) | Merge commit — "Merge pull request #17 from Avijr2022/cursor/pf005-doc-status-reconciliation" |
+| Governance merge commit (tag target) | `bdc188c8ff1c89c3e0578830ef73c9934536b495` — "Merge pull request #18 from Avijr2022/cursor/pf005-release-approved" (parents `219bb6c` + `c130312`); `master` = `origin/master` at tag creation time |
 | Human release approval | **`PF-005 RELEASE APPROVED: YES`** — 2026-09-14; approver name/role **PENDING** (human-supplied decision transcribed verbatim; ELU-AI-001) |
-| Proposed tag | `Phase-2-PF005` — **annotated** — **APPROVED, NOT YET CREATED** (no tag object, no push) |
+| Release tag | **`Phase-2-PF005`** — **annotated** — **created and pushed 2026-09-14**; tag object `8f0502ce507da62de25f8105c06ac3185da83c97`; peels to `bdc188c8ff1c89c3e0578830ef73c9934536b495` |
+| Tag verification | `git rev-parse Phase-2-PF005` → `8f0502ce…` · `git rev-parse Phase-2-PF005^{}` → `bdc188c8…` · remote `refs/tags/Phase-2-PF005` present (verified 2026-09-14) |
 | Tag existence check | No tag points at `219bb6c`, `4430f9d` or `56f201e` (verified 2026-09-14) |
 | Prior tag precedent | PF-004 release tag `Phase-2-PF004-R1` targets a dedicated no-change baseline commit (`3f30159a…`); recorded here for information only — the baseline for this release is the commit designated above. **Confirmed 2026-09-14: the existing `master`/`origin/master` commit is the release baseline; no dedicated no-change baseline commit will be created and the baseline SHA must not be altered.** |
 
@@ -107,9 +107,9 @@ These are local infrastructure-remediation changes (host PostgreSQL port migrati
 
 - [x] Independent QA release audit recorded (ELU-QA-PF005 v1.0 — **PASS — RELEASE APPROVED**; reviewer identity remains PENDING)
 - [x] Human **RELEASE APPROVED** recorded — **`PF-005 RELEASE APPROVED: YES`** (2026-09-14)
-- [x] `ELU-QA-REG-001` / `ELU-MSL-001` / `ELU-MSL-002` / `Documentation/CHANGELOG.md` release entries recorded in this change set (register v1.7 → v1.8)
-- [ ] Annotated tag `Phase-2-PF005` created on the PF-005 governance merge commit — **NOT YET CREATED** (separate authorised step; target SHA pending)
-- [ ] Post-tag reconciliation — tag object SHA, peeled commit SHA and created/pushed date recorded — **PENDING**
+- [x] `ELU-QA-REG-001` / `ELU-MSL-001` / `ELU-MSL-002` / `Documentation/CHANGELOG.md` release entries recorded (register v1.7 → v1.8)
+- [x] Annotated tag `Phase-2-PF005` created and pushed on `bdc188c8ff1c89c3e0578830ef73c9934536b495` — 2026-09-14 (tag object `8f0502ce507da62de25f8105c06ac3185da83c97`)
+- [x] Post-tag reconciliation — tag object SHA, target commit and created/pushed date recorded (register v1.8 → v1.9; MSL-001 history 1.18; MSL-002 change log 4.82; CHANGELOG)
 - [ ] Flutter UI (Batch 3) release decision — **PENDING** (out of this release scope)
 
 ## Open items for the human release decision
@@ -119,14 +119,16 @@ These are local infrastructure-remediation changes (host PostgreSQL port migrati
 1. Tag name and type — **CONFIRMED:** `Phase-2-PF005`, **annotated** (only the annotation message text remains open).
 2. Baseline commit — **CONFIRMED:** the release baseline is the existing `master`/`origin/master` commit `219bb6c8b026797fef56e3c3a46f6a17c0218787`; **no dedicated no-change baseline commit is to be created** (PF-004 precedent not applied) and the baseline SHA is not to be altered.
 
-**Completed by this change set (2026-09-14):**
+**Completed (2026-09-14):**
 
-3. Governance-record updates — **DONE:** `ELU-QA-PF005` (v1.0, `PASS — RELEASE APPROVED`), `ELU-REL-PF005` (approval recorded, tag pending), `ELU-QA-REG-001` (v1.7 → **v1.8**, PF-005 row), `ELU-MSL-001` (history **1.17**), `ELU-MSL-002` (change log **4.81**), `Documentation/CHANGELOG.md`. **Not committed at the time of writing.**
+3. Governance-record updates — **DONE** (`ELU-QA-PF005`, `ELU-REL-PF005`, `ELU-QA-REG-001` v1.7 → v1.8, `ELU-MSL-001` history 1.17, `ELU-MSL-002` change log 4.81, `Documentation/CHANGELOG.md`); merged via PR #18 at governance merge `bdc188c8…`.
+4. Annotated release tag `Phase-2-PF005` — **DONE:** created and pushed 2026-09-14; tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`.
+5. Post-tag reconciliation — **DONE:** tag object, target commit and created/pushed date recorded in `ELU-REL-PF005`, `ELU-QA-REG-001` (v1.8 → v1.9), `ELU-MSL-001` (history 1.18), `ELU-MSL-002` (change log 4.82) and `Documentation/CHANGELOG.md`.
 
 **Still pending human decision:**
-4. Confirm disposition of the 5 uncommitted Option B infrastructure files (recommended: separate commit/PR, never inside the PF-005 tag).
-5. Confirm handling of the two non-demonstrable acceptance criteria (AC-PF-005-02, AC-PF-005-04) in the release record.
+6. Confirm disposition of the 5 uncommitted Option B infrastructure files (recommended: separate commit/PR, never inside the PF-005 tag).
+7. Confirm handling of the two non-demonstrable acceptance criteria (AC-PF-005-02, AC-PF-005-04) in the release record.
 
 ---
 
-*© Euphoria Infotech (I) Limited — ELU-REL-PF005 (RELEASE APPROVED 2026-09-14 — annotated tag Phase-2-PF005 not yet created)*
+*© Euphoria Infotech (I) Limited — ELU-REL-PF005 (RELEASED 2026-09-14 — annotated tag Phase-2-PF005, tag object 8f0502ce507da62de25f8105c06ac3185da83c97, target bdc188c8ff1c89c3e0578830ef73c9934536b495)*
