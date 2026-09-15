@@ -2,6 +2,33 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [Option B — PostgreSQL Host Port Infrastructure] — 2026-09-15 — MERGED (PR #21)
+
+### Change (infrastructure only — NOT part of any module release)
+- **Option B — PostgreSQL host port infrastructure change.** Host-published PostgreSQL port moved **55432 → 15432**; Compose API database URLs pinned to the Compose service (`postgres:5432`). Exactly **five** approved files: `.env.example`, `README.md`, `docker-compose.yml`, `Scripts/start-api-host.bat`, `Scripts/start-infra.bat`. No PF-005 functional, Backend, Frontend, Database or Documentation file was part of Option B.
+- **Feature commit:** `713f8021bc2b238d151722276e8eafe193593f34` — `chore(infra): move PostgreSQL host port to 15432`.
+- **PR:** **#21** · **Merge commit:** `44f9906f6f105adfb49eeb2ba7da905e8890ae9a` (normal merge into `master`) · merged **2026-09-15** · `master` = `origin/master` = `44f9906…`.
+- **No release tag** was created for Option B — infrastructure changes are not release-tagged (consistent with prior practice: the 2026-09-10 Flutter dependency pin and the FIN v4.13 / PR #6 merge were recorded without tags).
+- **PF-005 remains separate and unchanged:** annotated tag `Phase-2-PF005` (object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`) is untouched. The PF-005 release predates the Option B merge (`bdc188c8…` is an ancestor of `44f9906…`), so the released PF-005 tree correctly does not contain Option B.
+
+### Runtime verification (completed 2026-09-15)
+- PostgreSQL host mapping **`0.0.0.0:15432 -> 5432/tcp`**; container internal port **5432**; database **elinkup**; `SELECT 1` succeeded; **`core.tenant` = 666** (unchanged).
+- Host API started from the **merged configuration with no overrides**; effective host DSN resolved to **`…@localhost:15432/elinkup`**; `GET /health` → **200**; `GET /openapi.json` → **200**; PF-005 GET routes → **401** (authentication required — not a defect).
+- Containerised API: **not startup-verified** — the pre-existing PF-003A SQL/mount defect remains (see below).
+
+### Changed (documentation only)
+- `ELU-MSL-001` — history row **1.19** added.
+- `ELU-MSL-002` — change log **4.83** added.
+
+### Superseded wording (historical entries retained)
+- The PF-005 entries below (RELEASED 2026-09-14 and RELEASE APPROVED 2026-09-14) state that Option B infrastructure "remains **excluded and uncommitted**" and that its "disposition — uncommitted; requires its own authorisation". Those statements described the **pre-merge state at that time** and are now superseded: authorisation was subsequently granted, Option B was implemented in `713f802`, merged via PR #21 as `44f9906`, and **no release tag** was created.
+
+### Known limitations / pre-existing issues (NOT fixed by Option B)
+- Docker API container startup defect: `FileNotFoundError: '/Database/03_PlatformFoundation/012_rls_pf003a.sql'` (the Compose `api` service mounts only `./Backend:/app`) — pre-existing, outside Option B scope.
+- `Backend/app/core/config.py` still defaults to `localhost:55432` (latent only; overridden by environment/dotenv).
+- `elinkup-redis` container not running.
+- Authentication smoke test **not performed** — `AuthService.login` writes `users.last_login`.
+
 ## [PF-005] — 2026-09-14 — RELEASED (ANNOTATED TAG `Phase-2-PF005` CREATED AND PUSHED)
 
 ### Release event (human-authorised tag operation)
@@ -11,7 +38,7 @@ All notable E-LinkUp implementation milestones.
 - **Content / implementation baseline (unchanged):** `219bb6c8b026797fef56e3c3a46f6a17c0218787` — **not** tagged; no dedicated no-change baseline commit.
 - **Human approval (pre-existing):** `PF-005 RELEASE APPROVED: YES` (2026-09-14). Tag creation was a separate authorised step.
 - **Scope:** backend functional layer only. **Excluded:** Flutter UI (Batch 3), `NTF-PF-005-*`, `RPT-PF-005-*`. **`AC-PF-005-02` / `AC-PF-005-04` remain NON-DEMONSTRABLE.**
-- **Option B infrastructure** (`.env.example`, `README.md`, `docker-compose.yml`, `Scripts/start-api-host.bat`, `Scripts/start-infra.bat`) remains **excluded and uncommitted**.
+- **Option B infrastructure** (`.env.example`, `README.md`, `docker-compose.yml`, `Scripts/start-api-host.bat`, `Scripts/start-infra.bat`) remains **excluded and uncommitted** at the time of this entry. **Superseded 2026-09-15:** authorisation was subsequently granted, Option B was implemented in `713f802` and merged via PR #21 as `44f9906`; **no release tag** was created — see the Option B entry above.
 - No tag was recreated, moved, deleted or force-updated; no additional tag was created; no history was rewritten.
 
 ### Changed (documentation only — post-tag reconciliation)
@@ -21,7 +48,7 @@ All notable E-LinkUp implementation milestones.
 - `ELU-MSL-002` — P1 job 12 closed; change log **4.82** added.
 
 ### Still outstanding (not part of this reconciliation)
-- Option B infrastructure disposition — uncommitted; requires its own authorisation.
+- Option B infrastructure disposition — uncommitted and requiring its own authorisation **at the time of this entry**. **Superseded 2026-09-15:** authorised, committed (`713f802`) and merged (PR #21 / `44f9906`) — see the Option B entry above.
 - Flutter UI (Batch 3) release decision.
 - Approver name/role and independent reviewer identity remain recorded as PENDING (nothing fabricated).
 - Pre-existing advisories, unchanged and NOT fixed by PF-005: Docker `/Database` mount defect; `Backend/app/core/config.py` `localhost:55432` fallback; Redis container not running.
@@ -38,7 +65,7 @@ All notable E-LinkUp implementation milestones.
 - **Scope:** backend functional layer only. **Excluded:** Flutter UI (Batch 3), `NTF-PF-005-*`, `RPT-PF-005-*`.
 - **`AC-PF-005-02` and `AC-PF-005-04` remain NON-DEMONSTRABLE** at this baseline — release approval does not convert them to verified.
 - **Approver:** PENDING — name/role not recorded in the authorising instruction; the decision string is transcribed verbatim (ELU-AI-001 — no AI-originated approval).
-- **Option B infrastructure** (`.env.example`, `README.md`, `docker-compose.yml`, `Scripts/start-api-host.bat`, `Scripts/start-infra.bat`) remains **excluded from PF-005** and uncommitted.
+- **Option B infrastructure** (`.env.example`, `README.md`, `docker-compose.yml`, `Scripts/start-api-host.bat`, `Scripts/start-infra.bat`) remains **excluded from PF-005** and was uncommitted at the time of this entry. **Superseded 2026-09-15:** subsequently authorised, committed (`713f802`) and merged (PR #21 / `44f9906`); Option B remained excluded from PF-005.
 
 ### Changed (documentation only)
 - `ELU-QA-PF005` v0.1 draft → **v1.0** (`PASS — RELEASE APPROVED`; reviewer identity PENDING).
