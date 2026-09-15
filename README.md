@@ -24,8 +24,9 @@ Related: **ELU-DEV-001**, **ELU-ADR-001**, **ELU-RDM-001**, **ELU-MSL-001**
   - Enable Docker Desktop → Settings → Resources → WSL Integration → Ubuntu  
 - Python 3.12+ recommended (3.14 may work; Docker API image uses 3.12)  
 - Flutter SDK (for frontend)  
-- Ports **55432** (Docker Postgres), **8000**, **9000/9001** free  
-  - Windows PostgreSQL 17/18 often occupy **5432/5433**; Docker defaults to **55432**
+- Ports **15432** (Docker Postgres), **8000**, **9000/9001** free
+  - Windows PostgreSQL 17/18 often occupy **5432/5433**; Docker defaults to **15432**
+  - Some Windows hosts reserve port ranges covering **55432**, so **15432** is used instead
 
 ---
 
@@ -47,13 +48,14 @@ cd D:\CRM\Backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-set DATABASE_URL=postgresql+psycopg://elinkup:elinkup_local@localhost:55432/elinkup
+set DATABASE_URL=postgresql+psycopg://elinkup:elinkup_local@localhost:15432/elinkup
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Or double-click `Scripts\start-api-host.bat`.
 
-> Host API uses **localhost:55432** → Docker `postgres:5432`. Avoid Windows PostgreSQL on 5432/5433.
+> Host API uses **localhost:15432** → Docker `postgres:5432`. Avoid Windows PostgreSQL on 5432/5433,
+> and avoid host ports inside Windows reserved/dynamic ranges (which cover 55432 on some hosts).
 
 On first boot the API will:
 

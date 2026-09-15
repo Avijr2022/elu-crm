@@ -14,8 +14,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-elinkup_local}
       POSTGRES_DB: ${POSTGRES_DB:-elinkup}
     ports:
-      # Host 55432 avoids Windows PostgreSQL 17 (:5432) and 18 (:5433)
-      - "${POSTGRES_PORT:-55432}:5432"
+      # Host 15432 avoids Windows PostgreSQL 17 (:5432) and 18 (:5433), and avoids
+      # Windows reserved/dynamic port ranges (which cover 55432 on some hosts)
+      - "${POSTGRES_PORT:-15432}:5432"
     volumes:
       - elinkup_pgdata:/var/lib/postgresql/data
       - ./Database/01_Schemas/001_CreateSchemas.sql:/docker-entrypoint-initdb.d/01_schemas.sql:ro
@@ -63,7 +64,11 @@ services:
     env_file:
       - .env.example
     environment:
+      # Inside the Compose network the API must reach the `postgres` service, not
+      # localhost. env_file (.env.example) supplies the host-run URLs, so both URL
+      # settings are pinned explicitly for the container.
       DATABASE_URL: postgresql+psycopg://elinkup:elinkup_local@postgres:5432/elinkup
+      DATABASE_URL_HOST: postgresql+psycopg://elinkup:elinkup_local@postgres:5432/elinkup
       APP_ENV: local
       REDIS_URL: redis://redis:6379/0
     ports:
