@@ -2,6 +2,49 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-006] — 2026-09-15 — START AUTHORIZATION RECORD PREPARED (GOVERNANCE ONLY — NOT AUTHORIZED)
+
+> **This entry is NOT an authorization.** It records that the **PF-006 START AUTHORIZATION** documentation has been **prepared and is awaiting explicit human authorization**. No PF-006 decision has been taken and no PF-006 implementation exists. The assistant originated nothing (ELU-AI-001 — no AI-originated approval).
+
+### Module (per approved specifications — unchanged)
+- **PF-006 — Department Management** · sub-module **PF-006-001 Department Structure** · feature **PF-006-001-001 Department Profile** (authoritative specification `ELU-BFS-PF` §PF-006, Document ID `ELU-BFS-PF-006`; corroborated by `ELU-EFS-001`, `EFS-PF`, `ELU-RTM-001` / `V1-PF-CRM` REQ-PF-014 / REQ-PF-015).
+- **Not to be confused with PF-005:** *Branch Structure* is sub-module **PF-005-001** and *Branch Hierarchy* is a **PF-005** capability (`GET /api/v1/org/branches/hierarchy`). PF-005 Branch Management is **RELEASED (2026-09-14)** and frozen; PF-006 Department Management is a separate module that has not started.
+
+### Authorization fields (PENDING — human input required; nothing invented)
+- **Decision:** PENDING — HUMAN AUTHORIZATION REQUIRED (no `PF-006 START AUTHORIZED` record exists; none is created here).
+- **Approver:** PENDING — HUMAN DECISION REQUIRED.
+- **Role:** PENDING — HUMAN DECISION REQUIRED.
+- **Authorization date:** PENDING — HUMAN DECISION REQUIRED.
+- These values must be human-supplied and transcribed verbatim; the assistant must not originate the decision, the identity, the role or the date (ELU-AI-001).
+
+### Status recorded (existing facts only — no status change implied)
+- **Implementation status: NOT STARTED (0%).** No `department` table in any schema; no RLS enrolment and no rollback DDL; no `department.*` permissions; no backend model / schema / service / router; no Flutter screen / route / service; no PF-006 tests.
+- **Governance status:** `ELU-MSL-001` §3.1 lists `PF-006…011 — Not Started` and §3.3 shows `PF-006 Department … 0%`; **no PF-006 row exists in `ELU-QA-REG-001`**; `ELU-RTM-001` has no PF-006 implementation section; `ELU-TST-PF` has no PF-006 test cases.
+- Requirements and specification coverage already exists and is Approved (BFS, EFS, EDM, DDD, ERD, API, UI). This entry changes none of those documents.
+
+### Pending scope decisions (NOT decided and NOT approved by this entry)
+- `NTF-PF-006-01..03` notifications — scope undecided.
+- `RPT-PF-006-01/02` reports — scope undecided.
+- `AC-PF-006-04` approval-workflow dependency (CPS-001 workflow engine) — undecided.
+- `users.department_id` — **PF-008 Users & Identity dependency** — undecided.
+- `department.branch_id` linkage (Set Null) — undecided.
+- Department-head linkage (`department_head_user_id`, BR-PF-043) — undecided.
+- Edition gating (`ELU-EDM-001` / BFS show Multi-Department in Community, Professional and Enterprise; whether a `DEPARTMENT` feature or limit is required) — undecided.
+- DDL numbering and placement (`Database/03_PlatformFoundation/015_department_pf006.sql` plus rollback; RLS loop update) — undecided.
+- PF-005 scope-guard update (`Backend/tests/test_pf005_branches.py::test_deferred_scope_not_implemented` asserts `core.department` absence) — undecided.
+- Flutter UI scope (following the PF-005 "Batch 3 excluded" precedent) — undecided.
+
+### Changed (documentation only)
+- `ELU-MSL-001` — version-history row **1.20** added (PF-006 authorization record prepared; PENDING fields). The §3.1 PF-006 row and the §3.3 dashboard are **deliberately unchanged** (status remains Not Started / 0% — no authorization exists).
+- `ELU-MSL-002` — "Next jobs" P1 row added (PF-006 authorization pending) and change-log **4.84** added.
+- `Documentation/CHANGELOG.md` — this entry.
+
+### Not done / explicitly out of scope
+- **No PF-006 implementation of any kind** — no DDL/SQL, no migration or seed, no backend code, no frontend code, no tests.
+- No `PF-006 START AUTHORIZED` record; no QA audit; no release notes; no release approval; no tag.
+- **PF-005 protection:** `Phase-2-PF005` — tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495` — **unchanged**. PF-005 Branch Management remains RELEASED and frozen; no PF-005 file, DDL, code, test or documentation was modified.
+- No commit, no push, no PR, no branch change: this preparation is an uncommitted working-tree change awaiting human authorization.
+
 ## [Option B — PostgreSQL Host Port Infrastructure] — 2026-09-15 — MERGED (PR #21)
 
 ### Change (infrastructure only — NOT part of any module release)
