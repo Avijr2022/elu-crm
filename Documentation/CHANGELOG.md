@@ -2,9 +2,45 @@
 
 All notable E-LinkUp implementation milestones.
 
-## [PF-006] — 2026-09-16 — RELEASE APPROVED BY HUMAN DECISION (NO TAG CREATED) — RELEASE TAG DECISION STILL PENDING
+## [PF-006] — 2026-09-16 — POST-TAG GOVERNANCE RECONCILIATION (ANNOTATED TAG CREATED AND PUSHED)
 
-> Governance recording of an **explicit human decision**. No code, schema, API, database, migration, seed, test, frontend or PF-008/PF-009 change; **no release tag has been created** and **no tag creation has been authorized**.
+> **Governance recording only.** No code, schema, API, database, migration, seed, test, frontend or PF-008/PF-009 change. **This entry creates no release artefact:** the annotated tag, its target, the release baseline and the release-approval decision are **recorded as already existing** — nothing is created, moved, re-pointed or deleted by this reconciliation.
+
+### Authorization
+- **`PF-006 POST-TAG GOVERNANCE RECONCILIATION AUTHORIZED: YES`** — human authorization. Operator identity **PENDING** (not supplied; not invented — ELU-AI-001).
+
+### Authoritative PF-006 release state (recorded as current)
+
+| Item | Value |
+|---|---|
+| Human release approval | **`PF-006 RELEASE APPROVED: YES`** — 2026-09-16; approver **Human Project Owner** (personal name not supplied — **PENDING**, not invented), role **Project Owner / Authorized Decision Maker** |
+| **Release baseline (declared)** | **`12b24543286b7c79b6145c40dc8a94ffda489021`** — declared by the human authorization for this reconciliation; **supersedes** the earlier `404c90f…` *candidate only* statement |
+| Implementation / content commit | `b3a2b1f0252340737cae7fc9cd719718adf7ffdd` — `feat(pf): PF-006 Department Management` (20 files, +2984 / −7) |
+| Governance merge (tag target) | `12b24543286b7c79b6145c40dc8a94ffda489021` — "Merge pull request #23 from Avijr2022/cursor/pf006-start-authorization-governance"; parents `404c90f` + `b3a2b1f` |
+| **Annotated release tag** | **`Phase-2-PF006`** — **created and pushed 2026-09-16**; tag object **`f6aefd1442da7772c5fb9d9942bb9fae5cededb5`** → target **`12b24543286b7c79b6145c40dc8a94ffda489021`** |
+| Remote verification | `refs/tags/Phase-2-PF006` = `f6aefd14…`; `refs/tags/Phase-2-PF006^{}` = `12b24543…`; `origin/master` = `12b24543…`; total tags 11; all pre-existing tags unchanged |
+| Release status | **PF-006 Department Management — RELEASED** (backend scope only) — same model as the PF-005 precedent: the implementation/content commit is **not** the tag target; the governance merge commit is |
+
+### Reconciliation performed in this change set
+- Corrected the stale **current-state** statements in this file, `ELU-MSL-001`, `ELU-MSL-002` and `ELU-QA-REG-001` that asserted the PF-006 tag was absent / not authorized, or that `404c90f…` was the current `HEAD` / `origin/master` / candidate-only baseline.
+- Appended concise **supersede notes** to the historical PF-006 records (this file's earlier PF-006 entries, `ELU-MSL-001` history row **1.22**, `ELU-MSL-002` change-log **4.86**). Their original statements are **preserved** and remain accurate as at their own dates; they were valid at the time and were subsequently superseded by the PR #23 merge (`12b24543…`) and the `Phase-2-PF006` release.
+- **Created** `Documentation/ELU-QA-PF006-Department-Management-Release-Audit.md` and `Documentation/ELU-REL-PF006-Phase-2-PF006-Release-Notes.md`, following the established PF-001…PF-005 naming/structure, using verified PF-006 facts only.
+- **Updated** `11-Engineering/ELU-TST-PF.md` to **v1.5** with a PF-006 test-specification section (**§2.3**) recording the PF-006 test-spec decision/status (36 automated PF-006 tests).
+
+### Still PENDING (reported, not invented)
+- Approver **personal name** for the PF-006 release approval (role recorded; name never supplied).
+- **Independent-reviewer / auditor identity** on `ELU-QA-PF006` (document now created; reviewer **PENDING**).
+- Deferred/excluded and unchanged: Flutter UI, workflow/approval engine (CPS-001), `NTF-PF-006-*`, `RPT-PF-006-01/02`, PF-009 runtime permission grain, department address structures; `users.department_id`, user↔department assignment and department-head FK/active-user validation remain **PF-008-owned**.
+
+### Not done by this reconciliation
+- **No tag** was created, moved, re-pointed, deleted or force-updated. `Phase-2-PF006` and `Phase-2-PF005` are **unchanged by this change set**.
+- No change to `origin/master` (`12b24543…`), no merge, no release certification, no PF-006 scope change.
+- No application code, schema, API, ORM, service, router, database, migration/DDL, seed, test, frontend, PF-008 or PF-009 change.
+- The optional **PF-009 technical-debt register entry was NOT added** — it is outside this authorization.
+
+## [PF-006] — 2026-09-16 — RELEASE APPROVED BY HUMAN DECISION (NO TAG CREATED AT THAT TIME) — SUPERSEDED IN PART
+
+> Governance recording of an **explicit human decision**. No code, schema, API, database, migration, seed, test, frontend or PF-008/PF-009 change; **at the time of this entry no release tag had been created** and **no tag creation had been authorized**. **Superseded 2026-09-16 — see the POST-TAG GOVERNANCE RECONCILIATION entry above:** the release baseline is now declared and the annotated tag `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) has been created and pushed.
 
 ### Human decision (recorded verbatim)
 - **`PF-006 RELEASE APPROVED: YES`** — Human Project Owner (personal name not supplied — **PENDING**, not invented; ELU-AI-001 — no AI-originated approval). **Approver role:** Project Owner / Authorized Decision Maker. **Decision date:** 2026-09-16.
@@ -16,22 +52,24 @@ All notable E-LinkUp implementation milestones.
 - In approved scope: the **additional human-approved history endpoint** `GET /org/departments/{department_id}/history` (10 authoritative `ELU-BFS-PF` §PF-006 §10 endpoints **+ 1** approved = **11** operations) and the **human-approved effective-parent-`NULL` organization-change policy**.
 - Schema on record: `core.department` 19 columns / 7 constraints / 6 indexes / RLS enabled + forced / single PF-003A `tenant_isolation` policy; `core.users` has no `department_id`; no persisted `level`/`path`; no `department_type` value constraint.
 
-### Release baseline — CANDIDATE ONLY (not declared)
-- Evidence / **baseline candidate:** `404c90f27d54ddc1ff9ae03580d24e49f195467d` — current `HEAD`, equal to `origin/master`. **This SHA is recorded as a candidate only**; the final release baseline/SHA decision remains a separate human decision (the PF-005 precedent required an explicit baseline decision rather than automatic adoption of the current `HEAD`).
-- **No PF-006 release tag exists** and **no tag creation has been authorized**; `Phase-2-PF005` and every other existing tag are unchanged.
+### Release baseline — CANDIDATE ONLY at the time of this entry (NOW SUPERSEDED)
+- Evidence / **baseline candidate (as recorded then):** `404c90f27d54ddc1ff9ae03580d24e49f195467d` — then-current `HEAD`, equal to `origin/master`. **That SHA was recorded as a candidate only**; the final release baseline/SHA decision remained a separate human decision (the PF-005 precedent required an explicit baseline decision rather than automatic adoption of the current `HEAD`).
+- **At the time of this entry no PF-006 release tag existed** and **tag creation was not authorized**; `Phase-2-PF005` and every other existing tag were unchanged.
+- **Superseded 2026-09-16 (POST-TAG GOVERNANCE RECONCILIATION):** the release baseline is **declared as `12b24543286b7c79b6145c40dc8a94ffda489021`**, implementing/content commit `b3a2b1f0252340737cae7fc9cd719718adf7ffdd`, and the annotated tag **`Phase-2-PF006`** (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) has been **created and pushed**. `404c90f…` is **no longer** current `HEAD`/`origin/master`; `origin/master` is `12b24543…`.
 
 ### Deferred / excluded (unchanged)
 - Flutter UI, workflow/approval engine (CPS-001), notifications (`NTF-PF-006-*`), reports (`RPT-PF-006-01/02`), PF-009 runtime permission grain, department address structures.
 - `users.department_id`, user↔department assignment and department-head FK/active-user validation remain **PF-008-owned**.
 - **PF-009 technical debt (recorded, unchanged and NOT added to any register):** generic `app.core.rbac.has_permission` PLATFORM_ADMIN universal bypass versus the PF-006 gate denial.
 
-### Governance records still PENDING (reported, not created here)
-- `ELU-QA-PF006` QA release-audit document — **QA-Director-owned; not created** (the completed QA result is recorded in `ELU-QA-REG-001` v1.10, `ELU-MSL-001` 1.24, `ELU-MSL-002` 4.88 and this entry).
-- `ELU-REL-PF006` release notes — **not created** (pending the release tag / baseline decision).
-- `ELU-TST-PF` PF-006 test-specification section — pending governance decision.
+### Governance records — recorded here, then reconciled 2026-09-16
+- `ELU-QA-PF006` QA release-audit document — **QA-Director-owned.** *As recorded at the time of this entry:* not created (the completed QA result was recorded in `ELU-QA-REG-001` v1.10, `ELU-MSL-001` 1.24, `ELU-MSL-002` 4.88 and this entry). **Created 2026-09-16:** `Documentation/ELU-QA-PF006-Department-Management-Release-Audit.md` (v1.0 — **PASS — RELEASE APPROVED**); the independent-reviewer identity remains **PENDING**.
+- `ELU-REL-PF006` release notes — *As recorded at the time of this entry:* not created (pending the release tag / baseline decision — now resolved). **Created 2026-09-16:** `Documentation/ELU-REL-PF006-Phase-2-PF006-Release-Notes.md`.
+- `ELU-TST-PF` PF-006 test-specification section — *As recorded at the time of this entry:* pending governance decision. **Recorded 2026-09-16:** `11-Engineering/ELU-TST-PF.md` **v1.5 §2.3**.
 
-### Not done
-- No commit, no push, no PR, no merge, **no tag**, no release certification. **PF-006 is not tagged and not released.**
+### Not done (at the time of this entry) — subsequently completed
+- No commit, no push, no PR, no merge, **no tag**, no release certification at the time of this entry.
+- **Superseded 2026-09-16:** the PF-006 change set was subsequently committed (`b3a2b1f0252340737cae7fc9cd719718adf7ffdd`), pushed, opened and merged as **PR #23** (merge commit `12b24543286b7c79b6145c40dc8a94ffda489021`), and the annotated tag **`Phase-2-PF006`** was created and pushed. **PF-006 is now RELEASED** (backend scope only). See the POST-TAG GOVERNANCE RECONCILIATION entry above.
 
 ## [PF-006] — 2026-09-15 — HUMAN SCOPE DECISIONS RECORDED (HISTORY ENDPOINT + ORGANIZATION-CHANGE POLICY) — NO RELEASE ACTION
 
