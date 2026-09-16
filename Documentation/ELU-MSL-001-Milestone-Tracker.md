@@ -128,7 +128,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-004 Organization | **RELEASE APPROVED** | `Phase-2-PF004-R1` | Frozen — bug / CR / ADR only |
 | PF-005 Branch | **RELEASED** | `Phase-2-PF005` (annotated) — tag object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495` — created/pushed 2026-09-14 | Backend functional layer released 2026-09-14 (content baseline `219bb6c`); Frozen — bug / CR / ADR only; AC-PF-005-02 / AC-PF-005-04 **NON-DEMONSTRABLE**; AC-PF-005-04 / BR-PF-038 deferred to PF-008; NTF/RPT deferred; Flutter UI (Batch 3) outstanding |
 | PF-006 Department | **RELEASED (2026-09-16) — QA PASSED; human decision `PF-006 RELEASE APPROVED: YES`** | `Phase-2-PF006` (annotated) — tag object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021` — created/pushed 2026-09-16; release baseline `12b24543286b7c79b6145c40dc8a94ffda489021`; implementation/content commit `b3a2b1f` (PR #23) | Backend scope delivered 2026-09-15 and audited: Batch 1 DDL/rollback/RLS/bootstrap (**PASS**), Batch 2 ORM + schemas (**PASS**), Batch 3 service (**PASS WITH NON-BLOCKING NOTES**), Batch 3-C organization-change correction (**PASS WITH NON-BLOCKING NOTES**), Batch 4 `department.*` catalogue + seeded matrix (**PASS**), Batch 5 API (11 routes) + 36 tests + PF-005 deferred-scope test correction (**PASS WITH NON-BLOCKING NOTES**). **Human scope decisions APPROVED 2026-09-15:** the additional history endpoint is retained as human-approved PF-006 scope; the effective-parent-`NULL` organization-change interpretation is approved. **QA PASSED 2026-09-16** (36/36 PF-006 + 35/35 PF-004/PF-005; no release blockers) — **human decision `PF-006 RELEASE APPROVED: YES` (2026-09-16; approver name/role pending record)**; `ELU-QA-REG-001` **v1.10** → **v1.11** PF-006 row recorded. **Release baseline/sha and tag:** **DECLARED / CREATED 2026-09-16** — baseline `12b24543286b7c79b6145c40dc8a94ffda489021`; annotated tag `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) created and pushed. **Still pending:** approver personal name; `ELU-QA-PF006` reviewer identity (document created 2026-09-16, **PASS — RELEASE APPROVED**); `ELU-REL-PF006` release notes created 2026-09-16; `ELU-TST-PF` PF-006 test-spec section recorded 2026-09-16 (**v1.5 §2.3**). Deferred: `users.department_id` / `department → users` / BR-PF-043 → **PF-008** (**non-demonstrable**); AC-PF-006-04 (CPS-001, **non-demonstrable**); NTF/RPT; Flutter UI; PF-009 permission grain; department address. PF-009 debt: generic PLATFORM_ADMIN bypass vs PF-006 gate denial (matrix unchanged). |
-| PF-007…011 | START AUTHORIZED — IN PROGRESS | — | Per BFS/RDM order |
+| PF-007…011 | SCOPE DECISIONS APPROVED — IMPLEMENTATION PENDING | — | Per BFS/RDM order |
 
 ### 3.2 One-Line Health
 
@@ -270,6 +270,30 @@ Overall CRM Progress       : ~18%
 | 2026-08-03 | Step 1–2 scaffold: Docker Compose, FastAPI PF/Auth, Flutter login, Euphoria seed (INR / Asia/Kolkata / FY Apr) | Engineering |
 | 2026-08-03 | Step 3 CRM Lead vertical slice: `crm.lead`, `/api/v1/crm/leads` CRUD, Flutter Leads table + create modal | Engineering |
 | 2026-08-03 | Step 4 Opportunity pipeline: `crm.opportunity`, stage advance, pipeline API, convert-from-lead, Flutter Pipeline tab | Engineering |
+
+
+### PF-007 SCOPE DECISIONS — HUMAN APPROVAL
+
+**Decision status:** APPROVED
+**Human authorization:** PF-007 SCOPE DECISIONS D1–D11 APPROVED: YES
+**Governance write authorization:** PF-007 SCOPE DECISION GOVERNANCE WRITE AUTHORIZED: YES
+**Recorded date:** 2026-09-16
+
+| ID | Approved decision |
+|---|---|
+| D1 | PF-007 uses exactly the 8 BFS §10 endpoints. No history API. Business Unit History UI remains deferred. |
+| D2 | `business_unit.export` is Tenant Admin only. |
+| D3 | Project Manager has read access only. Project-to-BU implementation remains deferred and is not authorized by PF-007. |
+| D4 | Implement BR-PF-048: `bu_manager_user_id` must reference an ACTIVE user in the same tenant at API level. No `users.business_unit_id` linkage is introduced; that remains PF-008. |
+| D5 | Professional edition maximum = 20 Business Units; Enterprise = unlimited, using the existing edition-limit mechanism. |
+| D6 | PF-007 authorizes opportunity-to-BU linkage only. Project and invoice Business Unit FKs remain deferred and are not modified. |
+| D7 | `organization_id` is assigned on Business Unit creation and is immutable afterward unless separately authorized by a future decision. |
+| D8 | Implement only the minimum reporting/aggregation required to demonstrate AC-PF-007-03. Do not introduce a general reporting engine. XLSX/PDF formatting remains deferred where existing architecture cannot support it without a new dependency. |
+| D9 | Unspecified Business Unit field types/lengths/validation are resolved using established PF conventions and documented before implementation. |
+| D10 | PF-007 release scope is backend-only. Flutter UI remains deferred, following the PF-005/PF-006 release precedent. |
+| D11 | Introduce `core.business_unit` with tenant-scoped RLS and partial unique key `(tenant_id, code) WHERE is_deleted = FALSE`, following the established PF database/RLS pattern. |
+
+**PF-007 SCOPE DECISION GOVERNANCE RECORDED: YES**
 
 ---
 

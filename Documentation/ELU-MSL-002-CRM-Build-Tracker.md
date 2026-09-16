@@ -167,4 +167,20 @@
 
 | 4.90 | 2026-09-16 | **PF-007 Business Unit Management — START AUTHORIZATION RECORDED AND GOVERNANCE SCOPE RECONCILED (governance only; no implementation, no release action).** Human decision **PF-007 START AUTHORIZED: YES** (2026-09-16; approver identity **PENDING** — not supplied, not invented; ELU-AI-001). Module per `ELU-BFS-PF` §PF-007: **PF-007 Business Unit Management / PF-007-001 Business Unit / PF-007-001-001 Business Unit Profile**. Scope: **Professional + Enterprise; Community excluded** (`BR-PF-046`); included = Business Unit management, opportunity → Business Unit tagging, and demonstrable BU revenue-report capability required by the approved PF-007 acceptance criteria (`RPT-PF-007-02` included only to that extent). Deferred: PF-008-owned user ↔ Business Unit / BU-manager linkage; PF-009-owned runtime permission grain; `NTF-PF-007-01..03`. Reconciled: `ELU-MSL-001` (tracker row … **START AUTHORIZED — IN PROGRESS**, authorization record moved into the document body, history **1.26**), `Documentation/CHANGELOG.md`. **Not done:** no code/schema/DDL/migration/seed/test/frontend change; no `ELU-QA-PF007`; no `ELU-REL-PF007`; no RTM/API/TST PF-007 sections; no tag; no release approval. **PF-007 RECONCILIATION RECORDED: YES.** **PF-006 RELEASED and frozen** — `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) unchanged. |
 
+### 4.91 — 2026-09-16 — PF-007 Scope Decisions Approved
+
+- Recorded human approval of PF-007 scope decisions D1–D11.
+- Confirmed 8-endpoint API scope with no history API.
+- Confirmed Tenant Admin-only export permission.
+- Confirmed Project Manager read-only boundary.
+- Confirmed BR-PF-048 ACTIVE same-tenant BU-manager validation.
+- Confirmed Professional maximum of 20 BUs and Enterprise unlimited.
+- Authorized opportunity-to-BU linkage only; project/invoice FKs remain deferred.
+- Confirmed `organization_id` immutable after Business Unit creation.
+- Limited reporting implementation to the minimum required for AC-PF-007-03; no general reporting engine.
+- Confirmed PF convention-based resolution of unspecified field types/validation before implementation.
+- Confirmed backend-only PF-007 release scope; Flutter UI deferred.
+- Confirmed `core.business_unit` + tenant RLS + partial unique `(tenant_id, code) WHERE is_deleted = FALSE`.
+- **PF-007 SCOPE DECISION GOVERNANCE RECORDED: YES**
+
 *© Euphoria Infotech — ELU-MSL-002*

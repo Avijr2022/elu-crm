@@ -2,6 +2,23 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-007] — 2026-09-16 — Scope Decisions Approved
+
+PF-007 human scope decisions D1–D11 approved. Governance boundaries are recorded before implementation.
+
+- 8 BFS-defined endpoints; no history API.
+- Tenant Admin-only Business Unit export.
+- Project Manager read-only boundary.
+- ACTIVE same-tenant BU-manager validation.
+- Professional limit 20; Enterprise unlimited.
+- Opportunity-to-BU linkage authorized; project/invoice linkage deferred.
+- `organization_id` immutable after creation.
+- Minimum AC-PF-007-03 reporting scope; no general reporting engine.
+- Field typing/validation to follow established PF conventions and be documented.
+- Backend-only release; Flutter UI deferred.
+- `core.business_unit` + tenant RLS + partial unique active-code constraint authorized.
+- **PF-007 SCOPE DECISION GOVERNANCE RECORDED: YES**
+
 ## [PF-007] — 2026-09-16 — START AUTHORIZATION RECORDED AND GOVERNANCE SCOPE RECONCILED (GOVERNANCE ONLY — NO IMPLEMENTATION)
 
 > **Governance recording only.** No code, schema, DDL, migration, seed, test, frontend, PF-008 or PF-009 change; **no release approval, no QA/CD record and no release tag** is created or implied by this entry.

@@ -54,6 +54,7 @@ BEGIN
       ('core', 'branch', false),
       ('core', 'branch_address', false),
       ('core', 'department', false),
+      ('core', 'business_unit', false),
       ('core', 'users', false),
       ('core', 'subscription', false),
       ('core', 'subscription_history', false),
