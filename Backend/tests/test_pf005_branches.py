@@ -877,7 +877,9 @@ def test_deferred_scope_not_implemented(
             ).first()
             is None
         )
-        # PF-006: no department table
+        # PF-006 (2026-09-15): core.department now exists — the previous
+        # "no department table" guard is superseded by the delivered PF-006 schema
+        # (Batch 1) and is therefore asserted in the positive direction only.
         assert (
             db.execute(
                 text(
@@ -885,7 +887,7 @@ def test_deferred_scope_not_implemented(
                     "AND table_name='department'"
                 )
             ).first()
-            is None
+            is not None
         )
         # BR-PF-037: no project → branch linkage
         assert (

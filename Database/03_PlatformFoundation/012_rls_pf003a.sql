@@ -53,6 +53,7 @@ BEGIN
       ('core', 'organization', false),
       ('core', 'branch', false),
       ('core', 'branch_address', false),
+      ('core', 'department', false),
       ('core', 'users', false),
       ('core', 'subscription', false),
       ('core', 'subscription_history', false),
