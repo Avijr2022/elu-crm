@@ -21,3 +21,8 @@
 ---
 
 *© Euphoria Infotech (I) Limited — ELU-QA-REG-001*
+### PF-007 Release Record
+
+| Module | Release | Status | Approval | Release Tag | Release Commit |
+|---|---|---|---|---|---|
+| PF-007 Business Unit Management | Phase 2 | RELEASE APPROVED | PF-007 RELEASE APPROVED: YES | `Phase-2-PF007` | `80ae94e1dd071f62198571a7592cf81246ee591e` |

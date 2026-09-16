@@ -263,3 +263,8 @@ Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.s
 ---
 
 *© Euphoria Infotech (I) Limited — ELU-RTM-001*
+### PF-007 Release Traceability Record
+
+| Module | Release | Release Commit | Release Tag | Approval |
+|---|---|---|---|---|
+| PF-007 Business Unit Management | Phase 2 | `80ae94e1dd071f62198571a7592cf81246ee591e` | `Phase-2-PF007` | PF-007 RELEASE APPROVED: YES |
