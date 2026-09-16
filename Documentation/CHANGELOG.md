@@ -45,6 +45,8 @@ PF-007 human scope decisions D1–D11 approved. Governance boundaries are record
 ### Idempotency marker
 - PF-007 RECONCILIATION RECORDED: YES
 
+PF-007 Batch 1 merge recorded: PR #26 -> d752eb7bba535b56377ed2e66240de28dd47db9a
+
 ## [PF-006] — 2026-09-16 — POST-TAG GOVERNANCE RECONCILIATION (ANNOTATED TAG CREATED AND PUSHED)
 
 > **Governance recording only.** No code, schema, API, database, migration, seed, test, frontend or PF-008/PF-009 change. **This entry creates no release artefact:** the annotated tag, its target, the release baseline and the release-approval decision are **recorded as already existing** — nothing is created, moved, re-pointed or deleted by this reconciliation.
