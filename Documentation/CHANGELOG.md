@@ -2,6 +2,32 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-007] — 2026-09-16 — START AUTHORIZATION RECORDED AND GOVERNANCE SCOPE RECONCILED (GOVERNANCE ONLY — NO IMPLEMENTATION)
+
+> **Governance recording only.** No code, schema, DDL, migration, seed, test, frontend, PF-008 or PF-009 change; **no release approval, no QA/CD record and no release tag** is created or implied by this entry.
+
+### Human decision (recorded verbatim)
+- **`PF-007 START AUTHORIZED: YES`** — 2026-09-16. Approver identity **PENDING** (not supplied in the authorising instruction; **not invented** — ELU-AI-001).
+
+### Authoritative scope
+- Module per `ELU-BFS-PF` §PF-007: **PF-007 Business Unit Management** / sub-module **PF-007-001 Business Unit** / feature **PF-007-001-001 Business Unit Profile**.
+- **Edition:** **Professional + Enterprise; Community excluded** (`BR-PF-046`).
+- **Included scope:** Business Unit management, opportunity → Business Unit tagging, and demonstrable BU revenue-report capability required by the approved PF-007 acceptance criteria.
+- **`RPT-PF-007-02` constraint:** Revenue by Business Unit (PDF+XLSX) is included only to the extent required to demonstrate the approved PF-007 acceptance criteria; no broader reporting scope is authorized.
+- **Deferred / excluded:** PF-008-owned user ↔ Business Unit and BU-manager linkage; PF-009-owned runtime permission grain; `NTF-PF-007-01..03` notifications; Flutter UI; any scope not listed above.
+
+### Reconciliation recorded in this entry
+- `ELU-MSL-001` — §3.1 tracker row aligned to **START AUTHORIZED — IN PROGRESS**; the PF-007 authorization record moved **inside** the document body (before the footer); the `RPT-PF-007-02` constraint added; **Version History row 1.26** added.
+- `ELU-MSL-002` — change-log row **4.90**.
+- The original human decision text is preserved unchanged; no approver identity, date or decision was invented.
+
+### Not done
+- No PF-007 implementation (no DDL/ORM/service/API/seed/tests), **no `ELU-QA-PF007`**, **no `ELU-REL-PF007`**, no RTM/API/TST PF-007 sections, no release approval, no release tag, no tag operation of any kind.
+- **PF-006 remains RELEASED and frozen** — `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) unchanged.
+
+### Idempotency marker
+- PF-007 RECONCILIATION RECORDED: YES
+
 ## [PF-006] — 2026-09-16 — POST-TAG GOVERNANCE RECONCILIATION (ANNOTATED TAG CREATED AND PUSHED)
 
 > **Governance recording only.** No code, schema, API, database, migration, seed, test, frontend or PF-008/PF-009 change. **This entry creates no release artefact:** the annotated tag, its target, the release baseline and the release-approval decision are **recorded as already existing** — nothing is created, moved, re-pointed or deleted by this reconciliation.
