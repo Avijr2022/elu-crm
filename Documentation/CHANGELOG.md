@@ -2,6 +2,176 @@
 
 All notable E-LinkUp implementation milestones.
 
+## [PF-006] — 2026-09-16 — RELEASE APPROVED BY HUMAN DECISION (NO TAG CREATED) — RELEASE TAG DECISION STILL PENDING
+
+> Governance recording of an **explicit human decision**. No code, schema, API, database, migration, seed, test, frontend or PF-008/PF-009 change; **no release tag has been created** and **no tag creation has been authorized**.
+
+### Human decision (recorded verbatim)
+- **`PF-006 RELEASE APPROVED: YES`** — Human Project Owner (personal name not supplied — **PENDING**, not invented; ELU-AI-001 — no AI-originated approval). **Approver role:** Project Owner / Authorized Decision Maker. **Decision date:** 2026-09-16.
+- Approved scope: **PF-006 Department Management** (PF-006-001 Department Structure / PF-006-001-001 Department Profile), **backend scope only**.
+
+### QA result reconciled (authoritative facts, unchanged)
+- **PF-006 QA: PASSED** — no release blockers identified by the formal QA audit (2026-09-16).
+- **36/36** PF-006 tests passed; **35/35** PF-004/PF-005 regression tests passed (0 failed, 0 skipped, 0 errors; exit 0).
+- In approved scope: the **additional human-approved history endpoint** `GET /org/departments/{department_id}/history` (10 authoritative `ELU-BFS-PF` §PF-006 §10 endpoints **+ 1** approved = **11** operations) and the **human-approved effective-parent-`NULL` organization-change policy**.
+- Schema on record: `core.department` 19 columns / 7 constraints / 6 indexes / RLS enabled + forced / single PF-003A `tenant_isolation` policy; `core.users` has no `department_id`; no persisted `level`/`path`; no `department_type` value constraint.
+
+### Release baseline — CANDIDATE ONLY (not declared)
+- Evidence / **baseline candidate:** `404c90f27d54ddc1ff9ae03580d24e49f195467d` — current `HEAD`, equal to `origin/master`. **This SHA is recorded as a candidate only**; the final release baseline/SHA decision remains a separate human decision (the PF-005 precedent required an explicit baseline decision rather than automatic adoption of the current `HEAD`).
+- **No PF-006 release tag exists** and **no tag creation has been authorized**; `Phase-2-PF005` and every other existing tag are unchanged.
+
+### Deferred / excluded (unchanged)
+- Flutter UI, workflow/approval engine (CPS-001), notifications (`NTF-PF-006-*`), reports (`RPT-PF-006-01/02`), PF-009 runtime permission grain, department address structures.
+- `users.department_id`, user↔department assignment and department-head FK/active-user validation remain **PF-008-owned**.
+- **PF-009 technical debt (recorded, unchanged and NOT added to any register):** generic `app.core.rbac.has_permission` PLATFORM_ADMIN universal bypass versus the PF-006 gate denial.
+
+### Governance records still PENDING (reported, not created here)
+- `ELU-QA-PF006` QA release-audit document — **QA-Director-owned; not created** (the completed QA result is recorded in `ELU-QA-REG-001` v1.10, `ELU-MSL-001` 1.24, `ELU-MSL-002` 4.88 and this entry).
+- `ELU-REL-PF006` release notes — **not created** (pending the release tag / baseline decision).
+- `ELU-TST-PF` PF-006 test-specification section — pending governance decision.
+
+### Not done
+- No commit, no push, no PR, no merge, **no tag**, no release certification. **PF-006 is not tagged and not released.**
+
+## [PF-006] — 2026-09-15 — HUMAN SCOPE DECISIONS RECORDED (HISTORY ENDPOINT + ORGANIZATION-CHANGE POLICY) — NO RELEASE ACTION
+
+> Governance-only record of **two explicit human approvals** by the Human Project Owner. No code, schema, API, database, migration, seed, test, frontend, PF-008 or PF-009 change. **PF-006 RELEASE APPROVAL remains PENDING**, and no release baseline, tag or certification is recorded.
+
+### Decision 1 — PF-006 history endpoint: **APPROVED AND RETAINED**
+- `GET /api/v1/org/departments/{department_id}/history` is **HUMAN-APPROVED PF-006 SCOPE** — retained as an **additional** PF-006 audit-history endpoint.
+- Recorded honestly: it is **not** part of the authoritative `ELU-BFS-PF` §PF-006 §10 endpoint list, which contains **10** endpoints. Counts: **§10 = 10**, **+ 1 human-approved history endpoint**, **total implemented PF-006 API operations = 11**.
+- It was already implemented and tested in Batch 5 (typed `DepartmentHistoryResponse`, `DepartmentService.history()`); it must **not** be removed, redesigned or reimplemented.
+- **Approved by:** Human Project Owner — **personal name not supplied in the authorising instruction (PENDING; not invented — ELU-AI-001)**. **Approver role:** Project Owner / Authorized Decision Maker. **Decision date:** 2026-09-15.
+
+### Decision 2 — PF-006 organization-change policy: **APPROVED (effective-parent-NULL interpretation)**
+- Recorded verdict verbatim: *"Human Project Owner approved the effective-parent-NULL interpretation for PF-006 organization changes."*
+- Approved behaviour (already implemented in **Batch 3-C** — **no implementation change in this batch**):
+  1. organization **unchanged** → allowed;
+  2. organization change + effective parent `NULL` + **no non-deleted children** → allowed;
+  3. organization change + effective parent **non-`NULL`** → rejected;
+  4. organization change + one or more **non-deleted children** → rejected;
+  5. a **single** update (PATCH or PUT) may **simultaneously detach the parent and change `organization_id`** when there are no non-deleted children → allowed;
+  6. **no cascade** of the organization change — ever;
+  7. **no silent reparenting** — ever;
+  8. the **parent/child same-organization rule (C-N11) remains enforced**; invalid, foreign-tenant or soft-deleted organizations remain **404**.
+- This **closes** the previously recorded items 1-vs-6 scope question in favour of the **stricter effective-parent-`NULL` reading**.
+- **Approved by:** Human Project Owner (personal name not supplied — **PENDING**, not invented). **Decision date:** 2026-09-15.
+
+### Still pending (NOT approved by this record)
+- **PF-006 RELEASE APPROVAL — PENDING** (separate human decision). Release baseline/SHA decision and release tag also remain pending.
+- `ELU-QA-REG-001` PF-006 row (**QA-Director-owned**), `ELU-QA-PF006` release audit, `ELU-REL-PF006` release notes and the `ELU-TST-PF` PF-006 test-spec decision remain outstanding — none is created or approved here.
+- **PF-009 technical debt (recorded, unchanged):** the generic `app.core.rbac.has_permission` PLATFORM_ADMIN universal bypass versus the PF-006 gate denial. The PF-006 permission matrix is deliberately unchanged and no PF-009 implementation is created.
+
+### Not done (explicitly out of scope)
+- No application code, schema, ORM, service, router, database, migration/DDL, seed, test, frontend, PF-008 or PF-009 change.
+- No commit, no push, no PR, no merge, no tag, no release approval and no release certification.
+- Deferred scope remains deferred: Flutter UI, workflow/approval engine, notifications, reports, PF-009 runtime permission grain, department address structures; `users.department_id`, user↔department assignment and department-head FK/active-user validation remain **PF-008-owned**.
+- **PF-005 Branch Management remains RELEASED and frozen** — annotation/tag `Phase-2-PF005` unchanged.
+
+## [PF-006] — 2026-09-15 — GOVERNANCE RECONCILIATION (BATCHES 2, 3, 3-C AND 5 RECORDED) — NO RELEASE ACTION
+
+> **Governance-only reconciliation.** This entry records implementation work that is **already complete and audited**. It adds no code, no schema/API behaviour, no database change and **records no release approval**. Authored by EIIP / Engineering — **approver identity PENDING (not supplied in the authorising instruction; not invented — ELU-AI-001)**.
+
+### Implementation record (all batches complete and audited)
+
+| Batch | Scope delivered | Audit verdict | Artefacts |
+|---|---|---|---|
+| **Batch 1** | DDL + rollback + RLS enrolment + bootstrap wiring | **PASS** | `Database/03_PlatformFoundation/015_department_pf006[_rollback].sql`, `Database/03_PlatformFoundation/012_rls_pf003a.sql`, `Backend/app/db/migrate_pf006.py`, `Backend/app/main.py` |
+| **Batch 2** | `Department` ORM model + Pydantic schemas | **PASS** | `Backend/app/models/pf/entities.py`, `Backend/app/models/pf/__init__.py`, `Backend/app/schemas/pf/department.py` |
+| **Batch 3** | Department service: business rules, hierarchy, organisation/branch resolution, status lifecycle, optimistic locking, soft delete, audit events | **PASS WITH NON-BLOCKING NOTES** | `Backend/app/services/pf/department_service.py` |
+| **Batch 3-C** | Organization-change correction — effective parent `NULL`, no non-deleted children, no cascade, no silent reparenting, combined detach + change allowed, C-N11 enforced | **PASS WITH NON-BLOCKING NOTES** | `Backend/app/services/pf/department_service.py` |
+| **Batch 4** | PF-006 permission catalogue (`department.create/read/update/delete/export`) + seeded role–permission matrix | **PASS** | `Backend/app/db/seed.py` |
+| **Batch 5** | Department API router + route wiring + move/history schemas + typed history response + PF-006 tests + PF-005 deferred-scope test correction | **PASS WITH NON-BLOCKING NOTES** | `Backend/app/api/v1/pf/departments.py`, `Backend/app/api/v1/router.py`, `Backend/app/schemas/pf/department.py`, `Backend/app/services/pf/department_service.py`, `Backend/tests/test_pf006_departments.py`, `Backend/tests/test_pf005_branches.py` |
+
+### Verified Batch-5 surface (release candidate — NOT released)
+- **Endpoints** (`app/api/v1/pf/departments.py`, prefix `/api/v1/org/departments`): `GET ""`, `GET /search`, `GET /export`, `GET /hierarchy`, `POST ""`, `GET /{id}`, `PUT /{id}`, `PATCH /{id}`, `PATCH /{id}/move`, `DELETE /{id}` — exactly `ELU-BFS-PF` §PF-006 §10 — **plus** `GET /{id}/history` (see the scope note below).
+- **Authorization:** read = TENANT_ADMIN / SALES_MANAGER / PROJECT_MANAGER; write = TENANT_ADMIN; export = TENANT_ADMIN. FINANCE_USER and SUPPORT_AGENT hold no PF-006 grant; PLATFORM_ADMIN is denied by the PF-006 role gate.
+- **Validation on record:** `core.department` 19 columns / 7 constraints / 6 indexes, RLS `true/true` with the single PF-003A `tenant_isolation` policy; 36 PF-006 tests and 35 PF-004/PF-005 regression tests collected; implementation validation run recorded **71 passed**; `git diff --check` clean; all changed Python files compile.
+
+### Open items (NOT decided here)
+- ~~‍**Human scope decision required — extra PF-006 history endpoint.**~~ **CLOSED — APPROVED 2026-09-15:** the endpoint is **HUMAN-APPROVED PF-006 SCOPE**, retained as an additional endpoint beyond the 10 in §10 (see the *HUMAN SCOPE DECISIONS RECORDED* section above). Not removed, not changed.
+- ~~‍**Human clarification required — PF-006 scope items 1 vs 6.**~~ **CLOSED — APPROVED 2026-09-15:** the Human Project Owner approved the effective-parent-`NULL` interpretation (the stricter reading); see the section above.
+- **PF-009 technical debt (recorded, unchanged):** the generic `app.core.rbac.has_permission` returns `True` for PLATFORM_ADMIN (universal bypass) while the PF-006 gate denies PLATFORM_ADMIN. The PF-006 permission matrix is deliberately unchanged and no technical-debt-register entry exists yet.
+- **QA/environment note:** PF-006 test rows exist only in generated test tenants; no PF-006 rows exist in the main/reference tenants. Nothing was deleted, truncated or reset.
+- **Missing governance records (reported, not invented):** `ELU-QA-REG-001` has **no PF-006 row**; there is **no `ELU-QA-PF006` release audit**, **no `ELU-REL-PF006` release notes** and **no PF-006 entry in `ELU-TST-PF`**.
+
+### Not done (explicitly out of scope of this reconciliation)
+- No release approval, no release certification, no tag, no commit, no push, no PR, no merge.
+- No change to application code, schemas, API behaviour, database structure, migrations/DDL, tests, seed or the PF-006 permission matrix as part of the reconciliation.
+- No Flutter UI, workflow/approval-engine integration, notifications, reports, PF-009 runtime permission grain or department address structures (all remain deferred).
+- `users.department_id`, user↔department assignment and department-head FK/active-user validation remain **PF-008-owned**.
+- **PF-005 Branch Management remains RELEASED and frozen** — `Phase-2-PF005` (object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`) unchanged; no PF-005 functional behaviour changed.
+
+## [PF-006] — 2026-09-15 — BATCH 4 DELIVERED (PERMISSION CATALOGUE / RBAC SEED / ACTOR MATRIX)
+
+### Decision (human, recorded) — PF-006 organization-change policy ADOPTED
+- **Adopted by:** Human Project Owner — **personal name not supplied in the authorising instruction** (recorded as PENDING; not invented — ELU-AI-001, no AI-originated approval).
+- **Approver role:** Project Owner / Authorized Decision Maker. **Decision date:** 2026-09-15.
+- **Adopted policy (transcribed from the authorising instruction — not originated by the assistant):**
+  1. `organization_id` may be changed **only when the department is a root department and has no non-deleted children**.
+  2. Organisation changes are **never cascaded**.
+  3. Departments are **never silently reparented**.
+  4. A single update **may** simultaneously set `parent_department_id = NULL` and change `organization_id`, provided there are no non-deleted children.
+  5. **C-N11** (parent and child must belong to the same organisation) **remains mandatory**.
+  6. If the current parent belongs to the old organisation and the request changes organisation **without detaching the parent**, the operation is **rejected**.
+- **Implementation status (corrected 2026-09-15 — superseded by the Batch 3-C note below):** the policy is **adopted and recorded here**. Batch 4 itself did not modify the service (strict file scope); the service alignment was delivered separately by **PF-006 Batch 3-C**.
+- **PF-006 Batch 3-C — Department Service aligned with the adopted policy (2026-09-15; `Backend/app/services/pf/department_service.py` only):**
+  1. an organisation change is allowed **only when the effective `parent_department_id` after the request is `NULL`** — the effective parent is evaluated up front, so a detach requested in the same call is honoured and a retained parent is rejected (items 1 and 6);
+  2. the department must have **no non-deleted children** (item 2);
+  3. the change is **never cascaded** to children and **never silently reparents** anything (items 3 and 4);
+  4. **one update may combine `parent_department_id = NULL` with an `organization_id` change** — accepted for PATCH and for PUT replacement — provided there are no non-deleted children (item 5);
+  5. **C-N11** (parent and child in the same organisation) **remains enforced** (item 7);
+  6. invalid, foreign-tenant or soft-deleted organisations keep the existing **404** behaviour, and tenant consistency, branch validation, soft delete, optimistic locking, audit events and hierarchy rules are unchanged (item 8). No new audit event was introduced and no DDL/schema change was required.
+- **Specification question (recorded, not decided):** the adopted items 1 and 6 differ in scope (item 1 requires the department to *be* a root; item 6 rejects only a retained parent belonging to the *old* organisation). Batch 3-C implements the stricter, unambiguous reading required by the authorising instruction — effective parent `NULL` after the request.
+
+### Batch 4 delivered (RBAC permission catalogue + seed only)
+- **`Backend/app/db/seed.py`** — five `department.*` permissions added to the `PERMISSIONS` catalogue (`department.create`, `department.read`, `department.update`, `department.delete`, `department.export`; module `PF`), and the PF-006 actor matrix added as `DEPARTMENT_PERMISSION_MATRIX` + idempotent `_sync_department_permission_matrix` (HD-01 pattern, mirroring PF-004/PF-005), invoked from all three existing seed entry points (`seed_platform`, `_ensure_platform_admin`, `provision_tenant_roles`).
+- **Naming note:** the requested action `department.view` is realised as **`department.read`** — the authoritative permission list (`ELU-BFS-PF` §PF-006 §12) and the established project convention (`organization.read`, `branch.read`) use `read`; no parallel `department.view` code was created.
+- **Seeded actor matrix (`ELU-BFS-PF` §12):** TENANT_ADMIN `create/read/update/delete/export`; SALES_MANAGER `read`; PROJECT_MANAGER `read`; FINANCE_USER **no grant**; PLATFORM_ADMIN **no grant** (recorded as an explicit empty tuple so the seeded map matches the enforced PF-006 role gate — the generic platform seeding would otherwise leave the whole `department.*` catalogue granted to PLATFORM_ADMIN). Support Agent is not granted (appears in BFS §2 but not in the §12 matrix).
+- **Not done (explicitly out of scope for Batch 4):** no service/ORM/schema change, no API router or endpoint, no Flutter, no PF-006 tests, no `users.department_id` or other PF-008 scope, no workflow/notifications/reports/CSV-XLSX/address structures/persisted level-path, no migration or DDL change, no commit/push/PR/merge/tag/release approval.
+- **PF-005 Branch Management remains RELEASED and frozen** — no PF-005 permission or grant was removed or changed; the annotated tag `Phase-2-PF005` (object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`) is unchanged.
+- **Governance note (updated 2026-09-15):** PF-006 Batches 2, 3 and 3-C originally had no CHANGELOG entries — that gap is now closed by the **PF-006 governance reconciliation** section above (which also records Batch 5). Remaining governance gap: `ELU-QA-REG-001` carries **no PF-006 row** (QA-owned; to be created at the QA/release gate). This entry records **Batch 4 only**.
+
+## [PF-006] — 2026-09-15 — IMPLEMENTATION AUTHORIZED — BATCH 1 DELIVERED (DDL + ROLLBACK + RLS)
+
+### Decision (human, recorded)
+- **PF-006 IMPLEMENTATION AUTHORIZED** — explicit human authorization for **PF-006 Department Management, Batch 1 only** (DDL, rollback, RLS enrolment and required bootstrap wiring).
+- **Approved by:** Human Project Owner — **personal name not supplied in the authorising instruction** (recorded as PENDING; not invented — ELU-AI-001, no AI-originated approval).
+- **Approver role:** Project Owner / Authorized Decision Maker.
+- **Decision date:** 2026-09-15.
+- **Authorized scope:** PF-006 Batch 1 only — DDL, rollback, RLS enrolment and required bootstrap wiring.
+- Values were human-supplied and transcribed verbatim.
+
+### Approved implementation decisions (C-N1…C-N6)
+| Decision | Recorded outcome |
+|---|---|
+| **C-N1** `department_type` | **No CHECK constraint, no enum, no API value validation** — the supplied value is stored as-is; no business values invented (the approved specification names the field but defines **no** value list) |
+| **C-N2** `level` / `path` | **No persisted columns**; hierarchy depth/path information is derived at read/query time; maximum depth = **5** remains the rule (`BR-PF-041`, service layer) |
+| **C-N3** `status` | Allowed `ACTIVE`, `INACTIVE`, `ARCHIVED`; **default `ACTIVE`** (`ck_department_status`, per `ELU-BFS-PF-006` §5) |
+| **C-N4** `department.export` | **Tenant Admin only** for this release — recorded as an **implementation decision** because the authoritative permission matrix (`ELU-BFS-PF` §12) carries no export column |
+| **C-N5** Specification-silent fields | `description` `VARCHAR(500)` NULL; `cost_centre_code` `VARCHAR(32)` NULL |
+| **C-N6** Address | **No** `department_address` table, **no** `address_id`, no department-specific address structure |
+
+### Batch 1 delivered (database only)
+- **New** `Database/03_PlatformFoundation/015_department_pf006.sql` — `core.department` (idempotent): 19 columns, PK `department_pkey`, checks `ck_department_status` and `ck_department_no_self_parent` (self-parenting rejected), FKs `fk_department_tenant` (no action), `fk_department_organization` (**RESTRICT**), `fk_department_parent` (**RESTRICT**, self-FK), `fk_department_branch` (**ON DELETE SET NULL** — C-N3/§8), partial UK `uk_department_tenant_code_active (tenant_id, department_code) WHERE is_deleted = FALSE` (`BR-PF-040`), and partial indexes `idx_department_tenant_status`, `idx_department_organization`, `idx_department_parent`, `idx_department_branch`.
+- **New** `Database/03_PlatformFoundation/015_department_pf006_rollback.sql` — reverse-order rollback (indexes → constraints → table last); no PF-003A/PF-005 object touched.
+- **RLS enrolment (ADR-015 / PF-003A):** `core.department` added to `Database/03_PlatformFoundation/012_rls_pf003a.sql` and to `Backend/app/db/migrate_pf003a.py::RLS_TABLES` (now 18 entries); **ENABLE + FORCE** RLS with the existing `tenant_isolation` policy (USING/WITH CHECK on `app.tenant_id` / `app.platform_context`). No second RLS mechanism; no existing isolation changed.
+- **Bootstrap wiring:** new `Backend/app/db/migrate_pf006.py` (`apply_pf006_ddl`, mirrors `migrate_pf005.py`) registered in `Backend/app/main.py` lifespan.
+- **Validated:** columns/constraints/indexes confirmed; `rls=true`, `forced=true`; `tenant_isolation` policy present; **idempotent re-apply** leaves constraint count at 7 and RLS at true/true; `import app.main` valid; no previously-RLS-enabled table lost RLS.
+
+### Deferred / non-demonstrable (recorded)
+- `users.department_id` and the `department → users` linkage (**BFS §7/§8**) → **PF-008 Users & Identity** — not implemented in PF-006.
+- **BR-PF-043** (department head must be an ACTIVE user in the same tenant) → **DEFERRED to PF-008**; `department_head_user_id` is a plain nullable UUID with **no FK and no validation** → **non-demonstrable in PF-006**.
+- **AC-PF-006-04** (approval workflow routing to the department head) → **DEFERRED / NON-DEMONSTRABLE** pending CPS-001.
+- `NTF-PF-006-01..03` notifications and `RPT-PF-006-01/02` reports → deferred; CSV/XLSX export deferred (JSON only, later batch); Flutter UI (BFS §11 screens) excluded from the first release.
+- **Edition gating → none** (`ELU-EDM-001`: Multi-Department available in Community, Professional and Enterprise).
+- **Open specification gap recorded (not invented):** `department_type` has no value list anywhere in the approved specification — the column therefore carries **no** CHECK/enum and no value validation (C-N1).
+
+### Not done (explicitly out of scope for Batch 1)
+- No ORM model, Pydantic schemas, repository/service, router/API, RBAC seeding or `department.*` permissions, tests, PF-005 guard update, frontend, QA audit, release approval, release certification or tag.
+- **PF-005 Branch Management remains RELEASED and frozen** — annotated tag `Phase-2-PF005` (object `8f0502ce507da62de25f8105c06ac3185da83c97` → target `bdc188c8ff1c89c3e0578830ef73c9934536b495`) **unchanged**; no PF-005 file modified.
+- Not committed, not pushed, no PR — Batch 1 is a working-tree change awaiting review/approval before Batch 2.
+
 ## [PF-006] — 2026-09-15 — START AUTHORIZATION RECORD PREPARED (GOVERNANCE ONLY — NOT AUTHORIZED)
 
 > **This entry is NOT an authorization.** It records that the **PF-006 START AUTHORIZATION** documentation has been **prepared and is awaiting explicit human authorization**. No PF-006 decision has been taken and no PF-006 implementation exists. The assistant originated nothing (ELU-AI-001 — no AI-originated approval).

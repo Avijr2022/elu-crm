@@ -551,6 +551,74 @@ class BranchAddress(Base, TimestampMixin, SoftDeleteMixin):
     modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
 
 
+class Department(Base, TimestampMixin, SoftDeleteMixin):
+    """Tenant department profile and hierarchy (ELU-BFS-PF-006 §7/§9 / ELU-DDD-PF §5).
+
+    Batch 2 scope: ORM representation of ``core.department`` only. Deferred:
+    ``users.department_id`` and the department -> users linkage (PF-008), department-head
+    assignment/validation (BR-PF-043 -> PF-008), the hierarchy depth rule (BR-PF-041) and
+    the circular-parent rule (BR-PF-042) — both service-layer concerns — and the
+    NTF-PF-006-* / RPT-PF-006-* scopes.
+
+    ``department_head_user_id`` is therefore a plain nullable UUID column with **no FK and
+    no relationship** to ``User``. No persisted ``level``/``path`` columns (C-N2 — hierarchy
+    information is derived at read time) and no ``department_type`` value restriction
+    (C-N1 — the approved specification defines no value list).
+
+    Indexes are owned by the PF-006 DDL (partial, soft-delete aware); this model therefore
+    does not declare ``index=True``. The department-code uniqueness is declared here only
+    because the DDL expects to replace this hard constraint with its soft-delete aware
+    partial unique index ``uk_department_tenant_code_active`` (BR-PF-040), mirroring PF-005.
+    """
+
+    __tablename__ = "department"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "department_code", name="uk_department_tenant_code"),
+        {"schema": "core"},
+    )
+
+    department_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id", name="fk_department_tenant"),
+        nullable=False,
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "core.organization.organization_id",
+            ondelete="RESTRICT",
+            name="fk_department_organization",
+        ),
+        nullable=False,
+    )
+    parent_department_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.department.department_id", ondelete="RESTRICT", name="fk_department_parent"),
+        nullable=True,
+    )
+    branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.branch.branch_id", ondelete="SET NULL", name="fk_department_branch"),
+        nullable=True,
+    )
+    department_code: Mapped[str] = mapped_column(String(30), nullable=False)
+    department_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    department_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    department_head_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    cost_centre_code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="ACTIVE"
+    )
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
+
 class Role(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "role"
     __table_args__ = (
