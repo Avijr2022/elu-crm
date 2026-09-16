@@ -260,3 +260,14 @@ Overall CRM Progress       : ~18%
 ---
 
 *© Euphoria Infotech (I) Limited — ELU-MSL-001 Milestone Tracker*
+
+
+## PF-007 Start Authorization — 2026-09-16
+
+- **Human decision:** PF-007 START AUTHORIZED: YES
+- **Module:** PF-007 — Business Unit Management
+- **Authoritative scope:** PF-007-001 Business Unit / PF-007-001-001 Business Unit Profile
+- **Edition:** Professional + Enterprise; Community excluded.
+- **Included scope:** Business Unit management, opportunity → Business Unit tagging, and demonstrable BU revenue-report capability required by PF-007 acceptance criteria.
+- **Deferred scope:** PF-008-owned user ↔ Business Unit / BU-manager linkage; PF-009-owned runtime permission grain; NTF-PF-007-01..03.
+- **Governance constraint:** No PF-007 implementation, release tag, or release approval is implied by this authorization.
