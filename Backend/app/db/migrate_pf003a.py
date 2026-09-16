@@ -25,6 +25,7 @@ RLS_TABLES: tuple[tuple[str, str], ...] = (
     ("core", "branch"),
     ("core", "branch_address"),
     ("core", "department"),
+    ("core", "business_unit"),
     ("core", "users"),
     ("core", "subscription"),
     ("core", "subscription_history"),

@@ -619,6 +619,69 @@ class Department(Base, TimestampMixin, SoftDeleteMixin):
     modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
 
 
+class BusinessUnit(Base, TimestampMixin, SoftDeleteMixin):
+    """Tenant business unit profile (ELU-BFS-PF-007 §7/§9 / ELU-DDD-PF §5).
+
+    Batch 1 scope: ORM representation of ``core.business_unit`` only. Deferred: the
+    ``business_unit -> opportunity`` (CRM), ``-> project`` (PRJ) and ``-> invoice`` (FIN)
+    relationships (D6 — a later controlled PF-007 batch), ``users.business_unit_id``
+    (PF-008), notifications (``NTF-PF-007-*``), reports / XLSX-PDF export formatting (D8)
+    and any history API (D1).
+
+    ``bu_manager_user_id`` is a plain nullable UUID column with **no FK and no
+    relationship** to ``User`` (D4) — ``BR-PF-048`` (ACTIVE same-tenant user) is enforced
+    at the API/service layer, and no ``users`` column is introduced or modified.
+
+    ``organization_id`` is assigned on creation and immutable afterwards (D7). The code
+    uniqueness is declared here only because the DDL replaces this hard constraint with
+    the soft-delete aware partial unique index ``uk_business_unit_tenant_code_active``
+    (BR-PF-047 / D11), mirroring PF-005/PF-006.
+    """
+
+    __tablename__ = "business_unit"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id", "business_unit_code", name="uk_business_unit_tenant_code"
+        ),
+        {"schema": "core"},
+    )
+
+    business_unit_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id", name="fk_business_unit_tenant"),
+        nullable=False,
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "core.organization.organization_id",
+            ondelete="RESTRICT",
+            name="fk_business_unit_organization",
+        ),
+        nullable=False,
+    )
+    business_unit_code: Mapped[str] = mapped_column(String(30), nullable=False)
+    business_unit_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    bu_manager_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    cost_centre_code: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    revenue_target_annual: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(18, 2), nullable=True
+    )
+    start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="ACTIVE"
+    )
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    modified_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
+
 class Role(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "role"
     __table_args__ = (

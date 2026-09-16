@@ -8,6 +8,7 @@ from app.api.v1.crm import lookups as crm_lookups
 from app.api.v1.crm import opportunities as crm_opportunities
 from app.api.v1.pf import branding as pf_branding
 from app.api.v1.pf import branches as pf_branches
+from app.api.v1.pf import business_units as pf_business_units
 from app.api.v1.pf import departments as pf_departments
 from app.api.v1.pf import editions as pf_editions
 from app.api.v1.pf import organizations as pf_organizations
@@ -30,6 +31,7 @@ api_router.include_router(pf_subscriptions.router)
 api_router.include_router(pf_organizations.router)
 api_router.include_router(pf_branches.router)
 api_router.include_router(pf_departments.router)
+api_router.include_router(pf_business_units.router)
 api_router.include_router(crm_leads.router)
 api_router.include_router(crm_opportunities.router)
 api_router.include_router(crm_customers.router)
