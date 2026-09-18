@@ -40,6 +40,7 @@ PF-007 human scope decisions D1–D11 approved. Governance boundaries are record
 
 ### Not done
 - No PF-007 implementation (no DDL/ORM/service/API/seed/tests), **no `ELU-QA-PF007`**, **no `ELU-REL-PF007`**, no RTM/API/TST PF-007 sections, no release approval, no release tag, no tag operation of any kind.
+  - **Supersede note — 2026-09-18 (documentation correction only; no new decision, no approval):** the PF-007 statement above was correct when recorded and is preserved unchanged. **Superseded** by subsequent posted repository state: the PF-007 implementation (Batch 1, commit `1cd4997f`, PR #26 → merge `d752eb7bba535b56377ed2e66240de28dd47db9a`); `ELU-REL-PF007-Phase-2-PF007-Release-Notes.md`; the `ELU-RTM-001` PF-007 release-traceability record and the `ELU-API-PF.md` PF-007 endpoint section; the PF-007 human release approval (recorded in the PF-007 Release Governance Record at the end of this file); and the annotated release tag `Phase-2-PF007` (tag object `bde87e9ee31d2f4c9a25ffdd7169cc9f90607a68` → release commit `80ae94e1dd071f62198571a7592cf81246ee591e`). **Still current / NOT superseded:** no `ELU-QA-PF007` exists — no QA verdict, reviewer, date or test result is recorded anywhere; and no PF-007 section exists in `ELU-TST-PF.md`.
 - **PF-006 remains RELEASED and frozen** — `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) unchanged.
 
 ### Idempotency marker
