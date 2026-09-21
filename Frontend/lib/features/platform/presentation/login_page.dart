@@ -16,6 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   // behind kDebugMode (a compile-time constant) keeps them out of release
   // builds entirely instead of merely hiding them at runtime.
   static const String _demoTenant = kDebugMode ? 'EIIP001' : '';
+  static const String _subtitle =
+      kDebugMode ? 'Euphoria Infotech · Local Dev' : 'Euphoria Infotech';
   static const String _demoEmail =
       kDebugMode ? 'admin@euphoriainfotech.com' : '';
   static const String _demoPassword = kDebugMode ? 'Admin@12345' : '';
@@ -74,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Euphoria Infotech · Local Dev',
+                        _subtitle,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
