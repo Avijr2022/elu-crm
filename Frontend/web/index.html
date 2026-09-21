@@ -18,22 +18,116 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="E-LinkUp CRM/ERP client (Euphoria Infotech)">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="elinkup_app">
+  <meta name="apple-mobile-web-app-title" content="E-LinkUp">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>elinkup_app</title>
+  <title>E-LinkUp</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Startup placeholder.
+    Flutter paints onto a canvas, so while the engine and the Dart bundle are
+    still downloading the page has nothing to show and renders blank white.
+    This overlay is visible from the very first HTML paint and is removed once
+    the Flutter app has started. Any initialization failure is reported here
+    instead of silently leaving a blank page.
+  -->
+  <style>
+    body { margin: 0; background: #0B3D91; }
+    #boot {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      padding: 24px; text-align: center; color: #FFFFFF;
+      background: linear-gradient(135deg, #0B3D91, #1F6FEB);
+      font-family: Roboto, "Segoe UI", Arial, sans-serif;
+    }
+    #boot .ring {
+      width: 46px; height: 46px; border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, .30); border-top-color: #FFFFFF;
+      animation: boot-spin .9s linear infinite;
+    }
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    #boot .title { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+    #boot .status { font-size: 13px; opacity: .85; }
+    #boot .error {
+      display: none; max-width: 720px; padding: 14px 16px; border-radius: 8px;
+      background: rgba(0, 0, 0, .38); text-align: left; font-size: 13px;
+      line-height: 1.45; white-space: pre-wrap; word-break: break-word;
+    }
+  </style>
 </head>
 <body>
+  <div id="boot">
+    <div class="ring"></div>
+    <div class="title">E-LinkUp</div>
+    <div class="status" id="boot-status">Loading application&hellip;</div>
+    <div class="error" id="boot-error"></div>
+  </div>
+
+  <script>
+    (function () {
+      var bootEl = document.getElementById('boot');
+      var statusEl = document.getElementById('boot-status');
+      var errorEl = document.getElementById('boot-error');
+
+      function fail(message) {
+        if (!statusEl) { return; }
+        statusEl.textContent = 'E-LinkUp could not start.';
+        if (errorEl) {
+          errorEl.style.display = 'block';
+          errorEl.textContent = (message && message.stack) ? message.stack : String(message);
+        }
+        console.error('[E-LinkUp bootstrap]', message);
+      }
+
+      window.addEventListener('error', function (e) { fail(e.message || e.error); });
+      window.addEventListener('unhandledrejection', function (e) { fail(e.reason); });
+
+      // Dismiss the startup overlay once Flutter has inserted its view. The
+      // standard flutter_bootstrap.js is left untouched so that both debug
+      // (`flutter run -d chrome`) and release builds keep working.
+      var dismissed = false;
+      function hasFlutterView() {
+        return !!(document.querySelector('flutter-view') ||
+                  document.querySelector('flt-glass-pane'));
+      }
+      function dismiss() {
+        if (dismissed) { return; }
+        dismissed = true;
+        window.setTimeout(function () {
+          if (bootEl && bootEl.parentNode) { bootEl.parentNode.removeChild(bootEl); }
+        }, 300);
+      }
+
+      if (hasFlutterView()) {
+        dismiss();
+      } else {
+        var observer = new MutationObserver(function () {
+          if (hasFlutterView()) { observer.disconnect(); dismiss(); }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // If nothing has started after 20s, tell the user what to try next
+        // instead of leaving an unexplained blank/loading screen.
+        window.setTimeout(function () {
+          if (dismissed || !statusEl) { return; }
+          statusEl.textContent =
+            'Still loading\u2026 If this does not finish, hard-refresh the page ' +
+            '(Ctrl+Shift+R) to clear a stale service worker cache.';
+        }, 20000);
+      }
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
