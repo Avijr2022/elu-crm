@@ -2,6 +2,11 @@
 
 All notable E-LinkUp implementation milestones.
 
+### 2026-09-21
+- Governance: split PF-007 Business Unit and PF-008 Users & Identity in MSL-001.
+- Preserved PF-007 Correction-A release facts and corrected PF progress arithmetic to 7 / 11 (64%), with 4 remaining.
+- PF-008 remains NOT STARTED; this change authorizes no implementation.
+
 ## [PF-007] — 2026-09-16 — Scope Decisions Approved
 
 PF-007 human scope decisions D1–D11 approved. Governance boundaries are recorded before implementation.
