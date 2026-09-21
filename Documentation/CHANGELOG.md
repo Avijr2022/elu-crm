@@ -6,6 +6,7 @@ All notable E-LinkUp implementation milestones.
 - Governance: split PF-007 Business Unit and PF-008 Users & Identity in MSL-001.
 - Preserved PF-007 Correction-A release facts and corrected PF progress arithmetic to 7 / 11 (64%), with 4 remaining.
 - PF-008 remains NOT STARTED; this change authorizes no implementation.
+- Auth contract: login now requires an explicit `tenant_code` and the user lookup is always scoped to that tenant (client-side requirement shipped in `f93f61c`; server-side enforcement applied here — request schema, auth service and user repository).
 
 ## [PF-007] — 2026-09-16 — Scope Decisions Approved
 

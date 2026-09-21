@@ -11,7 +11,7 @@ class UserRepository:
         self.db = db
 
     def get_by_email(
-        self, email: str, tenant_id: UUID | None = None
+        self, email: str, tenant_id: UUID
     ) -> User | None:
         stmt = (
             select(User)
@@ -23,11 +23,10 @@ class UserRepository:
             )
             .where(
                 User.email == email.lower(),
+                User.tenant_id == tenant_id,
                 User.is_deleted.is_(False),
             )
         )
-        if tenant_id is not None:
-            stmt = stmt.where(User.tenant_id == tenant_id)
         return self.db.scalars(stmt).first()
 
     def get_by_id(self, user_id: UUID, tenant_id: UUID) -> User | None:

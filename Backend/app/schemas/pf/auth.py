@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -8,9 +7,9 @@ from pydantic import BaseModel, EmailStr, Field
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
-    tenant_code: Optional[str] = Field(
-        default=None,
-        description="Optional tenant code; defaults to Euphoria seed tenant when omitted",
+    tenant_code: str = Field(
+        min_length=1,
+        description="Required tenant code; login is always tenant-scoped.",
     )
 
 

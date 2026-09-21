@@ -25,19 +25,17 @@ class AuthService:
         self.settings = get_settings()
 
     def login(
-        self, email: str, password: str, tenant_code: str | None = None
+        self, email: str, password: str, tenant_code: str
     ) -> TokenResponse:
         # Auth bootstrap: resolve tenant/user before JWT exists (ADR-015).
         bind_rls_context(self.db, platform=True)
-        tenant = None
-        if tenant_code:
-            tenant = self.tenants.get_by_code(tenant_code)
-            if tenant is None:
-                raise UnauthorizedError("Invalid tenant or credentials", req_id="REQ-PF-051")
+        tenant = self.tenants.get_by_code(tenant_code)
+        if tenant is None:
+            raise UnauthorizedError("Invalid tenant or credentials", req_id="REQ-PF-051")
 
         user = self.users.get_by_email(
             email=email.lower(),
-            tenant_id=tenant.tenant_id if tenant else None,
+            tenant_id=tenant.tenant_id,
         )
         if user is None or not verify_password(password, user.password_hash):
             raise UnauthorizedError("Invalid tenant or credentials", req_id="REQ-PF-051")
