@@ -35,7 +35,7 @@ class AuthController extends ChangeNotifier {
   Future<bool> login({
     required String email,
     required String password,
-    String tenantCode = 'EIIP001',
+    required String tenantCode,
   }) async {
     busy = true;
     error = null;

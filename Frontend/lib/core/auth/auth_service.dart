@@ -12,7 +12,7 @@ class AuthService {
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
-    String tenantCode = 'EIIP001',
+    required String tenantCode,
   }) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/v1/auth/login');
     final response = await http.post(
