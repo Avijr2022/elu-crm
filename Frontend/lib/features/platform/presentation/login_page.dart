@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _tenantCtrl,
                         decoration: const InputDecoration(
                           labelText: 'Tenant code',
-                          hintText: 'EIIP001',
+                          hintText: kDebugMode ? 'EIIP001' : null,
                         ),
                         validator: (v) =>
                             (v == null || v.isEmpty) ? 'Required' : null,
