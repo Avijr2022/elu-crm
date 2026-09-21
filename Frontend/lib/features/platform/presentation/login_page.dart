@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,10 +12,18 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // Demo credentials are a local-development convenience only. Putting them
+  // behind kDebugMode (a compile-time constant) keeps them out of release
+  // builds entirely instead of merely hiding them at runtime.
+  static const String _demoTenant = kDebugMode ? 'EIIP001' : '';
+  static const String _demoEmail =
+      kDebugMode ? 'admin@euphoriainfotech.com' : '';
+  static const String _demoPassword = kDebugMode ? 'Admin@12345' : '';
+
   final _formKey = GlobalKey<FormState>();
-  final _tenantCtrl = TextEditingController(text: 'EIIP001');
-  final _emailCtrl = TextEditingController(text: 'admin@euphoriainfotech.com');
-  final _passwordCtrl = TextEditingController(text: 'Admin@12345');
+  final _tenantCtrl = TextEditingController(text: _demoTenant);
+  final _emailCtrl = TextEditingController(text: _demoEmail);
+  final _passwordCtrl = TextEditingController(text: _demoPassword);
 
   @override
   void dispose() {
@@ -55,7 +64,10 @@ class _LoginPageState extends State<LoginPage> {
                       Text(
                         'E-LinkUp',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFF0B3D91),
                             ),
@@ -87,7 +99,8 @@ class _LoginPageState extends State<LoginPage> {
                       TextFormField(
                         controller: _passwordCtrl,
                         obscureText: true,
-                        decoration: const InputDecoration(labelText: 'Password'),
+                        decoration:
+                            const InputDecoration(labelText: 'Password'),
                         validator: (v) =>
                             (v == null || v.length < 8) ? 'Min 8 chars' : null,
                       ),
@@ -107,14 +120,16 @@ class _LoginPageState extends State<LoginPage> {
                                 await auth.login(
                                   email: _emailCtrl.text.trim(),
                                   password: _passwordCtrl.text,
-                                  tenantCode: _tenantCtrl.text.trim().toUpperCase(),
+                                  tenantCode:
+                                      _tenantCtrl.text.trim().toUpperCase(),
                                 );
                               },
                         child: auth.busy
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Text('Sign in'),
                       ),
