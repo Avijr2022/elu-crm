@@ -397,7 +397,14 @@ PERMISSIONS = [
     ("user.delete", "Deactivate user", "PF"),
     ("user.export", "Export users", "PF"),
     ("user.reset_password", "Admin password reset", "PF"),
+    ("role.create", "Create role", "PF"),
+    ("role.read", "View role", "PF"),
+    ("role.update", "Update role", "PF"),
+    ("role.delete", "Deactivate role", "PF"),
+    ("role.export", "Export roles", "PF"),
+    ("role.configure", "Configure role permissions", "PF"),
     ("role.assign", "Assign roles", "PF"),
+    ("permission.read", "View permission catalogue", "PF"),
     ("edition.create", "Create edition", "PF"),
     ("edition.read", "View edition", "PF"),
     ("edition.update", "Update edition", "PF"),
@@ -454,6 +461,15 @@ ROLES = [
     ("SALES_MANAGER", "Sales Manager", True),
     ("PROJECT_MANAGER", "Project Manager", True),
     ("FINANCE_USER", "Finance User", True),
+    # BFS-PF-009 §3 seeds SEVEN system roles. These two were missing from
+    # provisioning (tests worked around it by creating the role ad hoc). They are
+    # seeded with NO grants on purpose: their §3 capabilities (Support Agent
+    # "SRV full", Team Member "read-only base") reference modules/permission sets
+    # that are not implemented, and inventing a grant set is out of scope for
+    # PF-009 Batch 1. FINANCE_USER / other PF matrices already record the
+    # "Support Agent has no grant" position.
+    ("SUPPORT_AGENT", "Support Agent", True),
+    ("TEAM_MEMBER", "Team Member", True),
 ]
 
 FEATURE_CATALOGUE = [
@@ -665,6 +681,7 @@ def seed_platform(db: Session) -> None:
         _ensure_platform_admin(db, existing, editions)
         _upgrade_crm_permissions(db, existing)
         _upgrade_sal_permissions(db, existing)
+        _upgrade_rbac_permissions(db, existing)
         _ensure_community_demo_tenant(db, editions)
         _ensure_tenant_branding(db, existing)
         db.commit()
@@ -1031,6 +1048,59 @@ def _upgrade_crm_permissions(db: Session, tenant: Tenant) -> None:
     _grant_role_permissions(db, tenant.tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
     for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
         _grant_role_permissions(db, tenant.tenant_id, role_code, crm_perm_codes)
+
+
+def _upgrade_rbac_permissions(db: Session, tenant: Tenant) -> None:
+    """Idempotent PF-009 backfill for already-provisioned tenants (re-seed path).
+
+    ``provision_tenant_roles`` only runs on tenant activation, so a tenant created
+    before PF-009 would otherwise never receive the ``role.*`` / ``permission.*``
+    catalogue rows, the authoritative BFS-PF-009 §3 system roles, or their RBAC
+    grants. This mirrors the established ``_upgrade_crm_permissions`` /
+    ``_upgrade_sal_permissions`` pattern.
+
+    Only the RBAC catalogue is granted (to PLATFORM_ADMIN + TENANT_ADMIN, matching
+    the generic provisioning convention). No role receives a ``department.*`` /
+    ``branch.*`` grain here and no universal PLATFORM_ADMIN bypass is introduced.
+    """
+    prefixes = {"role", "permission"}
+    for code, name, module in PERMISSIONS:
+        if code.split(".", 1)[0] not in prefixes:
+            continue
+        exists = db.scalars(
+            select(Permission).where(Permission.permission_code == code)
+        ).first()
+        if not exists:
+            db.add(
+                Permission(
+                    permission_code=code, permission_name=name, module_code=module
+                )
+            )
+    db.flush()
+
+    for code, name, is_system in ROLES:
+        exists = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant.tenant_id, Role.role_code == code
+            )
+        ).first()
+        if exists is None:
+            db.add(
+                Role(
+                    tenant_id=tenant.tenant_id,
+                    role_code=code,
+                    role_name=name,
+                    description=f"System role: {name}",
+                    is_system=is_system,
+                )
+            )
+    db.flush()
+
+    rbac_codes = tuple(
+        code for code, _, _ in PERMISSIONS if code.split(".", 1)[0] in prefixes
+    )
+    for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
+        _grant_role_permissions(db, tenant.tenant_id, role_code, rbac_codes)
 
 
 def _ensure_tenant_branding(db: Session, tenant: Tenant) -> None:
