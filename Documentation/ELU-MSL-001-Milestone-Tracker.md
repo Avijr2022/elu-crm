@@ -49,6 +49,7 @@
 
 | 1.26 | 2026-09-16 | EIIP / Engineering (governance reconciliation; approver identity PENDING — not supplied in the authorising instruction; ELU-AI-001) | **PF-007 governance start authorization and scope reconciliation — status changed to START AUTHORIZED — IN PROGRESS.** Reconciles the previously recorded PF-007 start authorization with the tracker: the §3.1 status row is aligned, the authorization record is moved inside the document body (before the footer), and the `RPT-PF-007-02` constraint is recorded. **No implementation, QA/release record, release approval or tag is implied.** Deferred unchanged: PF-008-owned user ↔ Business Unit / BU-manager linkage; PF-009-owned runtime permission grain; `NTF-PF-007-01..03`. |
 | 1.27 | 2026-09-21 | EIIP / Engineering (Governance) | Correction-B: split PF-007 Business Unit and PF-008 Users & Identity governance rows; retain PF-007 Correction-A release facts; correct PF dashboard arithmetic; PF-008 remains NOT STARTED. |
+| 1.28 | 2026-09-22 | Avijit Roy | PF-009 Batch 1 RBAC foundation governance reconciliation: recorded merged/tagged state, split PF-009 from PF-010/PF-011, and corrected current-state representation. Human authorization remains recorded verbatim as `PF-009 BATCH 1 MERGE APPROVED: YES`; full PF-009 release remains pending explicit release approval. |
 
 ---
 
@@ -131,7 +132,9 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-006 Department | **RELEASED (2026-09-16) — QA PASSED; human decision `PF-006 RELEASE APPROVED: YES`** | `Phase-2-PF006` (annotated) — tag object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021` — created/pushed 2026-09-16; release baseline `12b24543286b7c79b6145c40dc8a94ffda489021`; implementation/content commit `b3a2b1f` (PR #23) | Backend scope delivered 2026-09-15 and audited: Batch 1 DDL/rollback/RLS/bootstrap (**PASS**), Batch 2 ORM + schemas (**PASS**), Batch 3 service (**PASS WITH NON-BLOCKING NOTES**), Batch 3-C organization-change correction (**PASS WITH NON-BLOCKING NOTES**), Batch 4 `department.*` catalogue + seeded matrix (**PASS**), Batch 5 API (11 routes) + 36 tests + PF-005 deferred-scope test correction (**PASS WITH NON-BLOCKING NOTES**). **Human scope decisions APPROVED 2026-09-15:** the additional history endpoint is retained as human-approved PF-006 scope; the effective-parent-`NULL` organization-change interpretation is approved. **QA PASSED 2026-09-16** (36/36 PF-006 + 35/35 PF-004/PF-005; no release blockers) — **human decision `PF-006 RELEASE APPROVED: YES` (2026-09-16; approver name/role pending record)**; `ELU-QA-REG-001` **v1.10** → **v1.11** PF-006 row recorded. **Release baseline/sha and tag:** **DECLARED / CREATED 2026-09-16** — baseline `12b24543286b7c79b6145c40dc8a94ffda489021`; annotated tag `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) created and pushed. **Still pending:** approver personal name; `ELU-QA-PF006` reviewer identity (document created 2026-09-16, **PASS — RELEASE APPROVED**); `ELU-REL-PF006` release notes created 2026-09-16; `ELU-TST-PF` PF-006 test-spec section recorded 2026-09-16 (**v1.5 §2.3**). Deferred: `users.department_id` / `department → users` / BR-PF-043 → **PF-008** (**non-demonstrable**); AC-PF-006-04 (CPS-001, **non-demonstrable**); NTF/RPT; Flutter UI; PF-009 permission grain; department address. PF-009 debt: generic PLATFORM_ADMIN bypass vs PF-006 gate denial (matrix unchanged). |
 | PF-007 Business Unit | **PF-007 Business Unit Management — RELEASED; human decision `PF-007 RELEASE APPROVED: YES`** | `Phase-2-PF007` (annotated) — tag object `bde87e9ee31d2f4c9a25ffdd7169cc9f90607a68` → target `80ae94e1dd071f62198571a7592cf81246ee591e` | PF-007 backend scope only; Batch 1 merged via PR #26 (merge `d752eb7bba535b56377ed2e66240de28dd47db9a`); merge governance reconciled via PR #27 (merge `80ae94e1dd071f62198571a7592cf81246ee591e`); deferred: Flutter UI, project/opportunity/invoice → Business Unit linkage, reporting engine, Business Unit history API; remaining modules per BFS/RDM order. |
 | PF-008 Users & Identity | NOT STARTED | — | Users & Identity; implementation not authorized |
-| PF-009…011 | NOT STARTED | — | RBAC · Audit & Compliance · System Configuration |
+| PF-009 | IN PROGRESS — Batch 1 foundation merged and tagged | Phase-2-PF009 | RBAC |
+| PF-010 | NOT STARTED | — | Audit & Compliance |
+| PF-011 | NOT STARTED | — | System Configuration |
 
 ### 3.2 One-Line Health
 
@@ -157,7 +160,7 @@ PF-005 Branch               ██████████ 100%   ← RELEASED (
 PF-006 Department           ██████████ 100%   ← **RELEASED (2026-09-16, backend scope)** — QA PASSED + human decision `PF-006 RELEASE APPROVED: YES`; annotated tag `Phase-2-PF006` (f6aefd14… → 12b24543…); release baseline `12b24543…`; Flutter UI deferred
 PF-007 Business Unit        ██████████ 100% RELEASED
 PF-008 Users & Identity     ░░░░░░░░░░   0%
-PF-009 RBAC                 ░░░░░░░░░░   0%
+PF-009 RBAC — IN PROGRESS (Batch 1 foundation merged and tagged)
 PF-010 Audit & Compliance   ░░░░░░░░░░   0%
 PF-011 System Configuration ░░░░░░░░░░   0%
 

@@ -167,6 +167,7 @@
 
 | 4.90 | 2026-09-16 | **PF-007 Business Unit Management — START AUTHORIZATION RECORDED AND GOVERNANCE SCOPE RECONCILED (governance only; no implementation, no release action).** Human decision **PF-007 START AUTHORIZED: YES** (2026-09-16; approver identity **PENDING** — not supplied, not invented; ELU-AI-001). Module per `ELU-BFS-PF` §PF-007: **PF-007 Business Unit Management / PF-007-001 Business Unit / PF-007-001-001 Business Unit Profile**. Scope: **Professional + Enterprise; Community excluded** (`BR-PF-046`); included = Business Unit management, opportunity → Business Unit tagging, and demonstrable BU revenue-report capability required by the approved PF-007 acceptance criteria (`RPT-PF-007-02` included only to that extent). Deferred: PF-008-owned user ↔ Business Unit / BU-manager linkage; PF-009-owned runtime permission grain; `NTF-PF-007-01..03`. Reconciled: `ELU-MSL-001` (tracker row … **START AUTHORIZED — IN PROGRESS**, authorization record moved into the document body, history **1.26**), `Documentation/CHANGELOG.md`. **Not done:** no code/schema/DDL/migration/seed/test/frontend change; no `ELU-QA-PF007`; no `ELU-REL-PF007`; no RTM/API/TST PF-007 sections; no tag; no release approval. **Supersede note — 2026-09-18 (documentation correction only; no new decision, no approval):** this 'Not done' clause was correct when recorded and is preserved unchanged. **Superseded** by subsequent posted repository state: the PF-007 implementation (Batch 1, commit `1cd4997f`, PR #26 → merge `d752eb7bba535b56377ed2e66240de28dd47db9a`); `ELU-REL-PF007-Phase-2-PF007-Release-Notes.md`; the `ELU-RTM-001` PF-007 release-traceability record and the `ELU-API-PF.md` PF-007 endpoint section; the PF-007 human release approval (recorded in the PF-007 Release Record in this file); and the annotated release tag `Phase-2-PF007` (tag object `bde87e9ee31d2f4c9a25ffdd7169cc9f90607a68` → release commit `80ae94e1dd071f62198571a7592cf81246ee591e`). **Still current / NOT superseded:** no `ELU-QA-PF007` exists — no QA verdict, reviewer, date or test result is recorded anywhere; and no PF-007 section exists in `ELU-TST-PF.md`. **PF-007 RECONCILIATION RECORDED: YES PF-007 Batch 1 merge recorded: PR #26 -> d752eb7bba535b56377ed2e66240de28dd47db9a.** **PF-006 RELEASED and frozen** — `Phase-2-PF006` (object `f6aefd1442da7772c5fb9d9942bb9fae5cededb5` → target `12b24543286b7c79b6145c40dc8a94ffda489021`) unchanged. |
 | 4.92 | 2026-09-21 | Correction-B: reconciled PF-007/PF-008 module representation and PF progress arithmetic; PF-008 remains NOT STARTED. |
+| 4.93 | 2026-09-22 | PF-009 Batch 1 governance reconciliation: PF-009 RBAC foundation merged to master at `2a2ce45213a6d0e96409a083c594b121686dfa22` and tagged `Phase-2-PF009`; recorded as IN PROGRESS because `PF-009 BATCH 1 MERGE APPROVED: YES` is merge authorization, not an explicit release-approval statement. |
 
 ### 4.91 — 2026-09-16 — PF-007 Scope Decisions Approved
 
@@ -193,3 +194,14 @@ PF-007 Business Unit Management is formally recorded as released.
 - Release tag: `Phase-2-PF007`
 - Release commit: `80ae94e1dd071f62198571a7592cf81246ee591e`
 - Annotated tag object: `bde87e9ee31d2f4c9a25ffdd7169cc9f90607a68`
+
+### PF-009 Release Record
+
+PF-009 Roles & Permissions (RBAC) Batch 1 foundation is recorded as **IN PROGRESS — Batch 1 foundation merged and tagged**.
+
+- Merge commit: `2a2ce45213a6d0e96409a083c594b121686dfa22`
+- Release tag: `Phase-2-PF009`
+- Annotated tag object: `4ef8b6c623005d9b8d3bbf4b7a22d1d329048054`
+- Human authorization recorded verbatim: **PF-009 BATCH 1 MERGE APPROVED: YES**
+- This entry does not convert merge approval into release approval.
+- Full PF-009 release remains pending explicit human release approval.
