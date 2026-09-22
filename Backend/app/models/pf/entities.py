@@ -763,9 +763,103 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     )
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # --- PF-008 CORE additions (see Documentation/PF008_CORE_IMPLEMENTATION_MAP.md) ---
+    # Linkage to the released PF-005 / PF-006 / PF-007 structures (D9). Nullable with
+    # ON DELETE SET NULL, mirroring ELU-BFS-PF-008 §8 (branch/department -> users).
+    branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.branch.branch_id", ondelete="SET NULL", name="fk_users_branch"),
+        nullable=True,
+    )
+    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "core.department.department_id",
+            ondelete="SET NULL",
+            name="fk_users_department",
+        ),
+        nullable=True,
+    )
+    business_unit_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "core.business_unit.business_unit_id",
+            ondelete="SET NULL",
+            name="fk_users_business_unit",
+        ),
+        nullable=True,
+    )
+    # Authentication / lifecycle (BR-PF-054, BR-PF-055, BR-PF-057).
+    failed_login_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0")
+    )
+    locked_until: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    invited_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    activated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deactivated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    password_changed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    reset_token_hash: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    reset_token_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    sessions_invalid_before: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     tenant: Mapped["Tenant"] = relationship(back_populates="users")
     organization: Mapped["Organization"] = relationship()
     role: Mapped["Role"] = relationship()
+
+
+class UserInvite(Base, TimestampMixin, SoftDeleteMixin):
+    """Pending PF-008 user invitation (ELU-BFS-PF-008 §5/§7; D2).
+
+    One ACTIVE invitation per user (partial unique index ``uk_user_invite_active_user``).
+    The token itself is never stored — only its SHA-256 hash (D5). Invitations expire after
+    72 hours (BR-PF-054); expiry is evaluated lazily by the service (D6), no scheduler.
+    """
+
+    __tablename__ = "user_invite"
+    __table_args__ = {"schema": "core"}
+
+    invite_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "core.tenant.tenant_id", ondelete="CASCADE", name="fk_user_invite_tenant"
+        ),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.users.user_id", ondelete="CASCADE", name="fk_user_invite_user"),
+        nullable=False,
+        index=True,
+    )
+    token_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="ACTIVE"
+    )
+    expires_on: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    used_on: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class Subscription(Base, TimestampMixin, SoftDeleteMixin):

@@ -14,6 +14,7 @@ from app.api.v1.pf import editions as pf_editions
 from app.api.v1.pf import organizations as pf_organizations
 from app.api.v1.pf import subscriptions as pf_subscriptions
 from app.api.v1.pf import tenants as pf_tenants
+from app.api.v1.pf import users as pf_users
 from app.api.v1.fin import payment_receipts as fin_payment_receipts
 from app.api.v1.fin import invoices as fin_invoices
 from app.api.v1.prj import handoffs as prj_handoffs
@@ -32,6 +33,7 @@ api_router.include_router(pf_organizations.router)
 api_router.include_router(pf_branches.router)
 api_router.include_router(pf_departments.router)
 api_router.include_router(pf_business_units.router)
+api_router.include_router(pf_users.router)
 api_router.include_router(crm_leads.router)
 api_router.include_router(crm_opportunities.router)
 api_router.include_router(crm_customers.router)
