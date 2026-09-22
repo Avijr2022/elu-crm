@@ -815,19 +815,28 @@ def test_deferred_scope_absent(client: TestClient, tenanta: dict) -> None:
     bu = _new_bu(client, tenanta, name="Scope BU")
 
     with platform_session() as db:
-        # no users.business_unit_id and no crm.opportunity.business_unit_id
-        for schema, table, column in (
-            ("core", "users", "business_unit_id"),
-            ("crm", "opportunity", "business_unit_id"),
-        ):
-            found = db.execute(
+        # PF-008 CORE (authorized 2026-09-21): core.users.business_unit_id now exists. The
+        # crm.opportunity linkage (D6) remains deferred and is still asserted absent.
+        assert (
+            db.execute(
                 text(
                     "SELECT count(*) FROM information_schema.columns "
                     "WHERE table_schema = :s AND table_name = :t AND column_name = :c"
                 ),
-                {"s": schema, "t": table, "c": column},
+                {"s": "core", "t": "users", "c": "business_unit_id"},
             ).scalar()
-            assert found == 0, f"{schema}.{table}.{column} must not exist"
+            == 1, "core.users.business_unit_id (PF-008) must exist"
+        )
+        assert (
+            db.execute(
+                text(
+                    "SELECT count(*) FROM information_schema.columns "
+                    "WHERE table_schema = :s AND table_name = :t AND column_name = :c"
+                ),
+                {"s": "crm", "t": "opportunity", "c": "business_unit_id"},
+            ).scalar()
+            == 0, "crm.opportunity.business_unit_id must not exist (D6)"
+        )
 
         # only the tenant and organization FKs exist on core.business_unit
         fks = db.execute(
@@ -842,14 +851,16 @@ def test_deferred_scope_absent(client: TestClient, tenanta: dict) -> None:
             "fk_business_unit_tenant",
         ]
 
-        # nothing references core.business_unit yet (no opportunity/project/invoice FK)
+        # the only reference to core.business_unit is the PF-008 user linkage; the deferred
+        # opportunity/project/invoice linkage (D6) is still absent
         referencing = db.execute(
             text(
-                "SELECT count(*) FROM pg_constraint "
-                "WHERE contype = 'f' AND confrelid = 'core.business_unit'::regclass"
+                "SELECT conname FROM pg_constraint "
+                "WHERE contype = 'f' AND confrelid = 'core.business_unit'::regclass "
+                "ORDER BY conname"
             )
-        ).scalar()
-        assert referencing == 0
+        ).scalars().all()
+        assert list(referencing) == ["fk_users_business_unit"]
 
     # no reporting / formatting surface
     paths = client.get("/openapi.json").json()["paths"]

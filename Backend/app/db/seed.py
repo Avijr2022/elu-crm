@@ -259,6 +259,77 @@ BUSINESS_UNIT_PERMISSION_MATRIX: dict[str, tuple[str, ...]] = {
 }
 
 
+# PF-008 user & identity capability matrix - BFS-PF-008 §12 (approved actor matrix).
+# Tenant Admin and Platform Admin hold create/read/update/delete/reset_password; §10 adds
+# ``user.export``. The §12 self-scope of SALES_EXECUTIVE (read/update *self*) is realised by
+# the ``/users/me`` endpoints rather than by a directory grant, so no grain is granted here
+# (no permission values are invented). Runtime permission-grain enforcement stays PF-009.
+USER_PERMISSION_MATRIX: dict[str, tuple[str, ...]] = {
+    "TENANT_ADMIN": (
+        "user.create",
+        "user.read",
+        "user.update",
+        "user.delete",
+        "user.export",
+        "user.reset_password",
+    ),
+    "PLATFORM_ADMIN": (
+        "user.create",
+        "user.read",
+        "user.update",
+        "user.delete",
+        "user.export",
+        "user.reset_password",
+    ),
+    "SALES_EXECUTIVE": (),
+    "SALES_MANAGER": (),
+    "PROJECT_MANAGER": (),
+    "FINANCE_USER": (),
+}
+
+
+def _sync_user_permission_matrix(db: Session, tenant_id) -> None:
+    """Align seeded ``user.*`` grants with the approved matrix (idempotent).
+
+    PF-008 equivalent of ``_sync_business_unit_permission_matrix`` (HD-01 pattern):
+    grants the approved codes and revokes any ``user.*`` grain that is not approved for
+    the role. Runtime permission-grain enforcement remains deferred to PF-009.
+    """
+    user_perm_ids = {
+        code: permission_id
+        for code, permission_id in db.execute(
+            select(Permission.permission_code, Permission.permission_id).where(
+                Permission.permission_code.like("user.%")
+            )
+        ).all()
+    }
+    if not user_perm_ids:
+        return
+    for role_code, allowed_codes in USER_PERMISSION_MATRIX.items():
+        role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code == role_code,
+            )
+        ).first()
+        if role is None:
+            continue
+        allowed_ids = {
+            user_perm_ids[code] for code in allowed_codes if code in user_perm_ids
+        }
+        for permission_id in allowed_ids:
+            _link_role_permission(db, role.role_id, permission_id)
+        stale_ids = [pid for pid in user_perm_ids.values() if pid not in allowed_ids]
+        if stale_ids:
+            db.execute(
+                delete(RolePermission).where(
+                    RolePermission.role_id == role.role_id,
+                    RolePermission.permission_id.in_(stale_ids),
+                )
+            )
+    db.flush()
+
+
 def _sync_business_unit_permission_matrix(db: Session, tenant_id) -> None:
     """Align seeded ``business_unit.*`` grants with the approved matrix (idempotent).
 
@@ -323,6 +394,9 @@ PERMISSIONS = [
     ("user.create", "Create user", "PF"),
     ("user.read", "View user", "PF"),
     ("user.update", "Update user", "PF"),
+    ("user.delete", "Deactivate user", "PF"),
+    ("user.export", "Export users", "PF"),
+    ("user.reset_password", "Admin password reset", "PF"),
     ("role.assign", "Assign roles", "PF"),
     ("edition.create", "Create edition", "PF"),
     ("edition.read", "View edition", "PF"),
@@ -715,6 +789,9 @@ def seed_platform(db: Session) -> None:
     # PF-007 business-unit grants per BFS-PF-007 §12 (groundwork; no runtime grain enforcement).
     _sync_business_unit_permission_matrix(db, tenant.tenant_id)
 
+    # PF-008 user/identity grants per BFS-PF-008 §12 (groundwork; no runtime grain enforcement).
+    _sync_user_permission_matrix(db, tenant.tenant_id)
+
     # Seed admin acts as Platform Admin for PF-001 ops (Euphoria demo)
     admin = User(
         tenant_id=tenant.tenant_id,
@@ -768,6 +845,9 @@ def _ensure_platform_admin(
 
     # PF-007 business-unit grants per BFS-PF-007 §12 (groundwork; no runtime grain enforcement).
     _sync_business_unit_permission_matrix(db, tenant.tenant_id)
+
+    # PF-008 user/identity grants per BFS-PF-008 §12 (groundwork; no runtime grain enforcement).
+    _sync_user_permission_matrix(db, tenant.tenant_id)
 
     platform_role = db.scalars(
         select(Role).where(
@@ -899,6 +979,8 @@ def provision_tenant_roles(db: Session, tenant_id) -> None:
     _sync_department_permission_matrix(db, tenant_id)
     # PF-007 business-unit grants per BFS-PF-007 §12 (groundwork; no runtime grain enforcement).
     _sync_business_unit_permission_matrix(db, tenant_id)
+    # PF-008 user/identity grants per BFS-PF-008 §12 (groundwork; no runtime grain enforcement).
+    _sync_user_permission_matrix(db, tenant_id)
 
 
 def _upgrade_sal_permissions(db: Session, tenant: Tenant) -> None:

@@ -1069,14 +1069,18 @@ def test_deferred_scope_absent(client: TestClient, tenanta: dict) -> None:
             )
         ).first()
         assert fk is None
+        # PF-008 CORE (authorized 2026-09-21): users.department_id now exists — the previous
+        # absence guard is superseded by the delivered PF-008 schema and is therefore asserted
+        # in the positive direction only. BR-PF-043 department-head validation and the
+        # department -> users FK remain PF-008-deferred (department_head_user_id has no FK).
         assert (
             db.execute(
                 text(
                     "SELECT 1 FROM information_schema.columns WHERE table_schema='core' "
-                    "AND table_name='users' AND column_name LIKE '%department%'"
+                    "AND table_name='users' AND column_name='department_id'"
                 )
             ).first()
-            is None
+            is not None
         )
         # no persisted hierarchy level/path (C-N2)
         for column in ("level", "path"):

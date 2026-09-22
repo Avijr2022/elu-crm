@@ -133,6 +133,68 @@ Edition gate: **`BUSINESS_UNIT` required** (BR-PF-046 / D11 — Professional + E
 
 **PF-001 implementation (2026-08-06):** Live OpenAPI at `/openapi.json`; exported snapshot `Backend/openapi/openapi.json` and edition path extract `Backend/openapi/pf001-editions-paths.json`. Edition endpoints implemented per BFS-PF §10.
 
+### 4.5 PF-008 Users & Identity — CORE (implemented 2026-09-21, NOT released)
+
+Authorized by `PF-008 CORE IMPLEMENTATION - AUTHORIZED` (human instruction, 2026-09-21) from baseline `969d022cd006c4ddc024f8e0a5d08af40a868841`; implementation decisions and the full evidence trail are recorded in
+`Documentation/PF008_CORE_IMPLEMENTATION_MAP.md` and `Documentation/PF008_CORE_EVIDENCE_REPORT.md`.
+
+| Method | Path | Purpose | Permission |
+|--------|------|---------|------------|
+| POST | `/api/v1/users` | Invite (INVITED + 72 h token) or create (ACTIVE + password) | `user.create` |
+| GET | `/api/v1/users` | List (tenant-scoped) | `user.read` |
+| GET | `/api/v1/users/search` | Search | `user.read` |
+| GET | `/api/v1/users/export` | Export (JSON) | `user.export` |
+| GET | `/api/v1/users/me` | Current user profile | authenticated |
+| PUT | `/api/v1/users/me` | Update own profile | authenticated |
+| GET | `/api/v1/users/{id}` | Detail | `user.read` |
+| PUT | `/api/v1/users/{id}` | Full update (optimistic locking) | `user.update` |
+| PATCH | `/api/v1/users/{id}` | Partial update / status transition | `user.update` |
+| DELETE | `/api/v1/users/{id}` | **Deactivate** (§10 defines DELETE as deactivate) | `user.delete` |
+| POST | `/api/v1/users/{id}/reinvite` | New 72 h invitation token | `user.create` |
+| POST | `/api/v1/users/{id}/reset-password` | Admin reset challenge | `user.reset_password` |
+| POST | `/api/v1/auth/register` | Activate an invited user (public, token) | none |
+| POST | `/api/v1/auth/logout` | Revoke outstanding refresh tokens | authenticated |
+| POST | `/api/v1/auth/forgot-password` | Request reset (public, non-enumerable) | none |
+| POST | `/api/v1/auth/reset-password` | Consume reset challenge (public) | none |
+| POST | `/api/v1/auth/change-password` | Self-service change | authenticated |
+
+Authorization follows the PF-004…PF-007 precedent of **role gates** (runtime permission-grain
+enforcement stays PF-009): read/search/export and write = `TENANT_ADMIN` + `PLATFORM_ADMIN`
+(`ELU-BFS-PF-008` §12); `SALES_EXECUTIVE` self-scope is served by `/users/me`. Implemented in
+`app/api/v1/pf/users.py` (+ additions to `app/api/v1/auth.py`), with all business rules in
+`UserService` (`app/services/pf/user_service.py`) and the authentication extensions in
+`AuthService` (`app/services/pf/auth_service.py`).
+
+**Rules implemented:** `BR-PF-051` email unique per tenant (existing `uk_users_tenant_email`);
+`BR-PF-052` seat enforcement on invite/create using `core.subscription.seat_count`
+(`Tenant.current_subscription_id`, ACTIVE/TRIAL) plus the edition `MAX_USERS` bound, counting
+`ACTIVE`+`INVITED`+`LOCKED` as seat holders (D8); `BR-PF-054` 72-hour invitation expiry (lazy,
+D6); `BR-PF-055` five failures ⇒ `LOCKED` for 30 minutes (lazy release, D7); `BR-PF-057`
+deactivation/password change revoke refresh tokens via `core.users.sessions_invalid_before`
+(D4); `BR-PF-059` tenant from the JWT only; `BR-PF-060` last ACTIVE Tenant Admin guard; user
+linkage to PF-005 branch / PF-006 department / PF-007 business unit with same-tenant and
+ACTIVE-target validation (D13 scope note); lifecycle
+`INVITED→{ACTIVE,EXPIRED,CANCELLED}`, `ACTIVE→{INACTIVE,LOCKED}`, `INACTIVE→ACTIVE`,
+`LOCKED→ACTIVE`, `EXPIRED→INVITED`.
+
+**Not implemented (deferred):** MFA enrolment/verification (`BR-PF-058`), SAML/OIDC SSO, SCIM,
+customer-portal users, `NTF-PF-008-01..08`, `RPT-PF-008-01..04` incl. dashboard/analytics,
+`JOB-PF-008-01` scheduler, `user.impersonate`, `core.user_credentials` / `core.user_session` /
+`core.user_mfa` tables (D1/D4), the configurable password policy of `BR-PF-053` (**no
+`tenant_security` table exists** — `005_core_tenant_security.sql` is empty; only the 8-character
+minimum mirroring the existing login contract is enforced, D10), `BR-PF-038` branch-head and
+`BR-PF-043` department-head validations (still released-documented PF-008 deferrals, D13) and the
+Flutter screens of §11.
+
+**Scope-guard reconciliation (requires human confirmation):** the delivered columns make the
+released deferral guards `tests/test_pf005_branches.py::test_deferred_scope_not_implemented`,
+`tests/test_pf006_departments.py::test_deferred_scope_absent` and
+`tests/test_pf007_business_units.py::test_deferred_scope_absent` fail by design. They were
+flipped to the **positive** direction with supersede notes — the same treatment PF-006 Batch 5
+applied to the PF-005 guard — while every still-valid deferral assertion (BR-PF-038 / BR-PF-043
+absence of FK and validation, `crm.opportunity.business_unit_id` absence, no reporting surface)
+is retained.
+
 ---
 
 ## 5. Sample DTOs

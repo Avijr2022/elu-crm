@@ -56,3 +56,56 @@ class TenantSummary(BaseModel):
     edition_code: str
     currency_code: str
     time_zone: str
+
+
+# --- PF-008 CORE authentication contracts (ELU-BFS-PF-008 §10) -------------------
+# Passwords: minimum length 8 mirrors the existing login contract — the configurable
+# tenant_security policy of BR-PF-053 has no source and is not implemented (D10).
+# MFA endpoints (BR-PF-058) are out of CORE scope and are not declared here.
+
+
+class RegisterRequest(BaseModel):
+    """POST /auth/register — activate an INVITED user with the 72-hour invitation token."""
+
+    token: str = Field(min_length=16)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class ForgotPasswordRequest(BaseModel):
+    """POST /auth/forgot-password — public, tenant-scoped, non-enumerable."""
+
+    tenant_code: str = Field(min_length=1)
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """POST /auth/reset-password — public, consumes a single-use reset token."""
+
+    token: str = Field(min_length=16)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class ChangePasswordRequest(BaseModel):
+    """POST /auth/change-password — authenticated self-service change."""
+
+    current_password: str = Field(min_length=8)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+class PasswordActionResponse(BaseModel):
+    """Result of an issued password challenge.
+
+    ``reset_token`` is populated **only** for the permission-gated
+    ``POST /users/{id}/reset-password`` path (`user.reset_password`), because the
+    ``NTF-PF-008-03`` e-mail delivery is deferred (D11). The public
+    ``POST /auth/forgot-password`` path never returns a token.
+    """
+
+    message: str
+    user_id: UUID
+    reset_token: str | None = None
+    expires_in_minutes: int | None = None

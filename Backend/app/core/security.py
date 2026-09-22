@@ -2,6 +2,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
 
+import hashlib
+import secrets
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
@@ -76,3 +79,17 @@ def decode_token(token: str) -> dict[str, Any]:
         )
     except JWTError as exc:
         raise ValueError("Invalid or expired token") from exc
+
+
+def generate_opaque_token(nbytes: int = 32) -> str:
+    """PF-008: opaque URL-safe secret for invitation / password-reset challenges (D5).
+
+    A dedicated challenge token is used instead of a new JWT ``type`` so no existing
+    decode path can accept it as an access/refresh credential.
+    """
+    return secrets.token_urlsafe(nbytes)
+
+
+def hash_token(token: str) -> str:
+    """PF-008: SHA-256 digest of an opaque challenge token (the token is never stored)."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()

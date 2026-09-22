@@ -867,7 +867,10 @@ def test_deferred_scope_not_implemented(
             )
         ).first()
         assert nullable is not None and nullable[0] == "YES"
-        # PF-008: users.branch_id not added
+        # PF-008 CORE (authorized 2026-09-21): users.branch_id now exists — the previous
+        # "users.branch_id not added" guard is superseded by the delivered PF-008 schema and is
+        # therefore asserted in the positive direction only. BR-PF-038 branch-head
+        # assignment/validation remains PF-008-deferred (no FK, no validation).
         assert (
             db.execute(
                 text(
@@ -875,7 +878,7 @@ def test_deferred_scope_not_implemented(
                     "AND table_name='users' AND column_name='branch_id'"
                 )
             ).first()
-            is None
+            is not None
         )
         # PF-006 (2026-09-15): core.department now exists — the previous
         # "no department table" guard is superseded by the delivered PF-006 schema

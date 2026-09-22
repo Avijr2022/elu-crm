@@ -8,8 +8,13 @@ from app.core.exceptions import AppError, http_error_from_app
 from app.db.session import get_db
 from app.repositories.pf.user_repository import TenantRepository
 from app.schemas.pf.auth import (
+    ChangePasswordRequest,
+    ForgotPasswordRequest,
     LoginRequest,
+    MessageResponse,
+    RegisterRequest,
     RefreshRequest,
+    ResetPasswordRequest,
     TenantSummary,
     TokenResponse,
     UserMeResponse,
@@ -37,6 +42,73 @@ def refresh(
 ) -> TokenResponse:
     try:
         return AuthService(db).refresh(payload.refresh_token)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+# --- PF-008 CORE authentication endpoints (ELU-BFS-PF-008 §10) -------------------
+# POST /auth/mfa/enroll and POST /auth/mfa/verify are deliberately NOT registered
+# (MFA out of CORE scope, BR-PF-058 deferred).
+
+
+@router.post("/register", response_model=TokenResponse)
+def register(
+    payload: RegisterRequest, db: Annotated[Session, Depends(get_db)]
+) -> TokenResponse:
+    """Activate an INVITED user with the 72-hour invitation token (AC-PF-008-01)."""
+    try:
+        return AuthService(db).register(payload.token, payload.password)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post("/logout", response_model=MessageResponse)
+def logout(
+    current: Annotated[CurrentUser, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> MessageResponse:
+    try:
+        return AuthService(db).logout(current.user_id, current.tenant_id)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post("/forgot-password", response_model=MessageResponse)
+def forgot_password(
+    payload: ForgotPasswordRequest, db: Annotated[Session, Depends(get_db)]
+) -> MessageResponse:
+    """Public, tenant-scoped, non-enumerable (D11)."""
+    try:
+        return AuthService(db).forgot_password(
+            payload.tenant_code, str(payload.email)
+        )
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+def reset_password(
+    payload: ResetPasswordRequest, db: Annotated[Session, Depends(get_db)]
+) -> MessageResponse:
+    try:
+        return AuthService(db).reset_password(payload.token, payload.password)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post("/change-password", response_model=MessageResponse)
+def change_password(
+    payload: ChangePasswordRequest,
+    current: Annotated[CurrentUser, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> MessageResponse:
+    try:
+        return AuthService(db).change_password(
+            current.user_id,
+            current.tenant_id,
+            payload.current_password,
+            payload.new_password,
+        )
     except AppError as exc:
         raise http_error_from_app(exc) from exc
 
