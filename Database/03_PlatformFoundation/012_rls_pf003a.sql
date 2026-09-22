@@ -57,6 +57,7 @@ BEGIN
       ('core', 'business_unit', false),
       ('core', 'users', false),
       ('core', 'user_invite', false),
+      ('core', 'user_role', false),
       ('core', 'subscription', false),
       ('core', 'subscription_history', false),
       ('core', 'subscription_usage', false),

@@ -25,6 +25,7 @@ from app.models.pf.entities import (
     TenantStatusHistory,
     User,
     UserInvite,
+    UserRole,
 )
 
 __all__ = [
@@ -53,5 +54,6 @@ __all__ = [
     "TenantSettings",
     "TenantStatusHistory",
     "User",
+    "UserRole",
     "UserInvite",
 ]

@@ -731,6 +731,48 @@ class RolePermission(Base):
     )
 
 
+class UserRole(Base, TimestampMixin):
+    """PF-009 M2M user<->role assignment (``core.user_role``).
+
+    Transitional foundation (PF-009 Batch 1): ``core.users.role_id`` remains the
+    authoritative single role for released behaviour and is NOT removed here, so
+    this table is populated from it by the idempotent backfill in
+    ``app.db.migrate_pf009`` and kept consistent going forward. Multi-role JWT/
+    auth resolution is a later authorised batch.
+    """
+
+    __tablename__ = "user_role"
+    __table_args__ = (
+        UniqueConstraint("user_id", "role_id", name="uk_user_role"),
+        {"schema": "core"},
+    )
+
+    user_role_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.tenant.tenant_id"),
+        nullable=False,
+        index=True,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.users.user_id"),
+        nullable=False,
+        index=True,
+    )
+    role_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("core.role.role_id"),
+        nullable=False,
+        index=True,
+    )
+    is_primary: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
+
+
 class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
     __table_args__ = (

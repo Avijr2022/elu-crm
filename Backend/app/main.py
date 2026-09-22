@@ -53,6 +53,7 @@ async def lifespan(_: FastAPI):
         from app.db.migrate_pf006 import apply_pf006_ddl
         from app.db.migrate_pf007 import apply_pf007_ddl
         from app.db.migrate_pf008 import apply_pf008_ddl
+        from app.db.migrate_pf009 import apply_pf009_ddl, backfill_user_role
         from app.db.rls_context import bind_rls_context, clear_rls_context, set_app_role_enabled
 
         # Bootstrap DDL + seed as owner/superuser; request sessions use elu_app.
@@ -67,6 +68,7 @@ async def lifespan(_: FastAPI):
         apply_pf006_ddl(db)
         apply_pf007_ddl(db)
         apply_pf008_ddl(db)
+        apply_pf009_ddl(db)
         from app.db.migrate_crm import apply_crm_ddl
 
         apply_crm_ddl(db)
@@ -80,6 +82,8 @@ async def lifespan(_: FastAPI):
 
         apply_prj_ddl(db)
         seed_platform(db)
+        # PF-009 Batch 1: mirror the transitional single role into core.user_role.
+        backfill_user_role(db)
         clear_rls_context(db)
     finally:
         db.close()
