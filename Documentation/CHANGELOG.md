@@ -6,6 +6,7 @@ All notable E-LinkUp implementation milestones.
 - Governance reconciliation: PF-008 Users & Identity recorded as RELEASED in **ELU-MSL-001** and **ELU-MSL-002** (implementation commit 771f846, PR #28, release baseline 20320125c4f37094b41e21f5800934699c881a66, annotated tag `Phase-2-PF008`).
 - PF progress arithmetic corrected to 8 / 11 (73%), with 3 remaining.
 - Added `Documentation/ELU-REL-PF008-Phase-2-PF008-Release-Notes.md`.
+- PF-009 Batch 2 authorized (human decision `PF-009 BATCH 2 AUTHORIZED: YES`): runtime permission-grain enforcement in `app.core.rbac.has_permission`, removal of the PLATFORM_ADMIN universal bypass so the seeded permission matrix governs, reconciliation of the PF-005/PF-006/PF-007 permission-gate bypasses, and tests. **Authorization recorded only** — no implementation, no release approval, no tag.
 
 ### 2026-09-21
 - Governance: split PF-007 Business Unit and PF-008 Users & Identity in MSL-001.
