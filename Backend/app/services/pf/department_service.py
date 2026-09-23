@@ -5,11 +5,10 @@ lifecycle, runtime-derived hierarchy (root depth 1 / maximum depth 5), circular-
 protection, the same-organization parent rule, soft delete with child guard,
 tenant-scoped search/pagination, JSON export and the BR-PF-045 advisory.
 
-Authorisation follows the PF-004/PF-005 convention: explicit **role gates** (see
-``require_department_*``) rather than a permission-grain check, because
-``app.core.rbac.has_permission`` grants PLATFORM_ADMIN a universal bypass, which would
-contradict the approved PF-006 matrix. Runtime permission-grain enforcement remains
-deferred to PF-009, and the ``department.*`` permission seeding belongs to a later batch.
+Authorisation is enforced at **permission grain** (PF-009 Batch 2): the seeded
+``DEPARTMENT_PERMISSION_MATRIX`` in ``app/db/seed.py`` is authoritative for every role, so
+the approved PF-006 §12 matrix is applied through ``app.core.rbac.has_permission``
+(Platform Admin holds no ``department.*`` grain).
 
 Approved implementation decisions applied here:
   * C-N1  — no ``department_type`` value validation (the specification defines no list).
@@ -50,12 +49,14 @@ from uuid import UUID, uuid4
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.deps import CurrentUser
 from app.core.exceptions import (
     ConflictError,
     ForbiddenError,
     NotFoundError,
     ValidationAppError,
 )
+from app.core.rbac import has_permission
 from app.models.pf import AuditEvent, Branch, Department, Organization
 from app.schemas.pf.department import (
     DepartmentCreate,
@@ -71,31 +72,29 @@ from app.services.pf.audit_service import write_audit_event
 
 _REQ = "PF-006"
 
-# ---------------------------------------------------------------- role gates
-# BFS-PF-006 §12 (approved matrix). Runtime permission-grain enforcement stays PF-009;
-# an explicit role gate is used (PF-004 HD-02 / PF-005 convention) because
-# ``app.core.rbac.has_permission`` grants PLATFORM_ADMIN a universal bypass.
-_DEPARTMENT_READ_ROLES = frozenset({"TENANT_ADMIN", "SALES_MANAGER", "PROJECT_MANAGER"})
-_DEPARTMENT_WRITE_ROLES = frozenset({"TENANT_ADMIN"})
-# C-N4: implementation decision — the authoritative §12 matrix has no export column.
-_DEPARTMENT_EXPORT_ROLES = frozenset({"TENANT_ADMIN"})
+# ------------------------------------------------------- permission-grain gates
+# BFS-PF-006 §12 (approved matrix, mirrored in app/db/seed.py
+# DEPARTMENT_PERMISSION_MATRIX). PF-009 Batch 2: the seeded matrix is authoritative for
+# every role, so the gates below check the permission grain instead of the role.
+_DEPARTMENT_WRITE_CODES = ("department.create", "department.update", "department.delete")
+_DEPARTMENT_EXPORT_CODE = "department.export"
 
 
-def require_department_read(role_code: str) -> None:
-    """Department read matrix (BFS-PF-006 §12)."""
-    if role_code not in _DEPARTMENT_READ_ROLES:
+def require_department_read(current: CurrentUser) -> None:
+    """Department read (BFS-PF-006 §12) at permission grain."""
+    if not has_permission(current, "department.read"):
         raise ForbiddenError("Department read not permitted", req_id=_REQ)
 
 
-def require_department_write(role_code: str) -> None:
-    """Department write matrix (BFS-PF-006 §12): Tenant Admin only."""
-    if role_code not in _DEPARTMENT_WRITE_ROLES:
+def require_department_write(current: CurrentUser) -> None:
+    """Department create/update/delete (BFS-PF-006 §12): Tenant Admin only."""
+    if not any(has_permission(current, code) for code in _DEPARTMENT_WRITE_CODES):
         raise ForbiddenError("Department write not permitted", req_id=_REQ)
 
 
-def require_department_export(role_code: str) -> None:
-    """Department export matrix (C-N4): Tenant Admin only."""
-    if role_code not in _DEPARTMENT_EXPORT_ROLES:
+def require_department_export(current: CurrentUser) -> None:
+    """Department export (C-N4): Tenant Admin only."""
+    if not has_permission(current, _DEPARTMENT_EXPORT_CODE):
         raise ForbiddenError("Department export not permitted", req_id=_REQ)
 
 

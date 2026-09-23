@@ -4,11 +4,11 @@ Implements the backend functional layer for Branch Management: CRUD, lifecycle,
 hierarchy, address upsert, search, JSON export, edition gate (BR-PF-034) and the
 per-edition branch limit (BR-PF-039).
 
-Authorisation is intentionally a *role gate* on the lines of PF-004
-(``organization_service.require_org_*``). Runtime permission-grain enforcement for
-the PF surface remains deferred to PF-009 (HD-01); ``app.core.rbac.has_permission``
-grants PLATFORM_ADMIN a universal bypass, which would contradict the read-only
-Platform Admin rule, so an explicit role check is used instead.
+Authorisation is enforced at **permission grain** (PF-009 Batch 2): the seeded
+``BRANCH_PERMISSION_MATRIX`` in ``app/db/seed.py`` is authoritative for every role, so the
+BFS-PF-005 §12 matrix (read: Tenant Admin / Sales Manager / Project Manager /
+Finance User / Platform Admin; write + export: Tenant Admin only) is applied through
+``app.core.rbac.has_permission``.
 
 EXPLICITLY DEFERRED (must not be implemented here):
   * branch-head assignment/validation (BR-PF-038 / AC-PF-005-04) -> PF-008
@@ -29,12 +29,14 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.edition_gating import BRANCH, require_feature
+from app.core.deps import CurrentUser
 from app.core.exceptions import (
     ConflictError,
     ForbiddenError,
     NotFoundError,
     ValidationAppError,
 )
+from app.core.rbac import has_permission
 from app.models.pf import AuditEvent, Branch, BranchAddress, Edition, Organization, Tenant
 from app.schemas.pf.branch import (
     BranchAddressIn,
@@ -53,30 +55,29 @@ from app.services.pf.audit_service import write_audit_event
 
 _REQ = "PF-005"
 
-# ---------------------------------------------------------------- role gates
-# BFS-PF-005 §12 (approved matrix, mirrored in app/db/seed.py BRANCH_PERMISSION_MATRIX).
-_BRANCH_READ_ROLES = frozenset(
-    {"PLATFORM_ADMIN", "TENANT_ADMIN", "SALES_MANAGER", "PROJECT_MANAGER", "FINANCE_USER"}
-)
-_BRANCH_WRITE_ROLES = frozenset({"TENANT_ADMIN"})
-_BRANCH_EXPORT_ROLES = frozenset({"TENANT_ADMIN"})
+# ------------------------------------------------------- permission-grain gates
+#  BFS-PF-005 §12 (approved matrix, mirrored in app/db/seed.py
+# BRANCH_PERMISSION_MATRIX). PF-009 Batch 2: the seeded matrix is authoritative for
+# every role, so the gates below check the permission grain instead of the role.
+_BRANCH_WRITE_CODES = ("branch.create", "branch.update", "branch.delete")
+_BRANCH_EXPORT_CODE = "branch.export"
 
 
-def require_branch_read(role_code: str) -> None:
-    """Branch read matrix (BFS-PF-005 §12)."""
-    if role_code not in _BRANCH_READ_ROLES:
+def require_branch_read(current: CurrentUser) -> None:
+    """Branch read (BFS-PF-005 §12) at permission grain."""
+    if not has_permission(current, "branch.read"):
         raise ForbiddenError("Branch read not permitted", req_id=_REQ)
 
 
-def require_branch_write(role_code: str) -> None:
-    """Branch create/update/delete matrix (BFS-PF-005 §12): Tenant Admin only."""
-    if role_code not in _BRANCH_WRITE_ROLES:
+def require_branch_write(current: CurrentUser) -> None:
+    """Branch create/update/delete (BFS-PF-005 §12): Tenant Admin only."""
+    if not any(has_permission(current, code) for code in _BRANCH_WRITE_CODES):
         raise ForbiddenError("Branch write not permitted", req_id=_REQ)
 
 
-def require_branch_export(role_code: str) -> None:
-    """Branch export matrix (BFS-PF-005 §12 + seeded ``branch.export`` grain)."""
-    if role_code not in _BRANCH_EXPORT_ROLES:
+def require_branch_export(current: CurrentUser) -> None:
+    """Branch export (BFS-PF-005 §12): Tenant Admin only."""
+    if not has_permission(current, _BRANCH_EXPORT_CODE):
         raise ForbiddenError("Branch export not permitted", req_id=_REQ)
 
 

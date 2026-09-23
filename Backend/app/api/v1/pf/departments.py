@@ -60,7 +60,7 @@ def list_departments(
         None, description="name|code|status|type|created_on; prefix - for desc"
     ),
 ) -> DepartmentListResponse:
-    require_department_read(current.role_code)
+    require_department_read(current)
     try:
         return DepartmentService(db).list_departments(
             current.tenant_id,
@@ -83,7 +83,7 @@ def search_departments(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> DepartmentListResponse:
-    require_department_read(current.role_code)
+    require_department_read(current)
     try:
         return DepartmentService(db).list_departments(
             current.tenant_id, page=page, page_size=page_size, search=q
@@ -97,7 +97,7 @@ def export_departments(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> list[dict]:
-    require_department_export(current.role_code)
+    require_department_export(current)
     try:
         return DepartmentService(db).export_rows(current.tenant_id)
     except AppError as exc:
@@ -113,7 +113,7 @@ def get_department_hierarchy(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DepartmentHierarchyResponse:
-    require_department_read(current.role_code)
+    require_department_read(current)
     try:
         return DepartmentService(db).hierarchy(current.tenant_id)
     except AppError as exc:
@@ -131,8 +131,8 @@ def create_department(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DepartmentResponse:
-    require_department_write(current.role_code)
     try:
+        require_department_write(current)
         return DepartmentService(db).create(current.tenant_id, payload, current.user_id)
     except AppError as exc:
         raise http_error_from_app(exc) from exc
@@ -149,7 +149,7 @@ def get_department_history(
     db: Annotated[Session, Depends(get_db)],
     limit: int = Query(50, ge=1, le=200),
 ) -> DepartmentHistoryResponse:
-    require_department_read(current.role_code)
+    require_department_read(current)
     try:
         return DepartmentService(db).history(
             current.tenant_id, department_id, limit=limit
@@ -169,7 +169,7 @@ def move_department(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DepartmentResponse:
-    require_department_write(current.role_code)
+    require_department_write(current)
     try:
         return DepartmentService(db).move(
             current.tenant_id,
@@ -190,7 +190,7 @@ def get_department(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DepartmentResponse:
-    require_department_read(current.role_code)
+    require_department_read(current)
     try:
         return DepartmentService(db).get(current.tenant_id, department_id)
     except AppError as exc:
@@ -206,7 +206,7 @@ def replace_department(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DepartmentResponse:
-    require_department_write(current.role_code)
+    require_department_write(current)
     try:
         return DepartmentService(db).update(
             current.tenant_id, department_id, payload, current.user_id, replace=True
@@ -224,7 +224,7 @@ def update_department(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DepartmentResponse:
-    require_department_write(current.role_code)
+    require_department_write(current)
     try:
         return DepartmentService(db).update(
             current.tenant_id, department_id, payload, current.user_id, replace=False
@@ -243,7 +243,7 @@ def delete_department(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
-    require_department_write(current.role_code)
+    require_department_write(current)
     try:
         DepartmentService(db).soft_delete(
             current.tenant_id, department_id, current.user_id

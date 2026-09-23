@@ -49,7 +49,7 @@ def list_branches(
         None, description="name|code|status|type|created_on; prefix - for desc"
     ),
 ) -> BranchListResponse:
-    require_branch_read(current.role_code)
+    require_branch_read(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -75,7 +75,7 @@ def search_branches(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> BranchListResponse:
-    require_branch_read(current.role_code)
+    require_branch_read(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -91,7 +91,7 @@ def export_branches(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> list[dict]:
-    require_branch_export(current.role_code)
+    require_branch_export(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -109,7 +109,7 @@ def get_branch_hierarchy(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> BranchHierarchyResponse:
-    require_branch_read(current.role_code)
+    require_branch_read(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -129,8 +129,8 @@ def create_branch(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> BranchResponse:
-    require_branch_write(current.role_code)
     try:
+        require_branch_write(current)
         return BranchService(db).create(current.tenant_id, payload, current.user_id)
     except AppError as exc:
         raise http_error_from_app(exc) from exc
@@ -142,7 +142,7 @@ def get_branch(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> BranchResponse:
-    require_branch_read(current.role_code)
+    require_branch_read(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -158,7 +158,7 @@ def replace_branch(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> BranchResponse:
-    require_branch_write(current.role_code)
+    require_branch_write(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -176,7 +176,7 @@ def update_branch(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> BranchResponse:
-    require_branch_write(current.role_code)
+    require_branch_write(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)
@@ -197,7 +197,7 @@ def delete_branch(
     current: Annotated[CurrentUser, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
-    require_branch_write(current.role_code)
+    require_branch_write(current)
     service = BranchService(db)
     try:
         service.assert_branch_feature(current.tenant_id)

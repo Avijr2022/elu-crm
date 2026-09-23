@@ -4,11 +4,10 @@ Implements the backend functional layer for Business Unit Management: CRUD, the
 three-state lifecycle, tenant-scoped search/pagination, JSON export and the approved
 Batch-1 business rules.
 
-Authorisation follows the PF-004/PF-005/PF-006 convention: explicit **role gates** (see
-``require_business_unit_*``) rather than a permission-grain check, because
-``app.core.rbac.has_permission`` grants PLATFORM_ADMIN a universal bypass, which would
-contradict the approved PF-007 matrix. Runtime permission-grain enforcement remains
-deferred to PF-009.
+Authorisation is enforced at **permission grain** (PF-009 Batch 2): the seeded
+``BUSINESS_UNIT_PERMISSION_MATRIX`` in ``app/db/seed.py`` is authoritative for every role,
+so the approved PF-007 §12 matrix (incl. D2/D3) is applied through
+``app.core.rbac.has_permission`` (Platform Admin holds no ``business_unit.*`` grain).
 
 Approved human scope decisions (D1-D11, recorded 2026-09-16) applied here:
   * D1  — exactly the 8 BFS §10 endpoints; **no history API** is implemented.
@@ -48,12 +47,14 @@ from uuid import UUID, uuid4
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.deps import CurrentUser
 from app.core.exceptions import (
     ConflictError,
     ForbiddenError,
     NotFoundError,
     ValidationAppError,
 )
+from app.core.rbac import has_permission
 from app.models.pf import BusinessUnit, Edition, Organization, Tenant, User
 from app.schemas.pf.business_unit import (
     BusinessUnitCreate,
@@ -65,34 +66,29 @@ from app.services.pf.audit_service import write_audit_event
 
 _REQ = "PF-007"
 
-# ---------------------------------------------------------------- role gates
-# BFS-PF-007 §12 (approved matrix, incl. the approved D2/D3 resolutions).
-# Runtime permission-grain enforcement stays PF-009; an explicit role gate is used
-# (PF-004 HD-02 / PF-005 / PF-006 convention) because ``app.core.rbac.has_permission``
-# grants PLATFORM_ADMIN a universal bypass.
-_BUSINESS_UNIT_READ_ROLES = frozenset(
-    {"TENANT_ADMIN", "SALES_MANAGER", "FINANCE_USER", "PROJECT_MANAGER"}
-)
-_BUSINESS_UNIT_WRITE_ROLES = frozenset({"TENANT_ADMIN"})
-# D2: the authoritative §12 matrix carries no export column — Tenant Admin only.
-_BUSINESS_UNIT_EXPORT_ROLES = frozenset({"TENANT_ADMIN"})
+# ------------------------------------------------------- permission-grain gates
+# BFS-PF-007 §12 (approved matrix incl. D2/D3, mirrored in app/db/seed.py
+# BUSINESS_UNIT_PERMISSION_MATRIX). PF-009 Batch 2: the seeded matrix is authoritative
+# for every role, so the gates below check the permission grain instead of the role.
+_BUSINESS_UNIT_WRITE_CODES = ("business_unit.create", "business_unit.update", "business_unit.delete")
+_BUSINESS_UNIT_EXPORT_CODE = "business_unit.export"
 
 
-def require_business_unit_read(role_code: str) -> None:
-    """Business-unit read matrix (BFS-PF-007 §12 + D3)."""
-    if role_code not in _BUSINESS_UNIT_READ_ROLES:
+def require_business_unit_read(current: CurrentUser) -> None:
+    """Business-unit read (BFS-PF-007 §12 + D3) at permission grain."""
+    if not has_permission(current, "business_unit.read"):
         raise ForbiddenError("Business unit read not permitted", req_id=_REQ)
 
 
-def require_business_unit_write(role_code: str) -> None:
-    """Business-unit write matrix (BFS-PF-007 §12): Tenant Admin only."""
-    if role_code not in _BUSINESS_UNIT_WRITE_ROLES:
+def require_business_unit_write(current: CurrentUser) -> None:
+    """Business-unit create/update/delete (BFS-PF-007 §12): Tenant Admin only."""
+    if not any(has_permission(current, code) for code in _BUSINESS_UNIT_WRITE_CODES):
         raise ForbiddenError("Business unit write not permitted", req_id=_REQ)
 
 
-def require_business_unit_export(role_code: str) -> None:
-    """Business-unit export matrix (D2): Tenant Admin only."""
-    if role_code not in _BUSINESS_UNIT_EXPORT_ROLES:
+def require_business_unit_export(current: CurrentUser) -> None:
+    """Business-unit export (D2): Tenant Admin only."""
+    if not has_permission(current, _BUSINESS_UNIT_EXPORT_CODE):
         raise ForbiddenError("Business unit export not permitted", req_id=_REQ)
 
 

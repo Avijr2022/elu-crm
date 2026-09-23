@@ -7,18 +7,30 @@ multi-role JWT resolution and permission-grain rollout are later batches and are
 deliberately NOT tested here.
 """
 
-from contextlib import contextmanager
+import re
 from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
+from uuid import UUID
 
 import pytest
 from sqlalchemy import func, select, text
 
-from app.core.exceptions import ValidationAppError
+from app.core.deps import CurrentUser
+from app.core.exceptions import ForbiddenError, ValidationAppError
+from app.core.rbac import has_permission
+from app.db import seed as seed_module
 from app.db.migrate_pf003a import rls_enabled
 from app.db.rls_context import bind_rls_context, clear_rls_context
 from app.db.session import SessionLocal
 from app.models.pf import Edition, Permission, Role, Tenant
-from app.services.pf import rbac_service
+from app.repositories.pf.permission_repository import permissions_for_role
+from app.services.pf import (
+    branch_service,
+    business_unit_service,
+    department_service,
+    rbac_service,
+)
 
 PF009_PERMISSION_CODES = (
     "role.create",
@@ -514,3 +526,193 @@ def test_new_system_roles_hold_no_grants():
                 {"t": tenant.tenant_id, "c": role_code},
             ).scalar()
             assert count == 0, f"{role_code} must not be granted any permission"
+
+# ---------------------------------------------------------------------------
+# PF-009 Batch 2 - runtime permission grain (PLATFORM_ADMIN bypass removed)
+# ---------------------------------------------------------------------------
+PLATFORM_ADMIN_SEEDED_GRAIN = frozenset(
+    {
+        "organization.read",
+        "branch.read",
+        "user.create",
+        "user.read",
+        "user.update",
+        "user.delete",
+        "user.export",
+        "user.reset_password",
+    }
+)
+
+USER_GRAINS = (
+    "user.create",
+    "user.read",
+    "user.update",
+    "user.delete",
+    "user.export",
+    "user.reset_password",
+)
+
+DENIED_FOR_PLATFORM = (
+    "organization.create",
+    "organization.update",
+    "organization.delete",
+    "organization.export",
+    "branch.create",
+    "branch.update",
+    "branch.delete",
+    "branch.export",
+    "department.read",
+    "department.create",
+    "business_unit.read",
+    "business_unit.create",
+)
+
+
+def _grain_current(role_code: str, codes) -> CurrentUser:
+    """Minimal ``CurrentUser`` for permission-grain checks (no DB required)."""
+    return CurrentUser(
+        user_id=UUID(int=1),
+        tenant_id=UUID(int=2),
+        email="grain-check@example.test",
+        role_code=role_code,
+        permissions=frozenset(codes),
+        user=None,  # type: ignore[arg-type]
+        platform_context=role_code == "PLATFORM_ADMIN",
+    )
+
+
+def test_platform_admin_permission_decisions_use_the_seeded_grain():
+    current = _grain_current("PLATFORM_ADMIN", PLATFORM_ADMIN_SEEDED_GRAIN)
+    assert has_permission(current, "organization.read")
+    assert has_permission(current, "branch.read")
+    for code in USER_GRAINS:
+        assert has_permission(current, code), code
+    for code in DENIED_FOR_PLATFORM:
+        assert not has_permission(current, code), code
+
+
+def test_platform_admin_bypass_is_removed_for_arbitrary_codes():
+    """A platform admin with no grains is no longer universally allowed."""
+    current = _grain_current("PLATFORM_ADMIN", frozenset())
+    assert has_permission(current, "organization.read") is False
+    assert has_permission(current, "anything.at.all") is False
+
+
+def test_non_platform_role_decisions_are_unchanged():
+    sales = _grain_current("SALES_MANAGER", {"lead.create", "lead.read", "branch.read"})
+    assert has_permission(sales, "lead.create")
+    assert has_permission(sales, "branch.read")
+    assert not has_permission(sales, "lead.delete")
+    assert not has_permission(sales, "organization.update")
+
+    tenant_admin_without_grain = _grain_current("TENANT_ADMIN", frozenset())
+    assert not has_permission(tenant_admin_without_grain, "branch.read")
+
+
+def test_seeded_platform_admin_grains_match_the_approved_matrices():
+    """The seeded DB matrix (not the role name) decides for PLATFORM_ADMIN."""
+    with platform_session() as db:
+        tenant_id = _any_tenant_id(db)
+        role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code == "PLATFORM_ADMIN",
+            )
+        ).first()
+        assert role is not None, "seeded PLATFORM_ADMIN role not found"
+        grains = permissions_for_role(db, role.role_id)
+
+    assert "organization.read" in grains
+    assert "branch.read" in grains
+    for code in USER_GRAINS:
+        assert code in grains, code
+    for code in DENIED_FOR_PLATFORM:
+        assert code not in grains, code
+    assert not [c for c in grains if c.startswith("department.")]
+    assert not [c for c in grains if c.startswith("business_unit.")]
+
+
+def test_pf005_pf006_pf007_service_gates_enforce_permission_grain():
+    """The former role-gate workarounds now check the seeded grain."""
+    platform_no_grain = _grain_current("PLATFORM_ADMIN", frozenset())
+    for gate in (
+        branch_service.require_branch_read,
+        branch_service.require_branch_write,
+        branch_service.require_branch_export,
+        department_service.require_department_read,
+        department_service.require_department_write,
+        department_service.require_department_export,
+        business_unit_service.require_business_unit_read,
+        business_unit_service.require_business_unit_write,
+        business_unit_service.require_business_unit_export,
+    ):
+        with pytest.raises(ForbiddenError):
+            gate(platform_no_grain)
+
+    tenant_admin = _grain_current(
+        "TENANT_ADMIN",
+        {
+            "branch.read",
+            "branch.create",
+            "branch.update",
+            "branch.delete",
+            "branch.export",
+            "department.read",
+            "department.create",
+            "department.update",
+            "department.delete",
+            "department.export",
+            "business_unit.read",
+            "business_unit.create",
+            "business_unit.update",
+            "business_unit.delete",
+            "business_unit.export",
+        },
+    )
+    branch_service.require_branch_read(tenant_admin)
+    branch_service.require_branch_write(tenant_admin)
+    branch_service.require_branch_export(tenant_admin)
+    department_service.require_department_read(tenant_admin)
+    department_service.require_department_write(tenant_admin)
+    department_service.require_department_export(tenant_admin)
+    business_unit_service.require_business_unit_read(tenant_admin)
+    business_unit_service.require_business_unit_write(tenant_admin)
+    business_unit_service.require_business_unit_export(tenant_admin)
+
+    platform_read_only = _grain_current("PLATFORM_ADMIN", {"branch.read"})
+    branch_service.require_branch_read(platform_read_only)
+    with pytest.raises(ForbiddenError):
+        branch_service.require_branch_write(platform_read_only)
+
+
+API_DIR = Path(__file__).resolve().parents[1] / "app" / "api"
+RESTRICTED_PREFIX_MATRICES = {
+    "organization.": seed_module.ORG_PERMISSION_MATRIX,
+    "branch.": seed_module.BRANCH_PERMISSION_MATRIX,
+    "department.": seed_module.DEPARTMENT_PERMISSION_MATRIX,
+    "business_unit.": seed_module.BUSINESS_UNIT_PERMISSION_MATRIX,
+}
+
+
+def _api_permission_codes() -> set:
+    codes = set()
+    for path in sorted(API_DIR.rglob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        codes.update(
+            re.findall(r'require_permission\(\s*\w+\s*,\s*"([^"]+)"', text)
+        )
+    return codes
+
+
+def test_api_permission_call_sites_never_rely_on_the_removed_bypass():
+    """Guard: no API call site loses access for PLATFORM_ADMIN after Batch 2."""
+    codes = _api_permission_codes()
+    assert codes, "no require_permission call sites discovered in app/api"
+    assert "lead.read" in codes, "API scan did not find expected CRM grains"
+
+    blocked = []
+    for code in sorted(codes):
+        for prefix, matrix in RESTRICTED_PREFIX_MATRICES.items():
+            if code.startswith(prefix) and code not in matrix["PLATFORM_ADMIN"]:
+                blocked.append(code)
+    assert not blocked, f"PLATFORM_ADMIN would lose API access to: {blocked}"

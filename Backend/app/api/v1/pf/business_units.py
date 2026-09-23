@@ -59,7 +59,7 @@ def list_business_units(
     ),
 ) -> BusinessUnitListResponse:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_read(current.role_code)
+    require_business_unit_read(current)
     try:
         return BusinessUnitService(db).list_business_units(
             current.tenant_id,
@@ -85,7 +85,7 @@ def search_business_units(
     page_size: int = Query(20, ge=1, le=100),
 ) -> BusinessUnitListResponse:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_read(current.role_code)
+    require_business_unit_read(current)
     try:
         return BusinessUnitService(db).list_business_units(
             current.tenant_id, page=page, page_size=page_size, search=q
@@ -100,7 +100,7 @@ def export_business_units(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[dict]:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_export(current.role_code)
+    require_business_unit_export(current)
     try:
         return BusinessUnitService(db).export_rows(current.tenant_id)
     except AppError as exc:
@@ -119,8 +119,8 @@ def create_business_unit(
     db: Annotated[Session, Depends(get_db)],
 ) -> BusinessUnitResponse:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_write(current.role_code)
     try:
+        require_business_unit_write(current)
         return BusinessUnitService(db).create(
             current.tenant_id, payload, current.user_id
         )
@@ -139,7 +139,7 @@ def get_business_unit(
     db: Annotated[Session, Depends(get_db)],
 ) -> BusinessUnitResponse:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_read(current.role_code)
+    require_business_unit_read(current)
     try:
         return BusinessUnitService(db).get(current.tenant_id, business_unit_id)
     except AppError as exc:
@@ -158,7 +158,7 @@ def replace_business_unit(
     db: Annotated[Session, Depends(get_db)],
 ) -> BusinessUnitResponse:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_write(current.role_code)
+    require_business_unit_write(current)
     try:
         return BusinessUnitService(db).update(
             current.tenant_id, business_unit_id, payload, current.user_id, replace=True
@@ -179,7 +179,7 @@ def update_business_unit(
     db: Annotated[Session, Depends(get_db)],
 ) -> BusinessUnitResponse:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_write(current.role_code)
+    require_business_unit_write(current)
     try:
         return BusinessUnitService(db).update(
             current.tenant_id, business_unit_id, payload, current.user_id, replace=False
@@ -199,7 +199,7 @@ def delete_business_unit(
     db: Annotated[Session, Depends(get_db)],
 ) -> None:
     require_feature(db, current.tenant_id, BUSINESS_UNIT)
-    require_business_unit_write(current.role_code)
+    require_business_unit_write(current)
     try:
         BusinessUnitService(db).soft_delete(
             current.tenant_id, business_unit_id, current.user_id

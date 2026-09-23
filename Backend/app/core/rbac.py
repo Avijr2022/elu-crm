@@ -1,3 +1,9 @@
+"""CRM RBAC helpers.
+
+``has_permission`` is the single permission-grain decision point. PF-009 Batch 2 removed
+the PLATFORM_ADMIN universal bypass, so the seeded matrix is authoritative for all roles.
+"""
+
 from app.core.deps import CurrentUser
 from app.core.exceptions import ForbiddenError
 
@@ -10,8 +16,13 @@ SALES_MANAGER_ROLES = frozenset(
 
 
 def has_permission(current: CurrentUser, code: str) -> bool:
-    if current.role_code == "PLATFORM_ADMIN":
-        return True
+    """Permission-grain decision from the seeded matrix (PF-009 Batch 2).
+
+    The seeded role-permission matrix is authoritative for every role, including
+    PLATFORM_ADMIN: the per-module matrices in ``app/db/seed.py`` carry the approved
+    BFS §12 grains (Platform Admin holds e.g. ``organization.read`` / ``branch.read``
+    only, and no ``department.*`` / ``business_unit.*`` grain).
+    """
     return code in current.permissions
 
 

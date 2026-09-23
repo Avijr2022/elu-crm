@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.edition_gating import BRANCH, BUSINESS_UNIT, has_feature
 from app.core.security import hash_password
 from app.db.migrate_pf001 import apply_pf001_ddl
 from app.db.migrate_pf002 import apply_pf002_ddl
@@ -1121,12 +1122,34 @@ def _ensure_tenant_branding(db: Session, tenant: Tenant) -> None:
         row.logo_url = _SEED_LOGO_JPEG
 
 
+def _sync_pf_module_matrices(db: Session, tenant_id) -> None:
+    """Bring a tenant's role grants in line with the approved PF-004..PF-008 matrices.
+
+    PF-009 Batch 2: the seeded matrix is authoritative and runtime permission-grain
+    enforcement is active, so every tenant must carry the approved grains (the platform
+    tenant already does).
+
+    ``branch.*`` and ``business_unit.*`` are additionally edition-gated, mirroring the
+    runtime feature gates (``app.core.edition_gating``): a tenant whose edition does not
+    carry ``BRANCH`` / ``BUSINESS_UNIT`` must not hold those grains, otherwise the role
+    gate would pass and the edition gate would be the one to deny.
+    """
+    _sync_org_permission_matrix(db, tenant_id)
+    if has_feature(db, tenant_id, BRANCH):
+        _sync_branch_permission_matrix(db, tenant_id)
+    _sync_department_permission_matrix(db, tenant_id)
+    if has_feature(db, tenant_id, BUSINESS_UNIT):
+        _sync_business_unit_permission_matrix(db, tenant_id)
+    _sync_user_permission_matrix(db, tenant_id)
+
+
 def _ensure_community_demo_tenant(db: Session, editions: dict[str, Edition]) -> None:
     """Idempotent Community-edition tenant for manual smoke tests."""
     settings = get_settings()
     existing = db.scalars(select(Tenant).where(Tenant.tenant_code == "COMU001")).first()
     if existing:
         _grant_role_permissions(db, existing.tenant_id, "SALES_EXECUTIVE", CRM_COMMUNITY_PERMS)
+        _sync_pf_module_matrices(db, existing.tenant_id)
         return
     community = editions["COMMUNITY"]
     tenant = Tenant(
@@ -1210,3 +1233,4 @@ def _ensure_community_demo_tenant(db: Session, editions: dict[str, Edition]) -> 
             account_status="ACTIVE",
         )
     )
+    _sync_pf_module_matrices(db, tenant.tenant_id)
