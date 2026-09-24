@@ -63,7 +63,7 @@ PF-009 Roles & Permissions (RBAC) — Phase 2 Batch 1 Governance Record
 **Status:** RELEASE APPROVED — Batch 2 implemented; release package prepared; human release approval **GRANTED** (`PF-009 RELEASE APPROVED: YES`, 2026-09-24).
 
 ### Baseline
-- Release baseline: `d200c533038576a22971f64c945c9df66ec5d8f1` (`d200c53`)
+- Release baseline: `80a3671428a3befba194dbb44e73bd9738b25cc6` (`80a3671`)
 - Batch 2 implementation commit: `d4e9659`
 - Existing Batch 1 release tag: `Phase-2-PF009` — immutable and unchanged.
 - No new release tag is created by this documentation change.
@@ -84,7 +84,7 @@ No release/tag/merge/push action is authorized by this document change.
 ### Release Decision
 
 - **PF-009 RELEASE APPROVED: YES** (human decision, 2026-09-24)
-- **Release baseline:** `d200c53` (`d200c533038576a22971f64c945c9df66ec5d8f1`)
+- **Release baseline:** `80a3671` (`80a3671428a3befba194dbb44e73bd9738b25cc6`)
 - **Batch-2 tag:** `Phase-2-PF009-Batch2` (new annotated tag) - **NOT YET CREATED**; this documentation change creates no tag.
 - **Existing Batch-1 tag:** `Phase-2-PF009` unchanged.
 - **Batch-2 implementation commit:** `d4e9659`.

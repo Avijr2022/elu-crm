@@ -581,7 +581,7 @@ PF-007 Batch 1 merge recorded: PR #26 -> d752eb7bba535b56377ed2e66240de28dd47db9
 ## 2026-09-24 — PF-009 Batch 2 Release-Package Preparation
 
 - Batch 2 implementation: `d4e9659`
-- Release baseline: `d200c53`
+- Release baseline: `80a3671`
 - Validation: 130 focused tests passed
 - CI: run `35886328014` SUCCESS
 - Existing `Phase-2-PF009` Batch-1 tag preserved unchanged

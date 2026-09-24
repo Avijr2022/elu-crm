@@ -318,4 +318,4 @@ Overall CRM Progress       : ~18%
 - **AI role:** Recording and verification only
 
 ### 2026-09-24 — PF-009 Batch 2 Release-Package Preparation
-PF-009 Batch 2 is implemented on master at `d4e9659`. Documentation release-package preparation is recorded against release baseline `d200c53` (`d200c533038576a22971f64c945c9df66ec5d8f1`). Existing `Phase-2-PF009` Batch-1 tag remains immutable. PF-009 is **RELEASE APPROVED** (`PF-009 RELEASE APPROVED: YES`, 2026-09-24); the Batch-2 tag `Phase-2-PF009-Batch2` is to be created.
+PF-009 Batch 2 is implemented on master at `d4e9659`. Documentation release-package preparation is recorded against release baseline `80a3671` (`80a3671428a3befba194dbb44e73bd9738b25cc6`). Existing `Phase-2-PF009` Batch-1 tag remains immutable. PF-009 is **RELEASE APPROVED** (`PF-009 RELEASE APPROVED: YES`, 2026-09-24); the Batch-2 tag `Phase-2-PF009-Batch2` is to be created.
