@@ -585,5 +585,5 @@ PF-007 Batch 1 merge recorded: PR #26 -> d752eb7bba535b56377ed2e66240de28dd47db9
 - Validation: 130 focused tests passed
 - CI: run `35886328014` SUCCESS
 - Existing `Phase-2-PF009` Batch-1 tag preserved unchanged
-- Release approval: YES (human decision `PF-009 RELEASE APPROVED: YES`, 2026-09-24); Batch-2 tag `Phase-2-PF009-Batch2` to be created
+- Release approval: YES (human decision `PF-009 RELEASE APPROVED: YES`, 2026-09-24); Batch-2 tag `Phase-2-PF009-Batch2` **created and pushed 2026-09-24** (annotated tag object `68b8c407b931d9c856b4d7c14ea104ea62084472` -> target `80a3671428a3befba194dbb44e73bd9738b25cc6`)
 - No release/tag/merge/push action performed by this change

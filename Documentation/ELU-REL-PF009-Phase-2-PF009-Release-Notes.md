@@ -85,7 +85,7 @@ No release/tag/merge/push action is authorized by this document change.
 
 - **PF-009 RELEASE APPROVED: YES** (human decision, 2026-09-24)
 - **Release baseline:** `80a3671` (`80a3671428a3befba194dbb44e73bd9738b25cc6`)
-- **Batch-2 tag:** `Phase-2-PF009-Batch2` (new annotated tag) - **NOT YET CREATED**; this documentation change creates no tag.
+- **Batch-2 tag:** `Phase-2-PF009-Batch2` (annotated) - **CREATED and PUSHED 2026-09-24** (separate authorized tag step); annotated tag object `68b8c407b931d9c856b4d7c14ea104ea62084472` -> target `80a3671428a3befba194dbb44e73bd9738b25cc6` (tagger Avijit Roy); no tag was moved or deleted; this documentation change creates no tag.
 - **Existing Batch-1 tag:** `Phase-2-PF009` unchanged.
 - **Batch-2 implementation commit:** `d4e9659`.
 - **Evidence:** focused PF-005 through PF-009 **130 passed**; CI run `35886328014` **SUCCESS**.
