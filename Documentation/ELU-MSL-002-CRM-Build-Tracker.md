@@ -201,16 +201,16 @@ PF-007 Business Unit Management is formally recorded as released.
 
 ### PF-009 Release Record
 
-PF-009 Roles & Permissions (RBAC) Batch 1 foundation is recorded as **IN PROGRESS — Batch 1 foundation merged and tagged**; the **Batch 2 runtime permission grain is implemented on `master` @ `d4e9659` (CI SUCCESS) and is NOT released**.
+PF-009 Roles & Permissions (RBAC) Batch 1 foundation is recorded as **Batch 1 foundation merged and tagged**; the **Batch 2 runtime permission grain is implemented on `master` @ `d4e9659` (CI SUCCESS)** and PF-009 is **RELEASE APPROVED (2026-09-24)** - the Batch-2 tag `Phase-2-PF009-Batch2` is to be created.
 
 - Merge commit: `2a2ce45213a6d0e96409a083c594b121686dfa22`
 - Release tag: `Phase-2-PF009`
 - Annotated tag object: `4ef8b6c623005d9b8d3bbf4b7a22d1d329048054`
 - Human authorization recorded verbatim: **PF-009 BATCH 1 MERGE APPROVED: YES**
 - This entry does not convert merge approval into release approval.
-- Full PF-009 release remains pending explicit human release approval.
+- (Superseded 2026-09-24: **PF-009 RELEASE APPROVED: YES**; Batch-2 tag `Phase-2-PF009-Batch2` to be created.)
 - **PF-009 BATCH 2 AUTHORIZED: YES** (2026-09-23) — runtime permission-grain enforcement in `app.core.rbac.has_permission`, removal of the PLATFORM_ADMIN universal bypass so the seeded permission matrix governs, reconciliation of the PF-005/PF-006/PF-007 gates that bypass permission-grain checks, and tests covering the resulting runtime behaviour. **Authorization only: no implementation, no release approval and no tag.** *(Superseded 2026-09-23 for the implementation status only — see change log 4.96 and the bullet below; the authorization record itself is unchanged.)*
-- **PF-009 Batch 2 runtime permission grain — IMPLEMENTED, COMMITTED and PUSHED (NOT released)** (2026-09-23): commit `d4e9659f7ccb7c2bc877058be63e4e10db01cb42` on `master` (= `origin/master`), 9 files, +334 / -101; focused PF-005/006/007/008/009 **130 passed, exit 0**; CI **CRM Tests** run `35886328014` **SUCCESS**; `Phase-2-PF009` (object `4ef8b6c623005d9b8d3bbf4b7a22d1d329048054`, Batch 1) **unchanged** — no new tag. Full PF-009 release remains pending explicit human release approval.
+- **PF-009 Batch 2 runtime permission grain — IMPLEMENTED, COMMITTED and PUSHED (NOT released)** (2026-09-23): commit `d4e9659f7ccb7c2bc877058be63e4e10db01cb42` on `master` (= `origin/master`), 9 files, +334 / -101; focused PF-005/006/007/008/009 **130 passed, exit 0**; CI **CRM Tests** run `35886328014` **SUCCESS**; `Phase-2-PF009` (object `4ef8b6c623005d9b8d3bbf4b7a22d1d329048054`, Batch 1) **unchanged** — no new tag. (Superseded 2026-09-24: **PF-009 RELEASE APPROVED: YES**; Batch-2 tag `Phase-2-PF009-Batch2` to be created.)
 
 ### 2026-09-24 — PF-009 Release Record
-PF-009 Batch 2 release-package prepared at baseline `20ee36a` from implementation commit `d4e9659`. Validation evidence: focused PF-005 through PF-009 suite **130 passed**; CI run `35886328014` **SUCCESS**. Existing `Phase-2-PF009` Batch-1 tag is unchanged. Release approval remains **PENDING HUMAN DECISION**.
+PF-009 Batch 2 release-package prepared at release baseline `d200c53` from implementation commit `d4e9659`. Validation evidence: focused PF-005 through PF-009 suite **130 passed**; CI run `35886328014` **SUCCESS**. Existing `Phase-2-PF009` Batch-1 tag is unchanged. Release approval: **`PF-009 RELEASE APPROVED: YES`** (2026-09-24); the Batch-2 tag `Phase-2-PF009-Batch2` is to be created.

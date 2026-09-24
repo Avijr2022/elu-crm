@@ -8,7 +8,7 @@ All notable E-LinkUp implementation milestones.
 - Added `Documentation/ELU-REL-PF008-Phase-2-PF008-Release-Notes.md`.
 - PF-009 Batch 2 authorized (human decision `PF-009 BATCH 2 AUTHORIZED: YES`): runtime permission-grain enforcement in `app.core.rbac.has_permission`, removal of the PLATFORM_ADMIN universal bypass so the seeded permission matrix governs, reconciliation of the PF-005/PF-006/PF-007 permission-gate bypasses, and tests. **Authorization recorded only** — no implementation, no release approval, no tag. **Superseded 2026-09-23 for implementation status — see the PF-009 Batch 2 entry below.**
 - PF-009 Batch 2 runtime permission grain **implemented, committed and pushed** to `master` — commit `d4e9659f7ccb7c2bc877058be63e4e10db01cb42` (9 files, +334 / -101): `has_permission` decides on the seeded grain, the PLATFORM_ADMIN universal bypass is removed, the PF-005/PF-006/PF-007 gates and API call sites enforce permission grains (create-route guards moved inside the routers' error wrapper), `_sync_pf_module_matrices` is edition-aware, and `test_pf009_rbac_foundation.py` now holds **26 tests**. Verified: focused PF-005/006/007/008/009 **130 passed**; `git diff --check` clean; `compileall` exit 0; CI **CRM Tests** run `35886328014` **SUCCESS**.
-- PF-009 remains **IN PROGRESS — not released**: no release approval, no tag (the existing annotated `Phase-2-PF009` tag belongs to Batch 1 and is unchanged).
+- PF-009 remains **IN PROGRESS — not released**: no release approval, no tag (the existing annotated `Phase-2-PF009` tag belongs to Batch 1 and is unchanged). **Superseded 2026-09-24 - PF-009 release approved; see the release-decision entry below.**
 - Registered as **pre-existing / out-of-scope (not fixed)**: PF-004 fixture isolation — the tenant tests create tenants whose admin carries the seed admin email while the fixtures resolve the seed admin with an unfiltered lookup, which mis-resolves on a reused local database (does not reproduce in CI).
 
 ### 2026-09-21
@@ -581,9 +581,9 @@ PF-007 Batch 1 merge recorded: PR #26 -> d752eb7bba535b56377ed2e66240de28dd47db9
 ## 2026-09-24 — PF-009 Batch 2 Release-Package Preparation
 
 - Batch 2 implementation: `d4e9659`
-- Documentation baseline: `20ee36a`
+- Release baseline: `d200c53`
 - Validation: 130 focused tests passed
 - CI: run `35886328014` SUCCESS
 - Existing `Phase-2-PF009` Batch-1 tag preserved unchanged
-- Release approval: pending human decision
+- Release approval: YES (human decision `PF-009 RELEASE APPROVED: YES`, 2026-09-24); Batch-2 tag `Phase-2-PF009-Batch2` to be created
 - No release/tag/merge/push action performed by this change

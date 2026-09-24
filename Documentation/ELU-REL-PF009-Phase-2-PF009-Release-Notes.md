@@ -60,10 +60,10 @@ This document records the merged and tagged PF-009 Batch 1 governance state. It 
 PF-009 Roles & Permissions (RBAC) — Phase 2 Batch 1 Governance Record
 ## PF-009 Batch 2 — Release Package Preparation
 
-**Status:** IN PROGRESS — Batch 2 implemented; release package prepared; human release approval pending.
+**Status:** RELEASE APPROVED — Batch 2 implemented; release package prepared; human release approval **GRANTED** (`PF-009 RELEASE APPROVED: YES`, 2026-09-24).
 
 ### Baseline
-- Current master baseline: `20ee36a18ef3f4fc27dfa766e410bcf930094ff0` (`20ee36a`)
+- Release baseline: `d200c533038576a22971f64c945c9df66ec5d8f1` (`d200c53`)
 - Batch 2 implementation commit: `d4e9659`
 - Existing Batch 1 release tag: `Phase-2-PF009` — immutable and unchanged.
 - No new release tag is created by this documentation change.
@@ -75,9 +75,17 @@ PF-009 Roles & Permissions (RBAC) — Phase 2 Batch 1 Governance Record
 - Working tree was clean at construction-gate start.
 
 ### Release Scope
-This section records the Batch 2 release-package preparation only. It does not constitute human release approval.
+This section records the Batch 2 release-package preparation and the human release decision (`PF-009 RELEASE APPROVED: YES`, 2026-09-24). It creates no tag and authorizes no push, PR or merge.
 
 ### Approval
-**PF-009 RELEASE APPROVED:** PENDING HUMAN DECISION
+**PF-009 RELEASE APPROVED:** YES
 
 No release/tag/merge/push action is authorized by this document change.
+### Release Decision
+
+- **PF-009 RELEASE APPROVED: YES** (human decision, 2026-09-24)
+- **Release baseline:** `d200c53` (`d200c533038576a22971f64c945c9df66ec5d8f1`)
+- **Batch-2 tag:** `Phase-2-PF009-Batch2` (new annotated tag) - **NOT YET CREATED**; this documentation change creates no tag.
+- **Existing Batch-1 tag:** `Phase-2-PF009` unchanged.
+- **Batch-2 implementation commit:** `d4e9659`.
+- **Evidence:** focused PF-005 through PF-009 **130 passed**; CI run `35886328014` **SUCCESS**.
