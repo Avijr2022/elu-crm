@@ -316,3 +316,6 @@ Overall CRM Progress       : ~18%
 - **Release status:** RELEASED
 - **Human approval:** Human Project Owner
 - **AI role:** Recording and verification only
+
+### 2026-09-24 — PF-009 Batch 2 Release-Package Preparation
+PF-009 Batch 2 is implemented on master at `d4e9659`. Documentation release-package preparation is recorded against baseline `20ee36a` (`20ee36a18ef3f4fc27dfa766e410bcf930094ff0`). Existing `Phase-2-PF009` Batch-1 tag remains immutable. PF-009 remains **IN PROGRESS / NOT RELEASED** pending human release approval.

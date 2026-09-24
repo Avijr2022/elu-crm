@@ -58,3 +58,26 @@ This document records the merged and tagged PF-009 Batch 1 governance state. It 
 ---
 
 PF-009 Roles & Permissions (RBAC) — Phase 2 Batch 1 Governance Record
+## PF-009 Batch 2 — Release Package Preparation
+
+**Status:** IN PROGRESS — Batch 2 implemented; release package prepared; human release approval pending.
+
+### Baseline
+- Current master baseline: `20ee36a18ef3f4fc27dfa766e410bcf930094ff0` (`20ee36a`)
+- Batch 2 implementation commit: `d4e9659`
+- Existing Batch 1 release tag: `Phase-2-PF009` — immutable and unchanged.
+- No new release tag is created by this documentation change.
+
+### Verification Evidence
+- Focused PF-005 through PF-009 validation: **130 passed**.
+- CI run `35886328014`: **SUCCESS**.
+- Batch 2 implementation is present on `master`.
+- Working tree was clean at construction-gate start.
+
+### Release Scope
+This section records the Batch 2 release-package preparation only. It does not constitute human release approval.
+
+### Approval
+**PF-009 RELEASE APPROVED:** PENDING HUMAN DECISION
+
+No release/tag/merge/push action is authorized by this document change.
