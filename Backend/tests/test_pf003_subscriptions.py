@@ -13,7 +13,7 @@ from app.db.migrate_pf003 import apply_pf003_ddl
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import AuditEvent, Role, User
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 
 @pytest.fixture(scope="module")
@@ -28,7 +28,7 @@ def platform_token(client: TestClient) -> str:
     with platform_session() as db:
         apply_pf003_ddl(db)
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         role = db.scalars(
@@ -244,7 +244,7 @@ def test_br_pf_019_one_current(client: TestClient, auth_header: dict) -> None:
     settings = get_settings()
     with platform_session() as db:
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         tid = str(admin.tenant_id)
     resp = client.post(

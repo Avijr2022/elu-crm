@@ -29,7 +29,7 @@ from app.db.migrate_pf006 import apply_pf006_ddl
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import Department, Organization, Role, Tenant, User
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 DEPARTMENTS = "/api/v1/org/departments"
 ORGANIZATIONS = "/api/v1/org/organizations"
@@ -49,7 +49,7 @@ def platform_token(client: TestClient) -> str:
     with platform_session() as db:
         apply_pf006_ddl(db)
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         admin.password_hash = hash_password(settings.seed_admin_password)

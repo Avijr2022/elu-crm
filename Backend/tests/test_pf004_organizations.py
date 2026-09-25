@@ -11,7 +11,7 @@ from app.core.security import hash_password
 from app.db.migrate_pf004 import apply_pf004_ddl
 from app.main import app
 from app.models.pf import Role, User
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 
 @pytest.fixture(scope="module")
@@ -26,7 +26,7 @@ def platform_token(client: TestClient) -> str:
     with platform_session() as db:
         apply_pf004_ddl(db)
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         admin.password_hash = hash_password(settings.seed_admin_password)
@@ -52,7 +52,7 @@ def tenant_admin_token(client: TestClient, platform_token: str) -> str:
     settings = get_settings()
     with platform_session() as db:
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         role = db.scalars(

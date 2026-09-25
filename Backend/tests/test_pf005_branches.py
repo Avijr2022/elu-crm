@@ -27,7 +27,7 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import Branch, BranchAddress, Organization, Role, Tenant, User
 from app.services.pf.branch_service import BranchService
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 BRANCHES = "/api/v1/org/branches"
 
@@ -44,7 +44,7 @@ def platform_token(client: TestClient) -> str:
     with platform_session() as db:
         apply_pf005_ddl(db)
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         admin.password_hash = hash_password(settings.seed_admin_password)

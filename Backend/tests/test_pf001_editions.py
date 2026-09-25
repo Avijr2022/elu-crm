@@ -11,7 +11,7 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import AuditEvent, Role, User
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 
 @pytest.fixture(scope="module")
@@ -25,7 +25,7 @@ def platform_token(client: TestClient) -> str:
     settings = get_settings()
     with platform_session() as db:
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None, "Seed admin missing — start API once to seed"
         role = db.scalars(

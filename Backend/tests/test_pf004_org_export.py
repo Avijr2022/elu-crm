@@ -14,7 +14,7 @@ from app.core.config import get_settings
 from app.core.security import hash_password
 from app.main import app
 from app.models.pf import Organization, Role, User
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 _EXPORT_URL = "/api/v1/org/organizations/export"
 _VALID_GSTIN = "29ABCDE1234F1Z5"
@@ -34,7 +34,7 @@ def _role_token(client: TestClient, role_code: str) -> str:
     email = f"pf004-{role_code.lower()}-{uuid.uuid4().hex[:8]}@euphoriainfotech.com"
     with platform_session() as db:
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         role = db.scalars(
@@ -97,7 +97,7 @@ def platform_admin_headers(client: TestClient) -> dict[str, str]:
     settings = get_settings()
     with platform_session() as db:
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         admin.password_hash = hash_password(settings.seed_admin_password)
@@ -227,7 +227,7 @@ def test_export_is_tenant_scoped(
     settings = get_settings()
     with platform_session() as db:
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         own_ids = {

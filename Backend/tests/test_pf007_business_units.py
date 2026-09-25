@@ -34,7 +34,7 @@ from app.db.rls_context import clear_rls_context
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.pf import Organization, Role, Tenant, User
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 BUSINESS_UNITS = "/api/v1/org/business-units"
 ORGANIZATIONS = "/api/v1/org/organizations"
@@ -53,7 +53,7 @@ def platform_token(client: TestClient) -> str:
     with platform_session() as db:
         apply_pf007_ddl(db)
         admin = db.scalars(
-            select(User).where(User.email == settings.seed_admin_email.lower())
+            platform_admin_select()
         ).first()
         assert admin is not None
         admin.password_hash = hash_password(settings.seed_admin_password)
@@ -825,8 +825,8 @@ def test_deferred_scope_absent(client: TestClient, tenanta: dict) -> None:
                 ),
                 {"s": "core", "t": "users", "c": "business_unit_id"},
             ).scalar()
-            == 1, "core.users.business_unit_id (PF-008) must exist"
-        )
+            == 1
+        ), "core.users.business_unit_id (PF-008) must exist"
         assert (
             db.execute(
                 text(
@@ -835,8 +835,8 @@ def test_deferred_scope_absent(client: TestClient, tenanta: dict) -> None:
                 ),
                 {"s": "crm", "t": "opportunity", "c": "business_unit_id"},
             ).scalar()
-            == 0, "crm.opportunity.business_unit_id must not exist (D6)"
-        )
+            == 0
+        ), "crm.opportunity.business_unit_id must not exist (D6)"
 
         # only the tenant and organization FKs exist on core.business_unit
         fks = db.execute(

@@ -21,10 +21,10 @@ def client():
 @pytest.fixture(scope="module")
 def admin_token(client: TestClient) -> str:
     settings = get_settings()
-    from tests.conftest import platform_session
+    from tests.conftest import platform_admin_select, platform_session
 
     with platform_session() as db:
-        admin = db.scalars(select(User).where(User.email == settings.seed_admin_email.lower())).first()
+        admin = db.scalars(platform_admin_select()).first()
         assert admin is not None
         admin.password_hash = hash_password(settings.seed_admin_password)
         db.commit()
