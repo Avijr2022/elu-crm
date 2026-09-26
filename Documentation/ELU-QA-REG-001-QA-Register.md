@@ -26,3 +26,5 @@
 | Module | Release | Status | Approval | Release Tag | Release Commit |
 |---|---|---|---|---|---|
 | PF-007 Business Unit Management | Phase 2 | RELEASE APPROVED | PF-007 RELEASE APPROVED: YES | `Phase-2-PF007` | `80ae94e1dd071f62198571a7592cf81246ee591e` |
+| PF-008 Users & Identity | Phase 2 | RELEASED | Human QA record pending | `Phase-2-PF008` | `20320125c4f37094b41e21f5800934699c881a66` |
+| PF-009 Roles & Permissions (RBAC) | Phase 2 (Batch 2) | RELEASE APPROVED | PF-009 RELEASE APPROVED: YES (2026-09-24) | `Phase-2-PF009`; `Phase-2-PF009-Batch2` | `2a2ce45213a6d0e96409a083c594b121686dfa22` -> `80a3671428a3befba194dbb44e73bd9738b25cc6` |
