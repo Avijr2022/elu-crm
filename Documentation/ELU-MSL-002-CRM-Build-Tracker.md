@@ -175,6 +175,8 @@
 
 | 4.97 | 2026-09-26 | PF-009 Batch-2 post-tag reconciliation completed: `Phase-2-PF009` and `Phase-2-PF009-Batch2` verified against their tagged release state; repository baseline `148a7a2f607a739dbf549288f4468a33ac63e9d0` clean with CI run 36226924086 SUCCESS; governance reconciliation complete. |
 
+| 4.98 | 2026-09-26 | **PF-010 CORE IMPLEMENTATION AUTHORIZED: YES** — human authorization recorded (approver identity not supplied in the authorising instruction; ELU-AI-001). Scope: **PF-010 Audit & Compliance — PF-010-001 Audit Trail / PF-010-001-001 Activity Logging**. Decision: **extend the existing `audit.audit_event` table and `app/services/pf/audit_service.py` `write_audit_event()` — no duplicate audit sink** (the sink is already called from ~37 sites across 9 PF services). Acceptance: AC-PF-010-01..06. Retention: Community 90 days / Professional 1 year / Enterprise 7 years (`ELU-EDM-001`). Notifications: NTF-PF-010-01..04. Reports: RPT-PF-010-01..05. Deferred: NTF-PF-010-02 and NTF-PF-010-04 (spec-marked v2). Recorded as authorization only: no implementation, no commit, no push, no PR, no release approval and no tag. Work baseline: HEAD `29f49f86cbb4a7bc7cfbe7cfbc24e776d418eb9e` (`master` == `origin/master`, worktree clean). Register status deliberately unchanged: PF-010 remains **NOT STARTED** in `ELU-MSL-001` until implementation begins. |
+
 ### 4.91 — 2026-09-16 — PF-007 Scope Decisions Approved
 
 - Recorded human approval of PF-007 scope decisions D1–D11.

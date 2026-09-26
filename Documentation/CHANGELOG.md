@@ -2,6 +2,10 @@
 
 All notable E-LinkUp implementation milestones.
 
+### 2026-09-26
+- PF-010 Audit & Compliance core implementation **authorized** (human decision `PF-010 CORE IMPLEMENTATION AUTHORIZED: YES`): scope PF-010-001 Audit Trail / PF-010-001-001 Activity Logging; decision to extend the existing `audit.audit_event` sink and `write_audit_event()` with **no duplicate sink**; acceptance AC-PF-010-01..06; retention 90 days / 1 year / 7 years; NTF-PF-010-01..04; RPT-PF-010-01..05; NTF-PF-010-02 and -04 deferred (spec-marked v2). Authorization only: no implementation, no commit, no push, no release approval and no tag. Work baseline `29f49f86cbb4a7bc7cfbe7cfbc24e776d418eb9e`.
+- PF-009 Batch-2 governance registers closed: `ELU-QA-REG-001` PF-008 and PF-009 release rows added, `ELU-MSL-002` change-log row 4.97 added (commit `29f49f8`, pushed to `master`; docs-only, no CI run triggered).
+
 ### 2026-09-23
 - Governance reconciliation: PF-008 Users & Identity recorded as RELEASED in **ELU-MSL-001** and **ELU-MSL-002** (implementation commit 771f846, PR #28, release baseline 20320125c4f37094b41e21f5800934699c881a66, annotated tag `Phase-2-PF008`).
 - PF progress arithmetic corrected to 8 / 11 (73%), with 3 remaining.
