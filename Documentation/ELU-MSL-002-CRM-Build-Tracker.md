@@ -218,3 +218,12 @@ PF-009 Roles & Permissions (RBAC) Batch 1 foundation is recorded as **Batch 1 fo
 
 ### 2026-09-24 — PF-009 Release Record
 PF-009 Batch 2 release-package prepared at release baseline `80a3671` from implementation commit `d4e9659`. Validation evidence: focused PF-005 through PF-009 suite **130 passed**; CI run `35886328014` **SUCCESS**. Existing `Phase-2-PF009` Batch-1 tag is unchanged. Release approval: **`PF-009 RELEASE APPROVED: YES`** (2026-09-24); the Batch-2 tag `Phase-2-PF009-Batch2` was created and pushed 2026-09-24 (annotated tag object `68b8c407b931d9c856b4d7c14ea104ea62084472` -> target `80a3671428a3befba194dbb44e73bd9738b25cc6`).
+
+### PF-010 AC-03 Retention Decision
+
+- **Decision:** Option A — implement retention as a callable purge service; do not introduce scheduler infrastructure in PF-010 CORE.
+- **AC-PF-010-03:** CORE demonstrability is by direct invocation of the purge service.
+- **JOB-PF-010-01:** scheduled retention-purge trigger is explicitly deferred from CORE.
+- **Retention:** Community 90 days; Professional 1 year; Enterprise 7 years.
+- **Rationale:** the repository has no scheduler implementation; this follows the established PF-008/D6 pattern of service-side/lazy evaluation with scheduled-job infrastructure deferred.
+- **Scope:** this is an implementation-scope decision only; it is not release approval.
