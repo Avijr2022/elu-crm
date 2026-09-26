@@ -78,6 +78,11 @@ services:
         condition: service_healthy
     volumes:
       - ./Backend:/app
+      # Migrations resolve their SQL as <repo-root>/Database/... (parents[3] from
+      # app/db/migrate_*.py), i.e. /Database inside the container. Without this
+      # mount startup fails: FileNotFoundError '/Database/03_PlatformFoundation/
+      # 012_rls_pf003a.sql' -> Application startup failed. Exiting.
+      - ./Database:/Database:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:

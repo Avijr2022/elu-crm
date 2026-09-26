@@ -3,12 +3,10 @@
 from contextlib import contextmanager
 from collections.abc import Iterator
 
-import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.security import hash_password
 from app.db.rls_context import bind_rls_context, clear_rls_context
 from app.db.session import SessionLocal
 from app.models.pf import Tenant, User
@@ -50,27 +48,12 @@ def platform_admin_select():
     )
 
 
-def reset_platform_admin_login() -> None:
-    """Pin the platform admin's credentials and clear stale lockout state.
-
-    Repeated failed logins increment ``failed_login_count`` and can leave the
-    account ``LOCKED`` (BR-PF-055), after which every login fails with 403 even
-    with the correct password. A fresh database is unaffected. No-op when the
-    database has not been seeded yet (the app lifespan seeds on first TestClient).
-    """
-    settings = get_settings()
-    with platform_session() as db:
-        admin = db.scalars(platform_admin_select()).first()
-        if admin is None:
-            return
-        admin.password_hash = hash_password(settings.seed_admin_password)
-        admin.account_status = "ACTIVE"
-        admin.failed_login_count = 0
-        admin.locked_until = None
-        db.commit()
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _platform_admin_login_state() -> None:
-    """Normalise the platform admin's login state before each module runs."""
-    reset_platform_admin_login()
+# NOTE (2026-09-25): a module-scoped autouse fixture that normalised the platform
+# admin's login state was DELIBERATELY REMOVED. It opened a platform_session()
+# (which issues SET LOCAL ROLE elu_app) during module setup, i.e. BEFORE the app
+# lifespan has run the bootstrap DDL that creates the elu_app role on a fresh
+# database. In CI that made all 264 tests error with
+# `DataError: (psycopg.errors.InvalidParameterValue) role "elu_app" does not exist`
+# while passing locally, where the role already exists.
+# Rule: keep conftest helpers side-effect free and DB-order-neutral - never touch the
+# database outside a TestClient(app) context.
