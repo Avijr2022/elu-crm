@@ -5,7 +5,7 @@
 | Decision ID | ADR-017 |
 | Title | PF-011 System Configuration specification reconciliation |
 | Date | 2026-09-29 |
-| Status | Proposed |
+| Status | Accepted |
 | Context | PF-011 implementation is authorized, but the approved BFS and downstream engineering specifications are not aligned. The PF-011 BFS defines six new tenant/platform settings tables and their fields, while ELU-DDD-PF defines materially different schemas for those tables. ELU-ERD-PF, ELU-API-PF, ELU-UI-PF and ELU-TST-PF currently do not contain complete PF-011 contracts. Existing tenant_settings is already implemented and consumed by the platform, so PF-011 must extend that existing entity rather than create a duplicate. |
 | Reason | The constitution requires downstream engineering specifications to be authoritative and prohibits silently inventing or renaming columns. Implementation before reconciliation could create schema, API, UI and test contracts that disagree with the approved BFS or existing platform behavior. |
 | Final Decision | Proposed: reconcile PF-011 through the governed specification chain before implementation. Preserve the existing tenant_settings entity and extend it deliberately. Reconcile the six new PF-011 tables across BFS, DDD, ERD, API, UI and TST. Preserve existing platform conventions for tenant RLS, platform/global settings, edition gating, audit events and Redis caching. No PF-011 implementation code or database migration is authorized until the reconciled downstream contracts are approved. |
@@ -57,6 +57,6 @@ The reconciliation shall:
 
 ## 4. Approval Gate
 
-ADR-017 remains Proposed until the PF-011 specification reconciliation is reviewed and approved by the authorized human decision-maker.
+ADR-017 is Accepted following review and approval by the authorized human decision-maker.
 
 No PF-011 implementation commit, migration, API implementation or schema mutation is authorized solely by creation of this proposal.
