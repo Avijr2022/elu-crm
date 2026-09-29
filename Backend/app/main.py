@@ -54,6 +54,7 @@ async def lifespan(_: FastAPI):
         from app.db.migrate_pf007 import apply_pf007_ddl
         from app.db.migrate_pf008 import apply_pf008_ddl
         from app.db.migrate_pf009 import apply_pf009_ddl, backfill_user_role
+        from app.db.migrate_pf010 import apply_pf010_ddl
         from app.db.rls_context import bind_rls_context, clear_rls_context, set_app_role_enabled
 
         # Bootstrap DDL + seed as owner/superuser; request sessions use elu_app.
@@ -69,6 +70,7 @@ async def lifespan(_: FastAPI):
         apply_pf007_ddl(db)
         apply_pf008_ddl(db)
         apply_pf009_ddl(db)
+        apply_pf010_ddl(db)
         from app.db.migrate_crm import apply_crm_ddl
 
         apply_crm_ddl(db)

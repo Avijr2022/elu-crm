@@ -2,9 +2,14 @@
 
 All notable E-LinkUp implementation milestones.
 
+### 2026-09-28
+- PF-010 Audit & Compliance CORE **implemented, committed and pushed** on branch `cursor/pf010-core-implementation` — commit `2085ea67971c47da1b34202c03c95b2988598ddb` (7 files, +416 / -0; parent `57c297ef8c93470133a380aa94620bb4aca63720`). AC-02: `audit.audit_event` is append-only via a `BEFORE UPDATE` trigger that rejects mutation for every role, with `elu_app` denied `UPDATE`/`DELETE`; `DELETE` stays privilege-controlled so the AC-03 retention purge under `owner_role()` remains possible. AC-03: retention windows by edition (Community 90 / Professional 365 / Enterprise 2555 days) plus `retention_days_for_edition()` and `purge_expired_audit_events()`; `idx_audit_event_created_on` added; `JOB-PF-010-01` deferred. Verified: full backend suite **271 passed, 1 skipped**; PF-010 focused tests **7 passed**; app lifespan OK with `apply_pf010_ddl` (`GET /health 200`); CI **CRM Tests** run `36419765262` **SUCCESS** on `2085ea6`. PF-010 remains **IN PROGRESS — not released**: no PR, no merge, no release approval, no tag, no `ELU-QA-PF010`.
+- PF-010 registers reconciled: `ELU-MSL-002` change-log row **4.99**, `ELU-MSL-001` history **1.33** and the tracker status row (NOT STARTED → IMPLEMENTED on a feature branch, not released); the dashboard stays 0% and 8 of 11 because it counts released modules.
+
 ### 2026-09-26
 - PF-010 Audit & Compliance core implementation **authorized** (human decision `PF-010 CORE IMPLEMENTATION AUTHORIZED: YES`): scope PF-010-001 Audit Trail / PF-010-001-001 Activity Logging; decision to extend the existing `audit.audit_event` sink and `write_audit_event()` with **no duplicate sink**; acceptance AC-PF-010-01..06; retention 90 days / 1 year / 7 years; NTF-PF-010-01..04; RPT-PF-010-01..05; NTF-PF-010-02 and -04 deferred (spec-marked v2). Authorization only: no implementation, no commit, no push, no release approval and no tag. Work baseline `29f49f86cbb4a7bc7cfbe7cfbc24e776d418eb9e`.
 - PF-009 Batch-2 governance registers closed: `ELU-QA-REG-001` PF-008 and PF-009 release rows added, `ELU-MSL-002` change-log row 4.97 added (commit `29f49f8`, pushed to `master`; docs-only, no CI run triggered).
+- PF-010 AC-03 decision: callable retention purge in CORE; `JOB-PF-010-01` scheduled trigger deferred; direct invocation is the CORE demonstration path; no new scheduler infrastructure.
 
 ### 2026-09-23
 - Governance reconciliation: PF-008 Users & Identity recorded as RELEASED in **ELU-MSL-001** and **ELU-MSL-002** (implementation commit 771f846, PR #28, release baseline 20320125c4f37094b41e21f5800934699c881a66, annotated tag `Phase-2-PF008`).
