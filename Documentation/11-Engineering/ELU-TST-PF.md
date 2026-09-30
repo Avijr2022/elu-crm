@@ -1,6 +1,6 @@
 # E-LinkUp Test Specification — Platform Foundation
 **Document ID:** ELU-TST-PF  
-**Version:** 1.5  
+**Version:** 1.6
 **Status:** Approved  
 **Related Documents:** ELU-RTM-001, ELU-API-PF, ELU-EFS-001, ELU-SEC-001, ELU-DOC-001  
 
@@ -16,6 +16,7 @@
 | 1.3 | 2026-09-12 | EIIP / QA | PF-005 branch groundwork test structure (§2.2, planned cases — not implemented) |
 | 1.4 | 2026-09-12 | EIIP / QA | PF-005 branch functional layer implemented — §2.2 cases automated (15 PF-005 + 13 isolation; full suite 141 passed, 1 skipped; no PF-001…PF-004 regression) |
 | 1.5 | 2026-09-16 | EIIP / QA | **PF-006 Department Management test-spec decision/status recorded — §2.3 added.** Batch 5 API implemented; **36** PF-006 tests automated (`Backend/tests/test_pf006_departments.py`) and 35 PF-004/PF-005 regression tests; implementation validation run recorded **71 passed** (2026-09-16 QA run: 36/36 + 35/35, 0 failed / 0 skipped / 0 errors). PF-006 **RELEASED** 2026-09-16 (annotated tag `Phase-2-PF006`); deferred/absent scope asserted by `test_deferred_scope_absent` |
+| 1.6 | 2026-09-29 | EIIP / Engineering | PF-011 governed specification reconciliation |
 
 ---
 
@@ -114,6 +115,43 @@ Implementation status: specification, schema (`014_branch_pf005.sql`), RLS, ORM 
 **Verification (2026-09-16 QA run):** PF-006 tests **36/36 passed**; PF-004/PF-005 regression **35/35 passed**; **0 failed, 0 skipped, 0 errors** (exit 0). Earlier implementation validation run recorded **71 passed**. Test rows are created only in generated test tenants — nothing deleted, truncated or reset.
 
 **Deferred test scope (recorded — not implemented):** Flutter UI acceptance criteria (no PF-006 screens); workflow/approval routing `AC-PF-006-04` (CPS-001 — **non-demonstrable**); `NTF-PF-006-*` notifications; `RPT-PF-006-01/02` reports; CSV/XLSX export; `users.department_id` / user↔department assignment / `department_head_user_id` `BR-PF-043` active-user validation (**PF-008** — **non-demonstrable**, no FK and no validation); runtime permission-grain enforcement (**PF-009**).
+
+### 2.4 PF-011 System Configuration (CORE — specification)
+
+PF-011 test coverage follows the reconciled ELU-BFS-PF, ELU-DDD-PF, ELU-ERD-PF, ELU-API-PF and ELU-UI-PF contracts. Tests are required for the existing `tenant_settings` entity plus the six new PF-011 logical tables: `tenant_preference`, `tenant_notification_preference`, `tenant_module_default`, `tenant_holiday_calendar`, `platform_setting`, and `setting_catalogue`.
+
+| TC ID | Rule / AC | Scenario | Expected |
+|-------|-----------|----------|----------|
+| TC-PF-011-01 | AC-PF-011-01 / BR-PF-079 | Update date format and fiscal-year start month | accepted for valid values; new-record/display behavior follows setting |
+| TC-PF-011-02 | AC-PF-011-02 / BR-PF-078 | Community tenant attempts edition-forbidden feature toggle | 403 / `EDITION_FORBIDDEN`; toggle remains disabled |
+| TC-PF-011-03 | AC-PF-011-03 / BR-PF-077 | Change tenant setting or preference | audit event contains before/after field differences |
+| TC-PF-011-04 | AC-PF-011-04 / BR-PF-081 | Configure notification channel and lead-assignment notification | only enabled permitted channel is used; platform-disabled channel cannot be enabled |
+| TC-PF-011-05 | AC-PF-011-05 / BR-PF-082 | Read settings after successful update | updated value becomes visible within documented 300-second cache TTL; successful writes invalidate tenant cache |
+| TC-PF-011-06 | AC-PF-011-06 / BR-PF-084 | Change fiscal-year settings | new reporting periods/quarters use updated fiscal-year configuration; existing generated PDFs are not retroactively changed |
+| TC-PF-011-07 | BR-PF-079 | Fiscal-year start month outside 1–12 | 422 validation error |
+| TC-PF-011-08 | BR-PF-080 | Reset settings without confirmation | request rejected; no settings changed |
+| TC-PF-011-09 | BR-PF-083 | Tenant attempts to change `is_editable=false` preference | denied for Tenant Admin; Platform Admin permitted |
+| TC-PF-011-10 | RBAC | Tenant Admin reads and configures tenant settings | permitted according to `settings.read` / `settings.configure` |
+| TC-PF-011-11 | RBAC | Finance User reads settings but attempts configuration | read permitted where allowed; write denied |
+| TC-PF-011-12 | RBAC | Sales Manager accesses settings | only documented limited settings visibility; unauthorized writes denied |
+| TC-PF-011-13 | RBAC | Platform Admin accesses platform settings | `platform_settings.read` / `platform_settings.configure` permitted |
+| TC-PF-011-14 | API contract | Exercise PF-011 settings/preferences/notifications/module-defaults/holidays/reset/catalogue operations | documented response codes, validation and authorization enforced |
+| TC-PF-011-15 | Cache fallback | Redis unavailable while reading settings | database fallback succeeds; no cross-tenant cache data exposed |
+| TC-PF-011-16 | Cache isolation | Tenant A and Tenant B use settings cache | tenant-scoped cache keys prevent cross-tenant value exposure |
+| TC-PF-011-17 | Audit | Holiday, notification, module-default and preference changes | corresponding audit event records before/after differences |
+| TC-PF-011-18 | Tenant isolation | Tenant A attempts to read/write Tenant B PF-011 settings | 404/403; zero foreign-tenant rows exposed or modified |
+| TC-PF-011-19 | RLS | PF-011 tenant-scoped tables queried without tenant context | fail closed; zero rows |
+| TC-PF-011-20 | Global scope | Platform settings and settings catalogue accessed | platform/global scope is not tenant-scoped and follows Platform Admin authorization |
+| TC-PF-011-21 | Lock semantics | `is_editable=false` preference exposed in UI/API | Tenant Admin receives read-only behavior; no new `lock_state` is required |
+| TC-PF-011-22 | Edition gate | Tenant attempts feature beyond current edition | configuration rejected server-side; UI must not bypass API authorization |
+| TC-PF-011-23 | Existing compatibility | Existing `tenant_settings` fields remain usable | existing `financial_year_start`, `currency_code`, `time_zone`, `date_format`, `time_format`, `default_language`, `notification_enabled`, and `workflow_enabled` are not silently renamed |
+| TC-PF-011-24 | API cache failure | Redis read/write failure occurs during settings operation | database path remains functional and request does not fail solely because Redis is unavailable |
+
+**PF-011 endpoint coverage:** tests must cover the reconciled API operations for `/api/v1/settings`, `/api/v1/settings/preferences`, `/api/v1/settings/preferences/{key}`, `/api/v1/settings/notifications`, `/api/v1/settings/module-defaults`, `/api/v1/settings/holidays`, `/api/v1/settings/holidays/{id}`, `/api/v1/settings/reset`, `/api/v1/settings/catalogue`, and `/api/v1/platform/settings`.
+
+**PF-011 security coverage:** all tenant-scoped PF-011 entities require repository tenant filtering and PostgreSQL RLS. Tests must prove fail-closed behavior, cross-tenant isolation, server-side edition enforcement, and permission enforcement. Client-supplied `tenant_id` must not override authenticated tenant scope.
+
+**PF-011 implementation status:** this section defines the governed test contract. It does not claim that PF-011 implementation tests have already been automated or executed.
 
 ---
 

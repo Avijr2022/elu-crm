@@ -1,6 +1,6 @@
 # E-LinkUp Master Requirements & Traceability Index
 **Document ID:** ELU-RTM-001  
-**Version:** 1.2  
+**Version:** 1.9
 **Status:** Approved
 **Document Owner:** BA / QA
 **Related Documents:** ELU-DOC-001, ELU-EFS-001, ELU-DF-001, ELU-TST-*, ELU-BFS-*, ELU-QA-PF001
@@ -25,6 +25,7 @@
 | 1.6 | 2026-08-06 | EIIP / PMO | PF-003 RELEASE APPROVED — baseline Phase-2-PF003 |
 | 1.7 | 2026-08-06 | EIIP / QA | PF-003A Enterprise Tenant Isolation traceability (QA PASS — await RELEASE APPROVED) |
 | 1.8 | 2026-08-06 | EIIP / PMO | PF-003A RELEASE APPROVED — baseline Phase-2-PF003A; start PF-004 |
+| 1.9 | 2026-09-29 | EIIP / QA | PF-011 System Configuration requirement, API, table, UI and test traceability reconciliation |
 
 ## 1. Requirement ID Ranges
 
@@ -262,9 +263,57 @@ Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.s
 
 ---
 
-*© Euphoria Infotech (I) Limited — ELU-RTM-001*
+
 ### PF-007 Release Traceability Record
 
 | Module | Release | Release Commit | Release Tag | Approval |
 |---|---|---|---|---|
 | PF-007 Business Unit Management | Phase 2 | `80ae94e1dd071f62198571a7592cf81246ee591e` | `Phase-2-PF007` | PF-007 RELEASE APPROVED: YES |
+---
+
+## 12. Implementation Traceability - PF-011 System Configuration (RECONCILED - NOT IMPLEMENTED)
+
+**Status:** Specification reconciliation complete under ADR-017. PF-011 implementation and database migration are not authorized until the reconciled downstream contracts are approved.
+
+| Business Rule / Control | Table(s) | API / Runtime | UI | Test |
+|---|---|---|---|---|
+| BR-PF-077 settings changes audited | `tenant_settings`, `tenant_preference`, `tenant_notification_preference`, `tenant_module_default`, `tenant_holiday_calendar` | settings mutations | Settings pages | TC-PF-011-03 |
+| BR-PF-078 edition ceiling | `tenant_preference`, existing edition feature catalogue | settings writes | Feature Toggles in TenantSettingsPage | TC-PF-011-02 |
+| BR-PF-079 fiscal start month 1-12 | `tenant_settings` | settings update validation | Business Preferences | TC-PF-011-01 |
+| BR-PF-080 reset requires Tenant Admin confirmation | tenant settings and preference tables | `POST /api/v1/settings/reset` | Reset confirmation | TC-PF-011-12 |
+| BR-PF-081 platform-disabled notification channel | `tenant_notification_preference`, `platform_setting` | notification settings validation | Notification Preferences | TC-PF-011-07 |
+| BR-PF-082 tenant settings cache TTL 300 seconds | all tenant-scoped PF-011 settings | tenant-scoped Redis cache with DB fallback | all settings pages | TC-PF-011-20, TC-PF-011-21 |
+| BR-PF-083 non-editable preference Platform Admin only | `tenant_preference.is_editable` | RBAC/settings authorization | Settings Catalogue / preference UI | TC-PF-011-15, TC-PF-011-16 |
+| BR-PF-084 format changes apply to new records/reports | `tenant_settings` | settings consumers | Business Preferences | TC-PF-011-24 |
+
+### 12.1 Logical table coverage
+
+| Logical table | PF-011 traceability |
+|---|---|
+| `tenant_settings` | Existing entity preserved and deliberately extended; no silent column renames |
+| `tenant_preference` | BFS §9 normative shape; tenant-scoped with RLS |
+| `tenant_notification_preference` | BFS §9 normative shape; tenant-scoped with RLS |
+| `tenant_module_default` | BFS §9 normative shape; tenant-scoped with RLS |
+| `tenant_holiday_calendar` | BFS §9 normative shape; tenant-scoped with RLS |
+| `platform_setting` | BFS §9 normative shape; platform/global scope |
+| `setting_catalogue` | BFS §9 normative shape; platform/global scope |
+
+### 12.2 API traceability
+
+The reconciled API contract covers all 19 PF-011 operations: settings read/update, preferences read/update/by-key, notifications read/update, module-defaults read/update, holidays read/create/update/delete, reset, catalogue read, and platform settings read/update.
+
+The API contract preserves the existing `tenant_settings` physical columns and documents `EDITION_FORBIDDEN`, `is_editable=false`, `If-Match`, tenant-scoped Redis caching with 300-second TTL and post-write invalidation, DB fallback, and audit `before`/`after` snapshots.
+
+### 12.3 UI and security traceability
+
+PF-011 UI routes are `/settings/preferences`, `/settings/notifications`, `/settings/module-defaults`, `/settings/holidays`, `/settings/catalogue`, and `/platform/settings`, while existing `/settings`, `/settings/security`, and `/settings/branding` remain preserved. Feature Toggles remain within TenantSettingsPage with no separate feature-toggle API route.
+
+Required permissions are `settings.read`, `settings.configure`, `platform_settings.read`, and `platform_settings.configure`. Tenant Admin, Platform Admin, Finance User, and Sales Manager behavior follows the reconciled API contract. Tenant-scoped data requires repository filtering plus PostgreSQL RLS; platform/global settings do not use tenant RLS.
+
+### 12.4 Test traceability
+
+PF-011 test specification `ELU-TST-PF` §2.4 defines TC-PF-011-01 through TC-PF-011-24 covering business preferences, notifications, module defaults, holidays, reset, catalogue, platform settings, edition gating, audit before/after snapshots, cache behavior, RBAC, and tenant isolation.
+
+**Implementation status:** NOT IMPLEMENTED. No PF-011 Backend or Database mutation is represented by this RTM entry.
+
+*© Euphoria Infotech (I) Limited — ELU-RTM-001*

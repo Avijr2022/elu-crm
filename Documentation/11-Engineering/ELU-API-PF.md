@@ -1,6 +1,6 @@
 # E-LinkUp API Specification — Platform Foundation
 **Document ID:** ELU-API-PF  
-**Version:** 1.2
+**Version:** 1.4
 **Status:** Approved  
 **Related Documents:** ELU-BFS-PF, ELU-EFS-001, V1-PF-CRM, ELU-DDD-PF, ELU-DEV-001, ELU-SEC-001, ELU-DOC-001  
 **Base URL:** `/api/v1` · Auth: Bearer JWT · Tenant: JWT claim (**ADR-015**)  
@@ -15,6 +15,7 @@
 | 1.1 | 2026-09-15 | EIIP / Engineering (governance reconciliation; approver identity PENDING — not supplied in the authorising instruction) | PF-006 Department endpoint surface recorded (implemented and audited, **NOT released**); `GET /{id}/history` flagged as a **human scope decision required** |
 | 1.2 | 2026-09-15 | Human Project Owner (personal name not supplied — **PENDING**, not invented; ELU-AI-001) | **PF-006 human scope decisions APPROVED and recorded:** (1) `GET /org/departments/{id}/history` retained as an **additional human-approved** PF-006 endpoint (§10 lists 10; total implemented operations = 11); (2) the **effective-parent-`NULL`** organization-change interpretation approved. **PF-006 RELEASE APPROVAL remains PENDING** |
 | 1.3 | 2026-09-16 | EIIP / Engineering (PF-007 implementation Batch 1 — authorized by `PF-007 IMPLEMENTATION BATCH 1 AUTHORIZED: YES`; operator identity PENDING — not supplied in the authorising instruction) | **PF-007 Business Unit endpoint surface recorded** (exactly the **8** `ELU-BFS-PF` §PF-007 §10 endpoints; **no history endpoint** — D1). Implementation Batch 1: `core.business_unit` (+ rollback + RLS enrolment), `migrate_pf007.py` + lifespan, ORM/schemas/service/router, `BUSINESS_UNIT` edition feature gate (BR-PF-046), `business_unit.*` permission catalogue + matrix (D2/D3) and the §12 role gates. **Not implemented in Batch 1:** opportunity/project/invoice linkage (D6), reporting/XLSX-PDF formatting (D8), notifications, history API, `users.business_unit_id` (PF-008), Flutter UI (D10) |
+| 1.4 | 2026-09-29 | EIIP / Engineering | PF-011 governed specification reconciliation |
 
 ---
 
@@ -194,6 +195,71 @@ flipped to the **positive** direction with supersede notes — the same treatmen
 applied to the PF-005 guard — while every still-valid deferral assertion (BR-PF-038 / BR-PF-043
 absence of FK and validation, `crm.opportunity.business_unit_id` absence, no reporting surface)
 is retained.
+
+### 4.6 PF-011 System Configuration — CORE (specified 2026-09-29, **NOT implemented**, NOT released)
+
+Specified by the PF-011 governed specification reconciliation: `ELU-BFS-PF` §PF-011 §9/§10/§12/§15, **ADR-017** and `ELU-DDD-PF` §11. Module scope: PF-011 System Configuration / PF-011-001 Tenant Settings / PF-011-001-001 Business Preferences. Cross-cutting behaviour follows **§1** unless stated otherwise.
+
+**Operations (exactly 19 — `ELU-BFS-PF` §PF-011 §10):**
+
+| # | Method | Path | Purpose | Permission |
+|---|--------|------|---------|------------|
+| 1 | GET | `/api/v1/settings` | Get all tenant settings | `settings.read` |
+| 2 | PUT | `/api/v1/settings` | Update tenant settings | `settings.configure` |
+| 3 | PATCH | `/api/v1/settings` | Partial update | `settings.configure` |
+| 4 | GET | `/api/v1/settings/preferences` | List preferences | `settings.read` |
+| 5 | PUT | `/api/v1/settings/preferences` | Update preferences | `settings.configure` |
+| 6 | GET | `/api/v1/settings/preferences/{key}` | Get single preference | `settings.read` |
+| 7 | PUT | `/api/v1/settings/preferences/{key}` | Set single preference | `settings.configure` |
+| 8 | GET | `/api/v1/settings/notifications` | Get notification preferences | `settings.read` |
+| 9 | PUT | `/api/v1/settings/notifications` | Update notification preferences | `settings.configure` |
+| 10 | GET | `/api/v1/settings/module-defaults` | Get module defaults | `settings.read` |
+| 11 | PUT | `/api/v1/settings/module-defaults` | Update module defaults | `settings.configure` |
+| 12 | GET | `/api/v1/settings/holidays` | List holidays | `settings.read` |
+| 13 | POST | `/api/v1/settings/holidays` | Add holiday | `settings.configure` |
+| 14 | PUT | `/api/v1/settings/holidays/{id}` | Update holiday | `settings.configure` |
+| 15 | DELETE | `/api/v1/settings/holidays/{id}` | Remove holiday (soft delete) | `settings.configure` |
+| 16 | POST | `/api/v1/settings/reset` | Reset to defaults (confirmation required) | `settings.configure` |
+| 17 | GET | `/api/v1/settings/catalogue` | Available settings registry | `settings.read` |
+| 18 | GET | `/api/v1/platform/settings` | Platform-global settings | `platform_settings.read` |
+| 19 | PUT | `/api/v1/platform/settings` | Update platform-global settings | `platform_settings.configure` |
+
+**Permissions (exactly four):** `settings.read`, `settings.configure`, `platform_settings.read`, `platform_settings.configure`.
+
+**RBAC (`ELU-BFS-PF` §PF-011 §12):**
+
+| Actor | Read | Configure |
+|-------|:----:|:---------:|
+| Tenant Admin | ✓ (tenant settings) | ✓ (tenant settings) |
+| Platform Admin | ✓ (all) | ✓ (all) |
+| Finance User | ✓ (read-only) | — |
+| Sales Manager | ✓ (read-limited) | — |
+
+**Behaviour:**
+
+- **Tenant isolation:** tenant-scoped reads and writes are bound to the JWT tenant; a cross-tenant access attempt returns **404** (§1).
+- **Edition gate:** a toggle or preference that exceeds the tenant edition is rejected with **403 `EDITION_FORBIDDEN`** (§1), resolved through the existing `edition_feature` / `feature_catalogue` mechanism and `tenant_preference.edition_minimum`. Feature toggles cannot exceed the tenant edition (`BR-PF-078`).
+- **Locked preferences:** `tenant_preference.is_editable = false` means the preference is **Platform Admin only**; `true` permits Tenant Admin configuration (`BR-PF-083`; **ADR-017** rule 9 — there is **no** `lock_state` column).
+- **Reset:** `POST /settings/reset` requires explicit **Tenant Admin confirmation** (`BR-PF-080`).
+- **Audit:** every settings change emits an audit event through the existing `write_audit_event()` sink with **before/after field snapshots** (`BR-PF-077`; `ELU-BFS-PF` §PF-011 §15) — payload `{"before": {...}, "after": {...}}`. No second audit sink is introduced.
+- **Cache:** the tenant-scoped settings cache uses the existing Redis client with **TTL 300 seconds** (`BR-PF-082`); a **successful write invalidates** the tenant's cache entry; when Redis is unavailable the service **falls back to the database** and fails open.
+- **Notification channels:** a channel disabled at platform level cannot be enabled by a tenant (`BR-PF-081`).
+- **Formatting:** date/number-format changes apply to new records and reports; they are **not** retroactive on existing PDFs (`BR-PF-084`).
+- **Optimistic locking:** where applicable, updates accept `If-Match` / body `version_no` and return **409** on conflict (§1).
+
+**PF-011 DTO fields map to the BFS §9 logical shapes:**
+
+| Table | DTO fields (BFS §9 logical shape) | Notes |
+|-------|-----------------------------------|-------|
+| `tenant_settings` | `time_zone`, `date_format`, `time_format`, `currency_code`, `financial_year_start`, `default_language`, ... | **Released ORM column names are preserved and are not renamed.** The logical-name mapping is recorded in `ELU-DDD-PF` §11.1 |
+| `tenant_preference` | `preference_key`, `preference_value`, `preference_type`, `preference_group`, `description`, `is_editable`, `edition_minimum` | `edition_minimum` drives the edition gate |
+| `tenant_notification_preference` | `event_type`, `module_code`, `email_enabled`, `sms_enabled`, `whatsapp_enabled`, `push_enabled`, `internal_enabled`, `notify_actor`, `notify_manager`, `notify_admin`, `custom_recipients` | Column per channel |
+| `tenant_module_default` | `module_code`, `entity_type`, `field_name`, `default_value` | |
+| `tenant_holiday_calendar` | `holiday_name`, `holiday_date`, `is_recurring`, `holiday_type`, `calendar_year` | |
+| `platform_setting` | `id`, `key`, `value`, `description` | Platform-global (`/api/v1/platform/settings`), no `tenant_id`, no RLS |
+| `setting_catalogue` | `id`, `setting_key`, `value_type`, `default_value`, `description` | Platform-global; `setting_catalogue -> tenant_preference` is restrictive |
+
+**Status:** specification only. No PF-011 implementation, migration or schema change is authorised by this record; **no PF-001...PF-010 behaviour is changed**.
 
 ---
 
