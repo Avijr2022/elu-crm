@@ -43,7 +43,7 @@ foreach($x in @(
  'platform_setting | id, key UK, value, description',
  'setting_catalogue | id, setting_key UK, value_type, default_value, description',
  'tenant_preference | tenant_id, preference_key, preference_value, preference_type, preference_group, description, is_editable, edition_minimum',
- 'tenant_notification_preference | tenant_id, event_code, channel, is_enabled',
+ 'tenant_notification_preference | tenant_id, event_type, module_code, email_enabled, sms_enabled, whatsapp_enabled, push_enabled, internal_enabled, notify_actor, notify_manager, notify_admin, custom_recipients',
  'tenant_module_default | tenant_id, module_domain, defaults_json',
  'tenant_holiday_calendar | tenant_id, holiday_date, name, is_working_day'
 )){
