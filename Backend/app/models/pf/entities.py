@@ -110,6 +110,30 @@ class FeatureCatalogue(Base, TimestampMixin, SoftDeleteMixin):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
+class SettingCatalogue(Base):
+    __tablename__ = "setting_catalogue"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    setting_key: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    value_type: Mapped[str] = mapped_column(String, nullable=False)
+    default_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class PlatformSetting(Base):
+    __tablename__ = "platform_setting"
+    __table_args__ = {"schema": "core"}
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    key: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
 class EditionFeature(Base, TimestampMixin):
     __tablename__ = "edition_feature"
     __table_args__ = (

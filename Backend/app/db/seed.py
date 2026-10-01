@@ -377,6 +377,79 @@ def _sync_business_unit_permission_matrix(db: Session, tenant_id) -> None:
     db.flush()
 
 
+# PF-011 system-configuration capability matrix — BFS-PF-011 §12 (approved actor matrix).
+# Tenant Admin configures tenant settings; Platform Admin holds all four grains because
+# /api/v1/platform/settings is platform-global; Finance User and Sales Manager are
+# read-only / read-limited viewers (no configure grant). The generic platform seeding
+# hands the *whole* catalogue to TENANT_ADMIN/PLATFORM_ADMIN, so this sync is precisely
+# what prevents the four PF-011 grains from being granted universally by accident.
+SETTINGS_PERMISSION_MATRIX: dict[str, tuple[str, ...]] = {
+    "TENANT_ADMIN": ("settings.read", "settings.configure"),
+    "PLATFORM_ADMIN": (
+        "settings.read",
+        "settings.configure",
+        "platform_settings.read",
+        "platform_settings.configure",
+    ),
+    "FINANCE_USER": ("settings.read",),
+    "SALES_MANAGER": ("settings.read",),
+    "SALES_EXECUTIVE": (),
+    "PROJECT_MANAGER": (),
+}
+
+
+def _sync_settings_permission_matrix(db: Session, tenant_id) -> None:
+    """Align seeded PF-011 grants with the approved matrix (idempotent).
+
+    PF-011 equivalent of ``_sync_user_permission_matrix`` (HD-01 pattern): grants the
+    approved codes and revokes any grain that is not approved for the role. Both
+    ``settings.*`` and ``platform_settings.*`` are governed by this one matrix because
+    PF-011 owns both families, and the two prefixes cannot overlap under ``LIKE``.
+
+    PF-011 has no edition feature (``app.core.edition_gating`` carries no PF-011 constant),
+    so unlike ``branch.*`` / ``business_unit.*`` there is no edition gate to mirror here.
+    """
+    settings_perm_ids = {}
+    for prefix in ("settings.%", "platform_settings.%"):
+        settings_perm_ids.update(
+            {
+                code: permission_id
+                for code, permission_id in db.execute(
+                    select(Permission.permission_code, Permission.permission_id).where(
+                        Permission.permission_code.like(prefix)
+                    )
+                ).all()
+            }
+        )
+    if not settings_perm_ids:
+        return
+    for role_code, allowed_codes in SETTINGS_PERMISSION_MATRIX.items():
+        role = db.scalars(
+            select(Role).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code == role_code,
+            )
+        ).first()
+        if role is None:
+            continue
+        allowed_ids = {
+            settings_perm_ids[code] for code in allowed_codes if code in settings_perm_ids
+        }
+        for permission_id in allowed_ids:
+            _link_role_permission(db, role.role_id, permission_id)
+        stale_ids = [
+            pid for pid in settings_perm_ids.values() if pid not in allowed_ids
+        ]
+        if stale_ids:
+            db.execute(
+                delete(RolePermission).where(
+                    RolePermission.role_id == role.role_id,
+                    RolePermission.permission_id.in_(stale_ids),
+                )
+            )
+    db.flush()
+
+
 # 1x1 JPEG for seeded tenant branding (PDF logo smoke test).
 _SEED_LOGO_JPEG = (
     "data:image/jpeg;base64,"
@@ -433,6 +506,10 @@ PERMISSIONS = [
     ("business_unit.update", "Update business unit", "PF"),
     ("business_unit.delete", "Delete business unit", "PF"),
     ("business_unit.export", "Export business units", "PF"),
+    ("settings.read", "View system settings", "PF"),
+    ("settings.configure", "Configure system settings", "PF"),
+    ("platform_settings.read", "View platform-global settings", "PF"),
+    ("platform_settings.configure", "Configure platform-global settings", "PF"),
     ("lead.create", "Create lead", "CRM"),
     ("lead.read", "View lead", "CRM"),
     ("lead.update", "Update lead", "CRM"),
@@ -810,6 +887,9 @@ def seed_platform(db: Session) -> None:
     # PF-008 user/identity grants per BFS-PF-008 §12 (groundwork; no runtime grain enforcement).
     _sync_user_permission_matrix(db, tenant.tenant_id)
 
+    # PF-011 settings/platform-settings grants per BFS-PF-011 §12 (scoped; no universal grant).
+    _sync_settings_permission_matrix(db, tenant.tenant_id)
+
     # Seed admin acts as Platform Admin for PF-001 ops (Euphoria demo)
     admin = User(
         tenant_id=tenant.tenant_id,
@@ -866,6 +946,9 @@ def _ensure_platform_admin(
 
     # PF-008 user/identity grants per BFS-PF-008 §12 (groundwork; no runtime grain enforcement).
     _sync_user_permission_matrix(db, tenant.tenant_id)
+
+    # PF-011 settings/platform-settings grants per BFS-PF-011 §12 (scoped; no universal grant).
+    _sync_settings_permission_matrix(db, tenant.tenant_id)
 
     platform_role = db.scalars(
         select(Role).where(
@@ -999,6 +1082,8 @@ def provision_tenant_roles(db: Session, tenant_id) -> None:
     _sync_business_unit_permission_matrix(db, tenant_id)
     # PF-008 user/identity grants per BFS-PF-008 §12 (groundwork; no runtime grain enforcement).
     _sync_user_permission_matrix(db, tenant_id)
+    # PF-011 settings/platform-settings grants per BFS-PF-011 §12 (scoped; no universal grant).
+    _sync_settings_permission_matrix(db, tenant_id)
 
 
 def _upgrade_sal_permissions(db: Session, tenant: Tenant) -> None:
@@ -1141,6 +1226,7 @@ def _sync_pf_module_matrices(db: Session, tenant_id) -> None:
     if has_feature(db, tenant_id, BUSINESS_UNIT):
         _sync_business_unit_permission_matrix(db, tenant_id)
     _sync_user_permission_matrix(db, tenant_id)
+    _sync_settings_permission_matrix(db, tenant_id)
 
 
 def _ensure_community_demo_tenant(db: Session, editions: dict[str, Edition]) -> None:
