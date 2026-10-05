@@ -98,7 +98,7 @@ class SubscriptionService:
         sub: Subscription,
         *,
         change_type: str,
-        actor_id: UUID,
+        actor_id: UUID | None,
         from_status: Optional[str],
         to_status: Optional[str],
         from_edition_id: Optional[UUID] = None,
@@ -575,7 +575,7 @@ class SubscriptionService:
         self.db.commit()
 
     def expire(
-        self, subscription_id: UUID, actor_id: UUID, version_no: int
+        self, subscription_id: UUID, actor_id: UUID | None, version_no: int
     ) -> SubscriptionResponse:
         """Mark EXPIRED and cascade tenant → SUSPENDED (BR-PF-024)."""
         sub = self._load(subscription_id)
