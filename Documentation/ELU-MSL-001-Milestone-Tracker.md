@@ -58,6 +58,7 @@
 | 1.33 | 2026-09-28 | EIIP / Engineering (governance recording; approver identity not supplied in the authorising instruction; ELU-AI-001) | **PF-010 Audit & Compliance CORE — IMPLEMENTED, COMMITTED and PUSHED (branch `cursor/pf010-core-implementation`; NOT released).** Implementation commit `2085ea67971c47da1b34202c03c95b2988598ddb` (7 files, +416 / -0; parent `57c297ef8c93470133a380aa94620bb4aca63720`), pushed to `origin/cursor/pf010-core-implementation`; the remote ref equals the local commit and the upstream is set. **AC-02:** append-only guard on `audit.audit_event` — a `BEFORE UPDATE` trigger that fires for every role, with `elu_app` denied `UPDATE`/`DELETE`, and `DELETE` left privilege-controlled so the AC-03 retention purge under `owner_role()` remains possible. **AC-03:** retention windows by edition (90 / 365 / 2555 days) plus `purge_expired_audit_events()`; `JOB-PF-010-01` deferred. **Verified:** full backend suite **271 passed, 1 skipped**; PF-010 focused tests **7 passed**; app lifespan OK (`GET /health 200`); CI `36419765262` **SUCCESS** on `2085ea6`. **Not done:** no PR, no merge, no release approval, no tag; PF-010 recorded **IN PROGRESS** (not released) and the dashboard stays 0% / 8 of 11 because it counts released modules. Recorded in `ELU-MSL-002` change log **4.99** and `Documentation/CHANGELOG.md` (2026-09-28). |
 
 | 1.34 | 2026-10-01 | EIIP / Engineering (governance recording; approver identity not supplied in the authorising instruction; ELU-AI-001) | **PF-010 Audit & Compliance CORE — RELEASE APPROVED (`PF-010 RELEASE APPROVED: YES`); tracker and dashboard reconciled to RELEASED.** Release baseline / tag target `30bc3a0ecdb865367b6a5c61f0c5f2f04a6ede16` (merge of PR #32); implementation commit `2085ea67971c47da1b34202c03c95b2988598ddb`. Evidence: focused PF-010 tests **7 passed**; full backend regression **271 passed / 1 skipped**; CI run `36419765262` **SUCCESS**. Dashboard corrected to **9 of 11 (82 %)**; PF-011 governance remains unreconciled (still 0 %). `Phase-2-PF010` **NOT yet created** — when created it must point at the release baseline above, **not** at the tip of `master` and **not** at this governance commit. |
+| 1.35 | 2026-10-05 | PF-011 System Configuration released; `PF-011 RELEASE APPROVED: YES`; baseline/tag target `4a3f13c8731ef7124cf8ba6f92068b129636ccc1`; focused 72 passed / 1 skipped; full backend 343 passed / 2 skipped. |
 
 ---
 
@@ -142,7 +143,7 @@ Progress % is PMO estimate of completeness toward the **v1.0** release goal unle
 | PF-008 Users & Identity | **RELEASED** | `Phase-2-PF008` | Released baseline 20320125c4f37094b41e21f5800934699c881a66; implementation commit 771f846; PR #28; annotated tag object 2b5ab64831912de65fb47c601c40cce0018715d1; governance reconciliation only. |
 | PF-009 | RELEASE APPROVED (2026-09-24) — Batch 1 foundation merged and tagged; Batch 2 (runtime permission grain) IMPLEMENTED on `master` @ `d4e9659` — CI SUCCESS; RELEASE APPROVED 2026-09-24 - Batch-2 tag created and pushed 2026-09-24 | `Phase-2-PF009-Batch2` (annotated) - tag object `68b8c407b931d9c856b4d7c14ea104ea62084472` -> target `80a3671428a3befba194dbb44e73bd9738b25cc6`; Batch-1 `Phase-2-PF009` unchanged | RBAC |
 | PF-010 | **RELEASED — RELEASE APPROVED (`PF-010 RELEASE APPROVED: YES`)**; release baseline `30bc3a0ecdb865367b6a5c61f0c5f2f04a6ede16` (merge of PR #32) — CI **SUCCESS** (run `36419765262`); focused tests **7 passed**; full regression **271 passed / 1 skipped**; tag `Phase-2-PF010` **NOT yet created** (it must target the release baseline, not the tip of `master`) | `Phase-2-PF010` — **to be created** (not yet present) | Audit & Compliance |
-| PF-011 | NOT STARTED | — | System Configuration |
+| PF-011 | **RELEASED - RELEASE APPROVED (`PF-011 RELEASE APPROVED: YES`)** | `Phase-2-PF011` - annotated; tag object `4d0bdce7e210aa411601c199c2a3027a67cc3e8e` -> target `4a3f13c8731ef7124cf8ba6f92068b129636ccc1` | System Configuration |
 
 ### 3.2 One-Line Health
 
@@ -170,11 +171,11 @@ PF-007 Business Unit        ██████████ 100% RELEASED
 PF-008 Users & Identity     ██████████ 100% RELEASED
 PF-009 RBAC — RELEASE APPROVED 2026-09-24 (Batch 1 foundation merged and tagged; Batch 2 implemented on `master` @ d4e9659; Batch-2 tag `Phase-2-PF009-Batch2` created and pushed 2026-09-24 (object `68b8c407b931d9c856b4d7c14ea104ea62084472` -> target `80a3671428a3befba194dbb44e73bd9738b25cc6`); Batch-1 `Phase-2-PF009` unchanged)
 PF-010 Audit & Compliance   ██████████ 100%   ← **RELEASED (2026-10-01)** — release baseline 30bc3a0e; annotated tag Phase-2-PF010 **to be created** (must target the baseline, not the tip of master)
-PF-011 System Configuration ░░░░░░░░░░   0%
+PF-011 System Configuration ██████████ 100% RELEASED (2026-10-05)
 
 Overall
-Modules Completed (PF)     : 9 / 11  (82%)
-Modules Remaining (PF)     : 2
+Modules Completed (PF)     : 10 / 11  (91%)
+Modules Remaining (PF)     : 1
 Business Rules (PF-001…027): ~85% enforced / deferred documented
 API (PF platform paths)    : ~35 paths of future PF surface (growing)
 Database (PF delivered)    : ~55% of PF schema surface

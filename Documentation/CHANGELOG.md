@@ -1,5 +1,10 @@
 # Changelog
 
+### 2026-10-05
+- PF-011 System Configuration CORE - RELEASE APPROVED (PF-011 RELEASE APPROVED: YES); baseline/tag target 4a3f13c8731ef7124cf8ba6f92068b129636ccc1; annotated tag Phase-2-PF011 verified locally and remotely.
+- Verification: PF-011 focused tests 72 passed / 1 skipped; full backend regression 343 passed / 2 skipped.
+- Governance reconciliation only; no application-code, tag, merge or push action.
+
 All notable E-LinkUp implementation milestones.
 
 ### 2026-10-01

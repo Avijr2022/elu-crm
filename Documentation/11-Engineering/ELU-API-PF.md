@@ -196,7 +196,7 @@ applied to the PF-005 guard — while every still-valid deferral assertion (BR-P
 absence of FK and validation, `crm.opportunity.business_unit_id` absence, no reporting surface)
 is retained.
 
-### 4.6 PF-011 System Configuration — CORE (specified 2026-09-29, **NOT implemented**, NOT released)
+### 4.6 PF-011 System Configuration — CORE (implemented and RELEASED 2026-10-05)
 
 Specified by the PF-011 governed specification reconciliation: `ELU-BFS-PF` §PF-011 §9/§10/§12/§15, **ADR-017** and `ELU-DDD-PF` §11. Module scope: PF-011 System Configuration / PF-011-001 Tenant Settings / PF-011-001-001 Business Preferences. Cross-cutting behaviour follows **§1** unless stated otherwise.
 
@@ -259,7 +259,7 @@ Specified by the PF-011 governed specification reconciliation: `ELU-BFS-PF` §PF
 | `platform_setting` | `id`, `key`, `value`, `description` | Platform-global (`/api/v1/platform/settings`), no `tenant_id`, no RLS |
 | `setting_catalogue` | `id`, `setting_key`, `value_type`, `default_value`, `description` | Platform-global; `setting_catalogue -> tenant_preference` is restrictive |
 
-**Status:** specification only. No PF-011 implementation, migration or schema change is authorised by this record; **no PF-001...PF-010 behaviour is changed**.
+**Status:** IMPLEMENTED and RELEASED. Release baseline/tag target: `4a3f13c8731ef7124cf8ba6f92068b129636ccc1`; annotated tag `Phase-2-PF011`. No PF-001...PF-010 behaviour is changed by this release.
 
 ---
 

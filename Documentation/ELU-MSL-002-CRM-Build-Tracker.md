@@ -5,7 +5,6 @@
 **Last synced:** 2026-09-12
 
 ---
-
 ## Executive snapshot
 
 | Area | Remark |
@@ -17,7 +16,6 @@
 | Tests | **118 pytest** (1 skipped — optional DeepSeek) + **25 Flutter**; hosted CI green |
 
 ---
-
 ## Deliverables (v4.12)
 
 | # | Feature |
@@ -31,7 +29,6 @@
 | 7 | Flutter Invoices list (status filter) + detail with Issue action, routed under FIN nav |
 
 ---
-
 ## API changes (v4.12)
 
 | Endpoint | Notes |
@@ -45,7 +42,6 @@
 | `POST /api/v1/fin/invoices/{id}/issue` | DRAFT → ISSUED; `409` if already issued, `422` if CANCELLED/non-DRAFT |
 
 ---
-
 ## Next jobs
 
 | P | # | Job | Module |
@@ -65,9 +61,9 @@
 | P4 | 10 | Hygiene: `HTTP_422_UNPROCESSABLE_ENTITY` deprecation cleanup (10 call sites) | ENG |
 
 ---
-
 ## Change log
 
+| 5.01 | 2026-10-05 | PF-011 System Configuration CORE - RELEASE APPROVED (`PF-011 RELEASE APPROVED: YES`); baseline/tag target `4a3f13c8731ef7124cf8ba6f92068b129636ccc1`; focused 72 passed / 1 skipped; full backend 343 passed / 2 skipped; existing `Phase-2-PF011` tag verified locally and remotely; governance reconciliation only. |
 | Version | Date | Change |
 |---------|------|--------|
 | 4.10 | 2026-09-07 | Branding UI; SO filter UI; payment stub persistence; JPEG PDF dimensions |

@@ -151,7 +151,7 @@ PF-011 test coverage follows the reconciled ELU-BFS-PF, ELU-DDD-PF, ELU-ERD-PF, 
 
 **PF-011 security coverage:** all tenant-scoped PF-011 entities require repository tenant filtering and PostgreSQL RLS. Tests must prove fail-closed behavior, cross-tenant isolation, server-side edition enforcement, and permission enforcement. Client-supplied `tenant_id` must not override authenticated tenant scope.
 
-**PF-011 implementation status:** this section defines the governed test contract. It does not claim that PF-011 implementation tests have already been automated or executed.
+**PF-011 implementation status:** IMPLEMENTED and RELEASED. The PF-011 focused automated suite has been executed with **72 passed / 1 skipped**; full backend regression has been executed with **343 passed / 2 skipped**.
 
 ---
 
