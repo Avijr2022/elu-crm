@@ -135,7 +135,7 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | REGISTERED address (BR-PF-012) | `tenant_address` + UK | create | Register | create flow asserts address |
 | ACTIVE edition only (BR-PF-013) | `edition` via `assert_assignable` | create | Register | `test_br_pf_013_deprecated_edition_blocked` |
 | Suspended login block (BR-PF-014) | `tenant.status` | `/auth/login`, refresh | — | auth_service + smoke |
-| Soft-close (BR-PF-015) | `tenant` CLOSED + soft delete | `DELETE /platform/tenants/{id}` | — | `test_soft_delete_closed` |
+| Soft-close (BR-PF-015; REQ-PF-012) | `tenant` CLOSED + soft delete | `DELETE /platform/tenants/{id}` | — | `test_soft_delete_closed` |
 | Own profile isolation (BR-PF-016) | `tenant` | `GET /tenant/profile` | — | `test_tenant_profile_own` |
 | Approve / Suspend / Reactivate | `tenant`, `tenant_status_history`, audit | `.../approve|suspend|reactivate` | action buttons | lifecycle test |
 | List / Search / Export | `tenant` | list/search/export | List + Search | `test_list_tenants`, `test_search_and_export` |
