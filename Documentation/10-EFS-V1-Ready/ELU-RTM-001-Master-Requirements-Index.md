@@ -1,6 +1,6 @@
 # E-LinkUp Master Requirements & Traceability Index
 **Document ID:** ELU-RTM-001  
-**Version:** 1.9
+**Version:** 2.0
 **Status:** Approved
 **Document Owner:** BA / QA
 **Related Documents:** ELU-DOC-001, ELU-EFS-001, ELU-DF-001, ELU-TST-*, ELU-BFS-*, ELU-QA-PF001
@@ -26,6 +26,7 @@
 | 1.7 | 2026-08-06 | EIIP / QA | PF-003A Enterprise Tenant Isolation traceability (QA PASS — await RELEASE APPROVED) |
 | 1.8 | 2026-08-06 | EIIP / PMO | PF-003A RELEASE APPROVED — baseline Phase-2-PF003A; start PF-004 |
 | 1.9 | 2026-09-29 | EIIP / QA | PF-011 System Configuration requirement, API, table, UI and test traceability reconciliation |
+| 2.0 | 2026-10-05 | EIIP / PMO | PF-011 RELEASE APPROVED — baseline Phase-2-PF011; implementation and release traceability reconciled |
 
 ## 1. Requirement ID Ranges
 
@@ -271,9 +272,9 @@ Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.s
 | PF-007 Business Unit Management | Phase 2 | `80ae94e1dd071f62198571a7592cf81246ee591e` | `Phase-2-PF007` | PF-007 RELEASE APPROVED: YES |
 ---
 
-## 12. Implementation Traceability - PF-011 System Configuration (RECONCILED - NOT IMPLEMENTED)
+## 12. Implementation Traceability - PF-011 System Configuration (RELEASED)
 
-**Status:** Specification reconciliation complete under ADR-017. PF-011 implementation and database migration are not authorized until the reconciled downstream contracts are approved.
+**Status:** PF-011 implementation is released and approved. Release baseline: `4a3f13c8731ef7124cf8ba6f92068b129636ccc1`; annotated tag: `Phase-2-PF011`; release decision: **PASS - RELEASE APPROVED**.
 
 | Business Rule / Control | Table(s) | API / Runtime | UI | Test |
 |---|---|---|---|---|
@@ -314,6 +315,6 @@ Required permissions are `settings.read`, `settings.configure`, `platform_settin
 
 PF-011 test specification `ELU-TST-PF` §2.4 defines TC-PF-011-01 through TC-PF-011-24 covering business preferences, notifications, module defaults, holidays, reset, catalogue, platform settings, edition gating, audit before/after snapshots, cache behavior, RBAC, and tenant isolation.
 
-**Implementation status:** NOT IMPLEMENTED. No PF-011 Backend or Database mutation is represented by this RTM entry.
+**Implementation status:** IMPLEMENTED AND RELEASED. PF-011 Backend and Database implementation is represented by the `Phase-2-PF011` release baseline. Focused PF-011 validation: **72 passed / 1 skipped**. Release approval: **PF-011 RELEASE APPROVED: YES**.
 
 *© Euphoria Infotech (I) Limited — ELU-RTM-001*
