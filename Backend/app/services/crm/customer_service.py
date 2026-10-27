@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import AppError, NotFoundError
+from app.core.exceptions import AppError, NotFoundError, ValidationAppError
 from app.models.crm import Customer, CustomerAddress, CustomerContact, Lead, Opportunity
 from app.models.pf import Tenant
 from app.repositories.crm.customer_contact_repository import (
@@ -11,6 +11,18 @@ from app.repositories.crm.customer_contact_repository import (
     CustomerContactRepository,
 )
 from app.repositories.crm.customer_repository import CustomerRepository
+from app.repositories.crm.customer_tax_registration_repository import (
+    CustomerTaxRegistrationRepository,
+)
+from app.schemas.crm.customer_duplicate import (
+    CustomerDuplicateCheckRequest,
+    CustomerDuplicateCheckResponse,
+    CustomerDuplicateMatch,
+    mask_tax_number,
+    normalize_customer_name,
+    validate_gstin_tax_number,
+    validate_tax_type,
+)
 from app.repositories.crm.lead_repository import LeadRepository
 from app.repositories.pf.user_repository import TenantRepository
 from app.schemas.crm.customer import (
@@ -29,6 +41,7 @@ class CustomerService:
     def __init__(self, db: Session) -> None:
         self.db = db
         self.repo = CustomerRepository(db)
+        self.tax_regs = CustomerTaxRegistrationRepository(db)
         self.contacts = CustomerContactRepository(db)
         self.addresses = CustomerAddressRepository(db)
         self.leads = LeadRepository(db)
@@ -52,6 +65,69 @@ class CustomerService:
             page=page,
             page_size=page_size,
         )
+
+    def duplicate_check(
+        self, tenant_id: UUID, payload: CustomerDuplicateCheckRequest
+    ) -> CustomerDuplicateCheckResponse:
+        matches: list[CustomerDuplicateMatch] = []
+        blocked = False
+        matched_ids: set[UUID] = set()
+
+        if payload.tax_number and payload.tax_number.strip():
+            # BR-CRM-045: only GSTIN is supported. Validating the type first guarantees an
+            # unsupported or missing type is rejected and never reaches the repository
+            # duplicate lookup, and that no other type is silently read as GSTIN.
+            if "tax_type" not in payload.model_fields_set:
+                raise ValidationAppError(
+                    "tax_type is required when tax_number is supplied (BR-CRM-045)",
+                    req_id="REQ-CRM-027",
+                )
+            tax_type = validate_tax_type(payload.tax_type)
+            normalized_tax = validate_gstin_tax_number(payload.tax_number)
+            tax_customer = self.tax_regs.find_active_tax_match(
+                tenant_id, tax_type, normalized_tax
+            )
+            if tax_customer is not None:
+                matched_ids.add(tax_customer.customer_id)
+                matches.append(
+                    CustomerDuplicateMatch(
+                        customer_id=tax_customer.customer_id,
+                        customer_number=tax_customer.customer_number,
+                        legal_name=tax_customer.legal_name,
+                        trade_name=tax_customer.trade_name,
+                        match_kind="TAX_ID",
+                        severity="BLOCK",
+                        tax_number_masked=mask_tax_number(normalized_tax),
+                    )
+                )
+                blocked = True
+
+        legal_norm = (
+            normalize_customer_name(payload.legal_name) if payload.legal_name else None
+        )
+        trade_norm = (
+            normalize_customer_name(payload.trade_name) if payload.trade_name else None
+        )
+        for customer, kind in self.repo.find_name_matches(
+            tenant_id,
+            legal_name_normalized=legal_norm,
+            trade_name_normalized=trade_norm,
+        ):
+            if customer.customer_id in matched_ids:
+                continue
+            matched_ids.add(customer.customer_id)
+            matches.append(
+                CustomerDuplicateMatch(
+                    customer_id=customer.customer_id,
+                    customer_number=customer.customer_number,
+                    legal_name=customer.legal_name,
+                    trade_name=customer.trade_name,
+                    match_kind=kind,
+                    severity="WARNING",
+                )
+            )
+
+        return CustomerDuplicateCheckResponse(blocked=blocked, matches=matches)
 
     def get_customer(self, tenant_id: UUID, customer_id: UUID) -> CustomerResponse:
         row = self.repo.get_by_id(tenant_id, customer_id)

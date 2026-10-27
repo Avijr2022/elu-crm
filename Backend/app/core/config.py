@@ -15,10 +15,12 @@ class Settings(BaseSettings):
     app_env: str = "local"
     api_v1_prefix: str = "/api/v1"
 
-    # Host-run default (Docker maps Postgres to localhost:55432).
+    # Host-run default (docker-compose.yml maps container 5432 to host 15432).
     # Inside Compose, set DATABASE_URL=...@postgres:5432/elinkup.
+    # 15432 is deliberate: it avoids the host PostgreSQL on 5432/5433 and Windows
+    # reserved/dynamic ranges, which cover 55432 on some hosts.
     database_url: str = (
-        "postgresql+psycopg://elinkup:elinkup_local@localhost:55432/elinkup"
+        "postgresql+psycopg://elinkup:elinkup_local@localhost:15432/elinkup"
     )
     database_url_host: str | None = None
 

@@ -1,5 +1,13 @@
 # Changelog
 
+### 2026-10-09
+- **REQ-CRM-027 IMPLEMENTATION AUTHORIZED: YES** — human decision recorded verbatim. CRM-003 / WF-CRM-003 · REQ-CRM-027 (duplicate-check; RTM **TC-CRM-003-03** in `V1-PF-CRM`). Approver personal name **PENDING** (not supplied; not invented — ELU-AI-001).
+- **Authorized scope:** GSTIN-only duplicate-check v1 via `POST /api/v1/crm/customers/duplicate-check`; explicitly reject unsupported `tax_type` values (v1 allow-list: `GSTIN`); duplicate active GSTIN → blocking duplicate-check result; duplicate normalized customer names → WARNING; supporting schema/repository and contract/test/documentation alignment per `ELU-MSL-002` change-log row **5.02**.
+- **Deferred:** **AC-CRM-CUS-002** (`ELU-BFS-CRM` §16; `EFS-CRM` AC table) and tax-registration persistence on customer create/update — not satisfied by duplicate-check alone; separate implementation required.
+- **Implementation status:** runtime rejection of unsupported `tax_type` values is implemented and verified by focused tests; **TC-CRM-003-03** is recorded in `Documentation/11-Engineering/ELU-TST-CRM.md` §1. Focused verification: 20 passed. Overall REQ-CRM-027 implementation is not yet certified complete. AC-CRM-CUS-002 and tax-registration persistence on customer create/update remain deferred.
+- **Authorization only:** no implementation certification, **no commit**, **no push**, no PR, no merge, no release approval, **no tag**. Work baseline: branch `cursor/pf011-core-implementation`, HEAD `fc8d128e68c0f3dc5aa22da3a71e2149a0b46966`.
+- Registers: `ELU-MSL-002` change-log **5.02**; `ELU-MSL-001` programme tracker unchanged (no REQ-CRM-027 row); `ELU-GOV-VAL-CRM-001` unchanged.
+
 ### 2026-10-05
 - PF-011 System Configuration CORE - RELEASE APPROVED (PF-011 RELEASE APPROVED: YES); baseline/tag target 4a3f13c8731ef7124cf8ba6f92068b129636ccc1; annotated tag Phase-2-PF011 verified locally and remotely.
 - Verification: PF-011 focused tests 72 passed / 1 skipped; full backend regression 343 passed / 2 skipped.

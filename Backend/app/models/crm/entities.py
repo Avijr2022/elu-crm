@@ -168,6 +168,36 @@ class Customer(Base):
     version_no: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
 
 
+class CustomerTaxRegistration(Base):
+    __tablename__ = "customer_tax_registration"
+    __table_args__ = {"schema": "crm"}
+
+    customer_tax_registration_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("core.tenant.tenant_id"), nullable=False, index=True
+    )
+    customer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("crm.customer.customer_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tax_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    tax_number: Mapped[str] = mapped_column(String(30), nullable=False)
+    state_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    created_on: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    modified_on: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    version_no: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
+
+
 class CustomerContact(Base):
     __tablename__ = "customer_contact"
     __table_args__ = {"schema": "crm"}

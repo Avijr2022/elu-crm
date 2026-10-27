@@ -16,6 +16,7 @@ _CRM_SCRIPTS = (
     "005_crm_customer_contact_address.sql",
     "006_crm_lookup.sql",
     "007_crm_activity_outcome.sql",
+    "008_crm_customer_tax_registration.sql",
 )
 
 
