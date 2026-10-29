@@ -2,9 +2,10 @@ from datetime import date
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.core.exceptions import AppError, NotFoundError, ValidationAppError
-from app.models.crm import Customer, CustomerAddress, CustomerContact, Lead, Opportunity
+from app.models.crm import Customer, CustomerAddress, CustomerContact, CustomerTaxRegistration, Lead, Opportunity
 from app.models.pf import Tenant
 from app.repositories.crm.customer_contact_repository import (
     CustomerAddressRepository,
@@ -146,6 +147,34 @@ class CustomerService:
                 422,
                 req_id="REQ-CRM-003",
             )
+
+        normalized_tax = None
+        tax_type = None
+        if payload.tax_number:
+            if "tax_type" not in payload.model_fields_set or not payload.tax_type:
+                raise ValidationAppError(
+                    "tax_type is required when tax_number is supplied (BR-CRM-045)",
+                    req_id="REQ-CRM-028",
+                )
+            tax_type = validate_tax_type(payload.tax_type)
+            normalized_tax = validate_gstin_tax_number(payload.tax_number)
+
+            existing = self.tax_regs.find_active_tax_match(
+                tenant_id, tax_type, normalized_tax
+            )
+            if existing is not None:
+                raise AppError(
+                    "CONFLICT",
+                    "A customer with this GSTIN already exists (BR-CRM-045)",
+                    409,
+                    req_id="REQ-CRM-028",
+                )
+        elif payload.tax_type:
+            raise ValidationAppError(
+                "tax_number is required when tax_type is supplied (BR-CRM-045)",
+                req_id="REQ-CRM-028",
+            )
+
         customer = Customer(
             customer_id=uuid4(),
             tenant_id=tenant_id,
@@ -158,7 +187,45 @@ class CustomerService:
             source_opportunity_id=payload.source_opportunity_id,
             notes=payload.notes,
         )
-        return self._to_response(self.repo.add(customer), include_children=True)
+
+        # Stage both rows in one transaction. Do not use CustomerRepository.add(),
+        # which commits the customer before a tax registration can be persisted.
+        try:
+            self.db.add(customer)
+            self.db.flush()
+            if normalized_tax is not None and tax_type is not None:
+                self.db.add(
+                    CustomerTaxRegistration(
+                        customer_tax_registration_id=uuid4(),
+                        tenant_id=tenant_id,
+                        customer_id=customer.customer_id,
+                        tax_type=tax_type,
+                        tax_number=normalized_tax,
+                        state_code=payload.state_code,
+                    )
+                )
+            self.db.commit()
+            self.db.refresh(customer)
+        except IntegrityError as exc:
+            self.db.rollback()
+            orig = exc.orig
+            sqlstate = getattr(orig, "sqlstate", None) or getattr(orig, "pgcode", None)
+            diag = getattr(orig, "diag", None)
+            constraint_name = getattr(diag, "constraint_name", None)
+            if (
+                normalized_tax is not None
+                and sqlstate == "23505"
+                and constraint_name == "uk_cust_tax_tenant_type_number_active"
+            ):
+                raise AppError(
+                    "CONFLICT",
+                    "A customer with this GSTIN already exists or conflicts with an existing registration",
+                    409,
+                    req_id="REQ-CRM-028",
+                ) from exc
+            raise
+
+        return self._to_response(customer, include_children=True)
 
     def create_from_opportunity(
         self, tenant_id: UUID, owner_id: UUID, opp: Opportunity
