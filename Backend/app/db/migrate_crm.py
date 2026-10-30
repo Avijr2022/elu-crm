@@ -1,4 +1,4 @@
-"""CRM DDL applicator (idempotent)."""
+﻿"""CRM DDL applicator (idempotent)."""
 
 from pathlib import Path
 
@@ -17,6 +17,7 @@ _CRM_SCRIPTS = (
     "006_crm_lookup.sql",
     "007_crm_activity_outcome.sql",
     "008_crm_customer_tax_registration.sql",
+    "009_crm_customer_status_history.sql",
 )
 
 

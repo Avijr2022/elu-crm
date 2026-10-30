@@ -1,4 +1,4 @@
-from app.models.crm.entities import (
+﻿from app.models.crm.entities import (
     Activity,
     ActivityLink,
     ActivityOutcome,
@@ -6,6 +6,7 @@ from app.models.crm.entities import (
     Customer,
     CustomerAddress,
     CustomerContact,
+    CustomerStatusHistory,
     CustomerTaxRegistration,
     Lead,
     Opportunity,
@@ -18,6 +19,7 @@ __all__ = [
     "Customer",
     "CustomerContact",
     "CustomerTaxRegistration",
+    "CustomerStatusHistory",
     "CustomerAddress",
     "Activity",
     "ActivityLink",
