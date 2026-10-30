@@ -7,7 +7,7 @@
 
 | ID | Module | Debt Item | Severity | Status | Notes |
 |----|--------|-----------|----------|--------|-------|
-| TD-PF-003-01 | PF-003 | Hourly expire scheduler job (BR-PF-024 “within 1 hour”) | Med | Open | Manual `POST .../expire` enforces cascade |
+| TD-PF-003-01 | PF-003 | Hourly expire scheduler job (BR-PF-024 “within 1 hour”) | Med | Implemented | Runnable `python -m app.jobs.expire_due_trial_subscriptions`; external scheduler remains required for hourly invocation |
 | TD-PF-003-02 | PF-003 | Permission-grain RBAC (`subscription.*`) beyond Platform Admin role gate | Low | Open | Role gate sufficient for Phase-2 |
 | TD-PF-003-03 | PF-003 | BR-PF-022 seat check on user create | Med | Deferred | PF-008 Users |
 | TD-PF-003-04 | PF-003 | Subscription notification emails (NTF-PF-003-*) | Low | Deferred | CPS Notification Engine |

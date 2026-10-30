@@ -1,6 +1,6 @@
 # E-LinkUp Master Requirements & Traceability Index
 **Document ID:** ELU-RTM-001  
-**Version:** 1.9
+**Version:** 2.1
 **Status:** Approved
 **Document Owner:** BA / QA
 **Related Documents:** ELU-DOC-001, ELU-EFS-001, ELU-DF-001, ELU-TST-*, ELU-BFS-*, ELU-QA-PF001
@@ -26,6 +26,8 @@
 | 1.7 | 2026-08-06 | EIIP / QA | PF-003A Enterprise Tenant Isolation traceability (QA PASS — await RELEASE APPROVED) |
 | 1.8 | 2026-08-06 | EIIP / PMO | PF-003A RELEASE APPROVED — baseline Phase-2-PF003A; start PF-004 |
 | 1.9 | 2026-09-29 | EIIP / QA | PF-011 System Configuration requirement, API, table, UI and test traceability reconciliation |
+| 2.0 | 2026-10-05 | EIIP / PMO | PF-011 RELEASE APPROVED — baseline Phase-2-PF011; implementation and release traceability reconciled |
+| 2.1 | 2026-10-07 | EIIP / PMO | PF-008 Users & Identity and PF-009 Roles & Permissions release traceability reconciliation |
 
 ## 1. Requirement ID Ranges
 
@@ -133,7 +135,7 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 | REGISTERED address (BR-PF-012) | `tenant_address` + UK | create | Register | create flow asserts address |
 | ACTIVE edition only (BR-PF-013) | `edition` via `assert_assignable` | create | Register | `test_br_pf_013_deprecated_edition_blocked` |
 | Suspended login block (BR-PF-014) | `tenant.status` | `/auth/login`, refresh | — | auth_service + smoke |
-| Soft-close (BR-PF-015) | `tenant` CLOSED + soft delete | `DELETE /platform/tenants/{id}` | — | `test_soft_delete_closed` |
+| Soft-close (BR-PF-015; REQ-PF-012) | `tenant` CLOSED + soft delete | `DELETE /platform/tenants/{id}` | — | `test_soft_delete_closed` |
 | Own profile isolation (BR-PF-016) | `tenant` | `GET /tenant/profile` | — | `test_tenant_profile_own` |
 | Approve / Suspend / Reactivate | `tenant`, `tenant_status_history`, audit | `.../approve|suspend|reactivate` | action buttons | lifecycle test |
 | List / Search / Export | `tenant` | list/search/export | List + Search | `test_list_tenants`, `test_search_and_export` |
@@ -229,7 +231,7 @@ SoT: **ELU-EFS-001** + companion V1 packs (**ELU-EFS-SOT-001**). Each workflow m
 
 ---
 
-## 11. Implementation Traceability — PF-005 Branch Management (IMPLEMENTED — NOT RELEASED)
+## 11. Implementation Traceability — PF-005 Branch Management (RELEASED — tag `Phase-2-PF005`)
 
 Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.sql` · RLS: `012_rls_pf003a.sql` (ADR-015) · Test spec: `ELU-TST-PF` §2.2.
 
@@ -248,7 +250,7 @@ Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.s
 | Branch history | `BranchService.history()` + schemas — **service-only, no API endpoint** (BFS §10 defines none) | — | service-level assertions |
 | Tenant isolation | FORCE RLS + `tenant_isolation` on `core.branch`, `core.branch_address` | — | TC-PF-ISO-05 |
 
-**Status:** **IMPLEMENTED — NOT RELEASED.** Groundwork Batch 1 (specification, schema, RLS, ORM, seed) **plus Batch 2 — backend functional layer**, delivered directly to `master` at `4430f9d2b9eedc51dede1ca1cf6183508a756dac` (2026-09-12): `app/schemas/pf/branch.py`, `app/services/pf/branch_service.py`, `app/api/v1/pf/branches.py` (+ router registration), `tests/test_pf005_branches.py`, `TC-PF-ISO-05`. No Flutter/UI, notifications or reports.
+**Status:** **IMPLEMENTED AND RELEASED** — human release approval recorded 2026-09-14; annotated tag `Phase-2-PF005` targets `bdc188c8ff1c89c3e0578830ef73c9934536b495`. Groundwork Batch 1 (specification, schema, RLS, ORM, seed) **plus Batch 2 — backend functional layer**, delivered directly to `master` at `4430f9d2b9eedc51dede1ca1cf6183508a756dac` (2026-09-12): `app/schemas/pf/branch.py`, `app/services/pf/branch_service.py`, `app/api/v1/pf/branches.py` (+ router registration), `tests/test_pf005_branches.py`, `TC-PF-ISO-05`. No Flutter/UI, notifications or reports.
 **SQL:** `014_branch_pf005.sql`, `014_branch_pf005_rollback.sql`  
 **RLS:** `012_rls_pf003a.sql` (tables added to the PF-003A loop), `migrate_pf003a.py::RLS_TABLES`  
 **ORM:** `app/models/pf/entities.py` — `Branch`, `BranchAddress`  
@@ -257,12 +259,32 @@ Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.s
 
 **Tests:** implemented — `Backend/tests/test_pf005_branches.py` (15) + `TC-PF-ISO-05` in `Backend/tests/isolation/test_tenant_isolation.py` (13 isolation tests); full backend suite **141 passed, 1 skipped**; no PF-001…PF-004 regression. See `ELU-TST-PF` §2.2.
 
-**Baseline:** **none — PF-005 is NOT released**: no release approval, no QA release audit, no tag.
+**Release baseline:** annotated tag `Phase-2-PF005` → `bdc188c8ff1c89c3e0578830ef73c9934536b495`; release audit: `ELU-QA-PF005-Branch-Management-Release-Audit.md`; release notes: `ELU-REL-PF005-Phase-2-PF005-Release-Notes.md`.
 
 **Deferred (recorded):** AC-PF-005-04 / BR-PF-038 and `users.branch_id` and branch-head assignment/validation → **PF-008**; `department` linkage → **PF-006**; BR-PF-037 project→branch enforcement → deferred until a project→branch linkage exists; **NTF-PF-005-\*** and **RPT-PF-005-\*** → deferred; runtime permission-grain enforcement → **PF-009** (role gates only for now); branch audit history → service-only, no API endpoint.
 
 ---
 
+
+## 12. Implementation Traceability - PF-006 Department Management (RELEASED - tag `Phase-2-PF006`)
+
+**Release baseline:** `12b24543286b7c79b6145c40dc8a94ffda489021`
+**Release tag:** `Phase-2-PF006`
+**Release status:** **IMPLEMENTED AND RELEASED** - `PF-006 RELEASE APPROVED: YES` (2026-09-16)
+
+| Requirement / control | Traceability | Status |
+|---|---|---|
+| BR-PF-041 | Five-level department hierarchy; sixth level rejected | IMPLEMENTED |
+| BR-PF-042 | Circular parent relationship rejected | IMPLEMENTED |
+| BR-PF-044 | Department with users cannot be deleted | IMPLEMENTED |
+| AC-PF-006-01 through AC-PF-006-04 | `Backend/tests/test_pf006_departments.py` | 36/36 passed |
+| Department API | `Backend/app/api/v1/pf/departments.py` - 11 approved operations | IMPLEMENTED |
+| Tenant isolation | PF-003A RLS integration | IMPLEMENTED |
+
+**Evidence:** `ELU-QA-PF006` v1.0, `ELU-REL-PF006-Phase-2-PF006-Release-Notes.md`, `ELU-TST-PF` §2.3, release tag `Phase-2-PF006`.
+
+**Excluded from release scope:** Flutter UI, workflow/CPS-001, notifications, reports, PF-009 runtime permission grain, department address structures, and `users.department_id` (PF-008).
+---
 
 ### PF-007 Release Traceability Record
 
@@ -271,9 +293,53 @@ Specification: `ELU-BFS-PF-005` §7/§9/§10/§16 · Schema: `014_branch_pf005.s
 | PF-007 Business Unit Management | Phase 2 | `80ae94e1dd071f62198571a7592cf81246ee591e` | `Phase-2-PF007` | PF-007 RELEASE APPROVED: YES |
 ---
 
-## 12. Implementation Traceability - PF-011 System Configuration (RECONCILED - NOT IMPLEMENTED)
+## 12. Implementation Traceability - PF-008 Users & Identity (RELEASED)
 
-**Status:** Specification reconciliation complete under ADR-017. PF-011 implementation and database migration are not authorized until the reconciled downstream contracts are approved.
+**Release baseline:** `20320125c4f37094b41e21f5800934699c881a66`
+**Release tag:** `Phase-2-PF008`
+**Release status:** IMPLEMENTED AND RELEASED - HUMAN RELEASE APPROVAL RECORDED
+
+PF-008 traceability reconciles the released Users & Identity implementation with the V1 requirements `REQ-PF-015` through `REQ-PF-024`.
+
+| Requirement | Traceability | Status |
+|---|---|---|
+| REQ-PF-015 | User invitation with tenant-scoped user lifecycle and branch/department assignment | IMPLEMENTED |
+| REQ-PF-016 | Seat-limit enforcement during user creation/invitation | IMPLEMENTED |
+| REQ-PF-017 | Invite-token activation and password handling; BR-PF-053 password policy remains partial because tenant security policy storage was not implemented in PF-008 | PARTIAL / DEFERRED GAP |
+| REQ-PF-018 | Role assignment/revocation and JWT permission refresh boundary is covered by PF-009; PF-008 provides user-role integration | PF-009 |
+| REQ-PF-019 | Custom role-permission matrix and edition role limits | PF-009 |
+| REQ-PF-020 | MFA enforcement through `tenant_security.mfa_required` | DEFERRED |
+| REQ-PF-021 | Five failed-login lockout with 30-minute lock | IMPLEMENTED |
+| REQ-PF-022 | User deactivation/reactivation and session invalidation | IMPLEMENTED |
+| REQ-PF-023 | At least one ACTIVE Tenant Admin guard | IMPLEMENTED |
+| REQ-PF-024 | User directory/export capability; role-permission matrix portion is covered by PF-009 RBAC scope | SPLIT: PF-008 / PF-009 |
+
+`REQ-PF-014` is not attributed to PF-008: organisation/branch/department/business-unit hierarchy was already delivered through the released PF-004, PF-005, PF-006 and PF-007 work.
+
+**Evidence:** `ELU-REL-PF008-Phase-2-PF008-Release-Notes.md`, `PF008_CORE_IMPLEMENTATION_MAP.md`, `PF008_CORE_EVIDENCE_REPORT.md` (historical implementation evidence), and release tag `Phase-2-PF008`.
+
+## 14. Implementation Traceability - PF-009 Roles & Permissions (RELEASED)
+
+**Release baselines:** `2a2ce45213a6d0e96409a083c594b121686dfa22` (Batch 1) and `80a3671428a3befba194dbb44e73bd9738b25cc6` (Batch 2)
+**Release tags:** `Phase-2-PF009`, `Phase-2-PF009-Batch2`
+**Release status:** IMPLEMENTED AND RELEASED - `PF-009 RELEASE APPROVED: YES` (2026-09-24)
+
+PF-009 traceability reconciles the released RBAC implementation with the V1 requirements `REQ-PF-013`, `REQ-PF-018`, and `REQ-PF-019`.
+
+| Requirement | Traceability | Status |
+|---|---|---|
+| REQ-PF-013 | Permission catalogue and system-role seed/bootstrap foundation | IMPLEMENTED |
+| REQ-PF-018 | Multi-role foundation, role assignment/revocation and permission/JWT refresh integration | IMPLEMENTED |
+| REQ-PF-019 | Custom role-permission matrix and edition-limit enforcement foundation | IMPLEMENTED |
+
+PF-009 Batch 2 release evidence records **130 focused PF-005 through PF-009 tests passed** and CI run `35886328014` as **SUCCESS**.
+
+The broader BFS RBAC rules `BR-PF-065` and `BR-PF-067` and other future RBAC/ABAC capabilities remain outside the released PF-009 scope where explicitly deferred by the release package.
+
+**Evidence:** `ELU-REL-PF009-Phase-2-PF009-Release-Notes.md`, release tags `Phase-2-PF009` and `Phase-2-PF009-Batch2`.
+## 15. Implementation Traceability - PF-011 System Configuration (RELEASED)
+
+**Status:** PF-011 implementation is released and approved. Release baseline: `4a3f13c8731ef7124cf8ba6f92068b129636ccc1`; annotated tag: `Phase-2-PF011`; release decision: **PASS - RELEASE APPROVED**.
 
 | Business Rule / Control | Table(s) | API / Runtime | UI | Test |
 |---|---|---|---|---|
@@ -314,6 +380,6 @@ Required permissions are `settings.read`, `settings.configure`, `platform_settin
 
 PF-011 test specification `ELU-TST-PF` §2.4 defines TC-PF-011-01 through TC-PF-011-24 covering business preferences, notifications, module defaults, holidays, reset, catalogue, platform settings, edition gating, audit before/after snapshots, cache behavior, RBAC, and tenant isolation.
 
-**Implementation status:** NOT IMPLEMENTED. No PF-011 Backend or Database mutation is represented by this RTM entry.
+**Implementation status:** IMPLEMENTED AND RELEASED. PF-011 Backend and Database implementation is represented by the `Phase-2-PF011` release baseline. Focused PF-011 validation: **72 passed / 1 skipped**. Release approval: **PF-011 RELEASE APPROVED: YES**.
 
 *© Euphoria Infotech (I) Limited — ELU-RTM-001*

@@ -1,4 +1,4 @@
-"""CRM DDL applicator (idempotent)."""
+﻿"""CRM DDL applicator (idempotent)."""
 
 from pathlib import Path
 
@@ -9,11 +9,15 @@ from app.db.rls_context import owner_role
 
 _CRM_DIR = Path(__file__).resolve().parents[3] / "Database" / "04_CRM"
 _CRM_SCRIPTS = (
+    "001_crm_lead.sql",
+    "002_crm_opportunity.sql",
     "003_crm_customer.sql",
     "004_crm_activity.sql",
     "005_crm_customer_contact_address.sql",
     "006_crm_lookup.sql",
     "007_crm_activity_outcome.sql",
+    "008_crm_customer_tax_registration.sql",
+    "009_crm_customer_status_history.sql",
 )
 
 

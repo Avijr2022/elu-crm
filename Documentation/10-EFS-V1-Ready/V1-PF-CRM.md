@@ -907,7 +907,7 @@ stateDiagram-v2
 | REQ-CRM-013 | Create opportunity manually or auto from lead conversion | Critical | BR-CRM-010, BR-CRM-021 |
 | REQ-CRM-014 | Advance opportunity through pipeline stages with gate validation | Critical | BR-CRM-024, BR-CRM-032 |
 | REQ-CRM-015 | Require manager approval when value > ₹15,00,000 at BUDGET_VALIDATION → PROPOSAL | High | BR-CRM-011 |
-| REQ-CRM-016 | Auto-advance to QUOTATION_ISSUED when quotation created (SAL-001) | High | BR-CRM-035 |
+| REQ-CRM-016 | On quotation approval, auto-advance an OPEN/REOPENED opportunity from an earlier pipeline stage to QUOTATION_ISSUED (SAL-001) | High | BR-CRM-035 |
 | REQ-CRM-017 | Close Won only with approved quotation linked | Critical | BR-CRM-027 |
 | REQ-CRM-018 | Close Lost with mandatory `loss_reason_id` and comment | High | BR-CRM-012, BR-CRM-028 |
 | REQ-CRM-019 | Reopen Closed Lost within 30 days with justification (≥20 chars) | Medium | BR-CRM-014, BR-CRM-037 |
@@ -924,7 +924,7 @@ stateDiagram-v2
 | REQ-CRM-013 | WF-CRM-002 | `opportunity` | `POST /api/v1/crm/opportunities` | UI-CRM-OPP-003 Opportunity Create | TC-CRM-002-01 |
 | REQ-CRM-014 | WF-CRM-002 | `opportunity`, `opportunity_stage_history` | `PATCH /api/v1/crm/opportunities/{id}/stage` | UI-CRM-OPP-006 Stage Advance Dialog | TC-CRM-002-02 |
 | REQ-CRM-015 | WF-CRM-002 | `opportunity` | `PATCH /api/v1/crm/opportunities/{id}/stage` | UI-CRM-OPP-006 Stage Advance Dialog | TC-CRM-002-03 |
-| REQ-CRM-016 | WF-CRM-002 | `opportunity`, `opportunity_stage` | `PATCH /api/v1/crm/opportunities/{id}/stage` | UI-CRM-OPP-002 Pipeline Kanban | TC-CRM-002-04 |
+| REQ-CRM-016 | WF-CRM-002 | `quotation`, `opportunity`, `opportunity_stage` | `PATCH /api/v1/sal/quotations/{quotation_id}/status` (`APPROVED`) | SAL quotation approval | TC-SAL-CRM-002 |
 | REQ-CRM-017 | WF-CRM-002 | `opportunity` | `POST /api/v1/crm/opportunities/{id}/close-won` | UI-CRM-OPP-007 Close Won/Lost Wizard | TC-CRM-002-05 |
 | REQ-CRM-018 | WF-CRM-002 | `opportunity`, `opportunity_competitor` | `POST /api/v1/crm/opportunities/{id}/close-lost` | UI-CRM-OPP-007 Close Won/Lost Wizard | TC-CRM-002-06 |
 | REQ-CRM-019 | WF-CRM-002 | `opportunity` | `POST /api/v1/crm/opportunities/{id}/reopen` | UI-CRM-OPP-005 Opportunity Detail | TC-CRM-002-07 |
@@ -966,7 +966,7 @@ stateDiagram-v2
 |------|-----|-------|-------|
 | QUALIFICATION | TECHNICAL_EVAL | `opportunity_value` > 0 (BR-CRM-022) | ✓ |
 | BUDGET_VALIDATION | PROPOSAL | Manager approval if value > ₹15L (BR-CRM-011) | ✓ |
-| PROPOSAL | QUOTATION_ISSUED | Quotation created (BR-CRM-035) | ✓ |
+| PROPOSAL | QUOTATION_ISSUED | Linked quotation becomes APPROVED (BR-CRM-035); only OPEN/REOPENED opportunities at an earlier stage advance | ✓ |
 | NEGOTIATION | CLOSED_WON | Approved quotation linked (BR-CRM-027) | ✓ |
 | Any OPEN | CLOSED_LOST | `loss_reason_id` + comment (BR-CRM-012) | ✓ |
 | CLOSED_LOST | REOPENED | Within 30 days + justification (BR-CRM-014) | ✓ |

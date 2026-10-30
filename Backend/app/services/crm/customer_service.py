@@ -2,15 +2,28 @@ from datetime import date
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
-from app.core.exceptions import AppError, NotFoundError
-from app.models.crm import Customer, CustomerAddress, CustomerContact, Lead, Opportunity
+from app.core.exceptions import AppError, NotFoundError, ValidationAppError
+from app.models.crm import Customer, CustomerAddress, CustomerContact, CustomerTaxRegistration, Lead, Opportunity
 from app.models.pf import Tenant
 from app.repositories.crm.customer_contact_repository import (
     CustomerAddressRepository,
     CustomerContactRepository,
 )
 from app.repositories.crm.customer_repository import CustomerRepository
+from app.repositories.crm.customer_tax_registration_repository import (
+    CustomerTaxRegistrationRepository,
+)
+from app.schemas.crm.customer_duplicate import (
+    CustomerDuplicateCheckRequest,
+    CustomerDuplicateCheckResponse,
+    CustomerDuplicateMatch,
+    mask_tax_number,
+    normalize_customer_name,
+    validate_gstin_tax_number,
+    validate_tax_type,
+)
 from app.repositories.crm.lead_repository import LeadRepository
 from app.repositories.pf.user_repository import TenantRepository
 from app.schemas.crm.customer import (
@@ -29,6 +42,7 @@ class CustomerService:
     def __init__(self, db: Session) -> None:
         self.db = db
         self.repo = CustomerRepository(db)
+        self.tax_regs = CustomerTaxRegistrationRepository(db)
         self.contacts = CustomerContactRepository(db)
         self.addresses = CustomerAddressRepository(db)
         self.leads = LeadRepository(db)
@@ -53,6 +67,69 @@ class CustomerService:
             page_size=page_size,
         )
 
+    def duplicate_check(
+        self, tenant_id: UUID, payload: CustomerDuplicateCheckRequest
+    ) -> CustomerDuplicateCheckResponse:
+        matches: list[CustomerDuplicateMatch] = []
+        blocked = False
+        matched_ids: set[UUID] = set()
+
+        if payload.tax_number and payload.tax_number.strip():
+            # BR-CRM-045: only GSTIN is supported. Validating the type first guarantees an
+            # unsupported or missing type is rejected and never reaches the repository
+            # duplicate lookup, and that no other type is silently read as GSTIN.
+            if "tax_type" not in payload.model_fields_set:
+                raise ValidationAppError(
+                    "tax_type is required when tax_number is supplied (BR-CRM-045)",
+                    req_id="REQ-CRM-027",
+                )
+            tax_type = validate_tax_type(payload.tax_type)
+            normalized_tax = validate_gstin_tax_number(payload.tax_number)
+            tax_customer = self.tax_regs.find_active_tax_match(
+                tenant_id, tax_type, normalized_tax
+            )
+            if tax_customer is not None:
+                matched_ids.add(tax_customer.customer_id)
+                matches.append(
+                    CustomerDuplicateMatch(
+                        customer_id=tax_customer.customer_id,
+                        customer_number=tax_customer.customer_number,
+                        legal_name=tax_customer.legal_name,
+                        trade_name=tax_customer.trade_name,
+                        match_kind="TAX_ID",
+                        severity="BLOCK",
+                        tax_number_masked=mask_tax_number(normalized_tax),
+                    )
+                )
+                blocked = True
+
+        legal_norm = (
+            normalize_customer_name(payload.legal_name) if payload.legal_name else None
+        )
+        trade_norm = (
+            normalize_customer_name(payload.trade_name) if payload.trade_name else None
+        )
+        for customer, kind in self.repo.find_name_matches(
+            tenant_id,
+            legal_name_normalized=legal_norm,
+            trade_name_normalized=trade_norm,
+        ):
+            if customer.customer_id in matched_ids:
+                continue
+            matched_ids.add(customer.customer_id)
+            matches.append(
+                CustomerDuplicateMatch(
+                    customer_id=customer.customer_id,
+                    customer_number=customer.customer_number,
+                    legal_name=customer.legal_name,
+                    trade_name=customer.trade_name,
+                    match_kind=kind,
+                    severity="WARNING",
+                )
+            )
+
+        return CustomerDuplicateCheckResponse(blocked=blocked, matches=matches)
+
     def get_customer(self, tenant_id: UUID, customer_id: UUID) -> CustomerResponse:
         row = self.repo.get_by_id(tenant_id, customer_id)
         if row is None:
@@ -70,6 +147,34 @@ class CustomerService:
                 422,
                 req_id="REQ-CRM-003",
             )
+
+        normalized_tax = None
+        tax_type = None
+        if payload.tax_number:
+            if "tax_type" not in payload.model_fields_set or not payload.tax_type:
+                raise ValidationAppError(
+                    "tax_type is required when tax_number is supplied (BR-CRM-045)",
+                    req_id="REQ-CRM-028",
+                )
+            tax_type = validate_tax_type(payload.tax_type)
+            normalized_tax = validate_gstin_tax_number(payload.tax_number)
+
+            existing = self.tax_regs.find_active_tax_match(
+                tenant_id, tax_type, normalized_tax
+            )
+            if existing is not None:
+                raise AppError(
+                    "CONFLICT",
+                    "A customer with this GSTIN already exists (BR-CRM-045)",
+                    409,
+                    req_id="REQ-CRM-028",
+                )
+        elif payload.tax_type:
+            raise ValidationAppError(
+                "tax_number is required when tax_type is supplied (BR-CRM-045)",
+                req_id="REQ-CRM-028",
+            )
+
         customer = Customer(
             customer_id=uuid4(),
             tenant_id=tenant_id,
@@ -82,7 +187,45 @@ class CustomerService:
             source_opportunity_id=payload.source_opportunity_id,
             notes=payload.notes,
         )
-        return self._to_response(self.repo.add(customer), include_children=True)
+
+        # Stage both rows in one transaction. Do not use CustomerRepository.add(),
+        # which commits the customer before a tax registration can be persisted.
+        try:
+            self.db.add(customer)
+            self.db.flush()
+            if normalized_tax is not None and tax_type is not None:
+                self.db.add(
+                    CustomerTaxRegistration(
+                        customer_tax_registration_id=uuid4(),
+                        tenant_id=tenant_id,
+                        customer_id=customer.customer_id,
+                        tax_type=tax_type,
+                        tax_number=normalized_tax,
+                        state_code=payload.state_code,
+                    )
+                )
+            self.db.commit()
+            self.db.refresh(customer)
+        except IntegrityError as exc:
+            self.db.rollback()
+            orig = exc.orig
+            sqlstate = getattr(orig, "sqlstate", None) or getattr(orig, "pgcode", None)
+            diag = getattr(orig, "diag", None)
+            constraint_name = getattr(diag, "constraint_name", None)
+            if (
+                normalized_tax is not None
+                and sqlstate == "23505"
+                and constraint_name == "uk_cust_tax_tenant_type_number_active"
+            ):
+                raise AppError(
+                    "CONFLICT",
+                    "A customer with this GSTIN already exists or conflicts with an existing registration",
+                    409,
+                    req_id="REQ-CRM-028",
+                ) from exc
+            raise
+
+        return self._to_response(customer, include_children=True)
 
     def create_from_opportunity(
         self, tenant_id: UUID, owner_id: UUID, opp: Opportunity

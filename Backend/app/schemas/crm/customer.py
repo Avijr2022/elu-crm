@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 CUSTOMER_TYPES = ("ACCOUNT", "PERSON")
@@ -78,6 +78,33 @@ class CustomerCreate(BaseModel):
     status: str = Field(default="PROSPECT", max_length=40)
     notes: Optional[str] = None
     source_opportunity_id: Optional[UUID] = None
+    tax_type: Optional[str] = Field(default=None, max_length=20)
+    tax_number: Optional[str] = Field(default=None, max_length=30)
+    state_code: Optional[str] = Field(default=None, max_length=10)
+
+    @field_validator("tax_type")
+    @classmethod
+    def normalize_tax_type(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().upper()
+        return normalized or None
+
+    @field_validator("tax_number")
+    @classmethod
+    def normalize_tax_number(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().upper().replace(" ", "")
+        return normalized or None
+
+    @field_validator("state_code")
+    @classmethod
+    def normalize_state_code(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 
 class CustomerUpdate(BaseModel):

@@ -9,6 +9,10 @@ from app.core.edition_gating import CRM_OPPORTUNITY, require_feature
 from app.core.exceptions import AppError, http_error_from_app
 from app.core.rbac import require_permission
 from app.db.session import get_db
+from app.schemas.crm.customer_duplicate import (
+    CustomerDuplicateCheckRequest,
+    CustomerDuplicateCheckResponse,
+)
 from app.schemas.crm.customer import (
     CustomerAddressCreate,
     CustomerAddressResponse,
@@ -57,6 +61,23 @@ def create_customer(
     require_permission(current, "customer.create")
     try:
         return CustomerService(db).create_customer(current.tenant_id, current.user_id, payload)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post(
+    "/duplicate-check",
+    response_model=CustomerDuplicateCheckResponse,
+    summary="Pre-create duplicate check (REQ-CRM-027 / BR-CRM-045)",
+)
+def customer_duplicate_check(
+    payload: CustomerDuplicateCheckRequest,
+    current: Annotated[CurrentUser, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> CustomerDuplicateCheckResponse:
+    require_permission(current, "customer.create")
+    try:
+        return CustomerService(db).duplicate_check(current.tenant_id, payload)
     except AppError as exc:
         raise http_error_from_app(exc) from exc
 

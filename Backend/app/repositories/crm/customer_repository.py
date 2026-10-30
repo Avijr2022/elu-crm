@@ -9,6 +9,10 @@ from sqlalchemy.orm import Session
 from app.models.crm import Customer
 
 
+def _collapsed_lower(column):
+    return func.lower(func.regexp_replace(func.trim(column), r"\s+", " ", "g"))
+
+
 class CustomerRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -59,6 +63,40 @@ class CustomerRepository:
             )
             or 0
         ) + 1
+
+    def find_name_matches(
+        self,
+        tenant_id: UUID,
+        *,
+        legal_name_normalized: str | None,
+        trade_name_normalized: str | None,
+    ) -> list[tuple[Customer, str]]:
+        """Return (customer, match_kind) for case/whitespace-normalized name hits."""
+        results: list[tuple[Customer, str]] = []
+        seen: set[UUID] = set()
+        base = [Customer.tenant_id == tenant_id, Customer.is_deleted.is_(False)]
+        if legal_name_normalized:
+            for row in self.db.scalars(
+                select(Customer).where(
+                    *base,
+                    _collapsed_lower(Customer.legal_name) == legal_name_normalized,
+                )
+            ).all():
+                if row.customer_id not in seen:
+                    seen.add(row.customer_id)
+                    results.append((row, "LEGAL_NAME"))
+        if trade_name_normalized:
+            for row in self.db.scalars(
+                select(Customer).where(
+                    *base,
+                    Customer.trade_name.isnot(None),
+                    _collapsed_lower(Customer.trade_name) == trade_name_normalized,
+                )
+            ).all():
+                if row.customer_id not in seen:
+                    seen.add(row.customer_id)
+                    results.append((row, "TRADE_NAME"))
+        return results
 
     def add(self, customer: Customer) -> Customer:
         self.db.add(customer)

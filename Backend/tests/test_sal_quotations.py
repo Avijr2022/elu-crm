@@ -76,10 +76,24 @@ def test_get_quotation_with_lines_and_lifecycle(client: TestClient, admin_token:
         json={"legal_name": f"SAL Get {uuid.uuid4().hex[:6]}"},
     )
     assert cust.status_code == 201, cust.text
+    opportunity = client.post(
+        "/api/v1/crm/opportunities",
+        headers=headers,
+        json={
+            "name": f"SAL Approval {uuid.uuid4().hex[:6]}",
+            "opportunity_value": "1000",
+        },
+    )
+    assert opportunity.status_code == 201, opportunity.text
+    opportunity_id = opportunity.json()["opportunity_id"]
+
     quote = client.post(
         "/api/v1/sal/quotations",
         headers=headers,
-        json={"customer_id": cust.json()["customer_id"]},
+        json={
+            "customer_id": cust.json()["customer_id"],
+            "opportunity_id": opportunity_id,
+        },
     )
     assert quote.status_code == 201, quote.text
     qid = quote.json()["quotation_id"]
@@ -112,6 +126,13 @@ def test_get_quotation_with_lines_and_lifecycle(client: TestClient, admin_token:
     )
     assert approve.status_code == 200, approve.text
     assert approve.json()["status"] == "APPROVED"
+
+    refreshed_opportunity = client.get(
+        f"/api/v1/crm/opportunities/{opportunity_id}", headers=headers
+    )
+    assert refreshed_opportunity.status_code == 200, refreshed_opportunity.text
+    assert refreshed_opportunity.json()["stage"] == "QUOTATION_ISSUED"
+    assert refreshed_opportunity.json()["probability"] == 75
 
     blocked = client.post(
         f"/api/v1/sal/quotations/{qid}/lines",

@@ -2,11 +2,15 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError, ForbiddenError, NotFoundError
+from app.models.crm import OpportunityStage
 from app.models.sal import Quotation, QuotationLine, SalesOrder, SalesOrderLine
 from app.repositories.crm.opportunity_repository import OpportunityRepository
+from app.schemas.crm.opportunity import PIPELINE_STAGES, STAGE_PROBABILITY
+from app.services.pf.audit_service import write_audit_event
 from app.repositories.crm.customer_repository import CustomerRepository
 from app.repositories.pf.branding_repository import TenantBrandingRepository
 from app.repositories.pf.user_repository import TenantRepository
@@ -294,6 +298,51 @@ class QuotationService:
             )
         from_status = quote.status
         quote.status = target
+
+        # BR-CRM-035: approval advances an earlier, open opportunity.
+        if target == "APPROVED" and quote.opportunity_id:
+            opportunity = self.opps.get_by_id(tenant_id, quote.opportunity_id)
+            if (
+                opportunity is not None
+                and opportunity.status in {"OPEN", "REOPENED"}
+                and opportunity.stage in PIPELINE_STAGES
+                and PIPELINE_STAGES.index(opportunity.stage)
+                < PIPELINE_STAGES.index("QUOTATION_ISSUED")
+            ):
+                previous_stage = opportunity.stage
+                opportunity.stage = "QUOTATION_ISSUED"
+                stage_row = self.db.scalars(
+                    select(OpportunityStage).where(
+                        OpportunityStage.tenant_id == tenant_id,
+                        OpportunityStage.code == "QUOTATION_ISSUED",
+                        OpportunityStage.is_active.is_(True),
+                        OpportunityStage.is_deleted.is_(False),
+                    )
+                ).first()
+                opportunity.probability = (
+                    stage_row.default_probability
+                    if stage_row is not None
+                    else STAGE_PROBABILITY["QUOTATION_ISSUED"]
+                )
+                opportunity.modified_on = datetime.now(timezone.utc)
+                opportunity.version_no = int(opportunity.version_no or 1) + 1
+                self.db.add(opportunity)
+                write_audit_event(
+                    self.db,
+                    event_type="OPPORTUNITY_STAGE_AUTO_ADVANCED",
+                    event_category="CRM",
+                    entity_type="opportunity",
+                    entity_id=opportunity.opportunity_id,
+                    actor_id=actor_id,
+                    tenant_id=tenant_id,
+                    payload={
+                        "from_stage": previous_stage,
+                        "to_stage": "QUOTATION_ISSUED",
+                        "source": "quotation_approved",
+                        "quotation_id": str(quotation_id),
+                    },
+                )
+
         self.history.add(tenant_id, quotation_id, from_status, target, actor_id, reason)
         self.db.commit()
         self.db.refresh(quote)

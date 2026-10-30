@@ -1,6 +1,6 @@
 # E-LinkUp Test Specification — Sales
 **Document ID:** ELU-TST-SAL  
-**Version:** 1.0  
+**Version:** 1.1
 **Status:** Approved  
 **Related Documents:** ELU-RTM-001, ELU-API-SAL, V1-SAL-PRJ, ELU-SEC-001, ELU-EDM-001  
 
@@ -11,6 +11,7 @@
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0 | 2026-08-06 | EIIP / QA | SAL tests + isolation |
+| 1.1 | 2026-10-09 | EIIP / QA | Add CRM quotation-approval opportunity auto-advance regression traceability (BR-CRM-035) |
 
 ---
 
@@ -20,6 +21,7 @@
 |----|-----|----------|----------|
 | TC-SAL-001 | REQ-SAL-001 | Create quotation | 201 |
 | TC-SAL-004 | REQ-SAL-004 | Submit for approval | status Under Review |
+| TC-SAL-CRM-002 | REQ-CRM-016 / BR-CRM-035 | Approve linked quotation via `PATCH /api/v1/sal/quotations/{quotation_id}/status` with `APPROVED` | Linked OPEN/REOPENED opportunity at an earlier stage advances to `QUOTATION_ISSUED`; regression test `test_get_quotation_with_lines_and_lifecycle` verifies stage and probability |
 | TC-SAL-009 | REQ-SAL-009 | SO from accepted quotation | 201 |
 | TC-SAL-016 | REQ-SAL-016 | WO from confirmed SO | 201 |
 | TC-SAL-EDN-01 | — | Community POST quotation | 403 |

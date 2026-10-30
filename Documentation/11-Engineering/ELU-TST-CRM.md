@@ -11,6 +11,7 @@
 | Version | Date | Author | Change |
 |---------|------|--------|--------|
 | 1.0 | 2026-08-06 | EIIP / QA | CRM test pack + mandatory isolation suite |
+| 1.1 | 2026-10-09 | EIIP / Engineering | Record TC-CRM-003-03 (REQ-CRM-027 duplicate-check) in §1 |
 
 ---
 
@@ -26,6 +27,7 @@
 | TC-CRM-011 | — | Close won without quotation (no exception) | 422 per BR-CRM-027 |
 | TC-CRM-020 | — | Suspend customer blocks new quotation path | 422/403 when SAL called |
 | TC-CRM-030 | — | Activity linked to other-tenant lead id | 404 |
+| TC-CRM-003-03 | REQ-CRM-027 | Duplicate-check pre-create: duplicate GSTIN blocks, duplicate name warns, unsupported/missing `tax_type` with a tax number is rejected | 200 `TAX_ID`/`BLOCK` masked; 200 `WARNING`; 422 BR-CRM-045 |
 
 Full RTM rows live in **V1-PF-CRM**; QA expands 1:1 before UAT.
 

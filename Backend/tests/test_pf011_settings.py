@@ -32,6 +32,7 @@ import redis
 from fastapi.testclient import TestClient
 from sqlalchemy import select, text
 
+from app.core.config import get_settings
 from app.core.deps import CurrentUser
 from app.core.rbac import has_permission
 from app.core.security import hash_password
@@ -50,11 +51,18 @@ from app.services.pf.settings_service import (
     REQ_ID,
     SettingsService,
 )
-from tests.conftest import platform_session
+from tests.conftest import platform_admin_select, platform_session
 
 API = "/api/v1"
 PASSWORD = "Pf011Test@123"
 PLATFORM_TENANT_CODE = "EIIP001"
+
+# Resolve the administration account the way tests/conftest.py prescribes: ``core.users``
+# is unique on ``(tenant_id, email)`` and every provisioned tenant seeds the same admin
+# email, so an email-only lookup can return a foreign tenant's row.
+_SEED = get_settings()
+PLATFORM_ADMIN_EMAIL = _SEED.seed_admin_email.lower()
+SEED_ADMIN_PASSWORD = _SEED.seed_admin_password
 
 PF011_TENANT_TABLES = (
     "tenant_settings",
@@ -118,19 +126,24 @@ def client() -> Iterator[TestClient]:
 
 
 def _platform_header(client: TestClient) -> dict:
+    """Log in as the platform admin, resolved through the conftest selector.
+
+    An email-only lookup can land on a *foreign* tenant's admin (-> 401 and a failed-login
+    increment on the wrong tenant), which is why ``platform_admin_select()`` is mandatory.
+    The password is normalised to the documented seed default, so the running application
+    keeps working with it after the suite.
+    """
     with platform_session() as db:
-        admin = db.scalars(
-            select(User).where(User.email == "admin@euphoriainfotech.com")
-        ).first()
+        admin = db.scalars(platform_admin_select()).first()
         assert admin is not None, "seeded platform admin not found"
-        admin.password_hash = hash_password(PASSWORD)
+        admin.password_hash = hash_password(SEED_ADMIN_PASSWORD)
         db.commit()
 
     resp = client.post(
         f"{API}/auth/login",
         json={
-            "email": "admin@euphoriainfotech.com",
-            "password": PASSWORD,
+            "email": PLATFORM_ADMIN_EMAIL,
+            "password": SEED_ADMIN_PASSWORD,
             "tenant_code": PLATFORM_TENANT_CODE,
         },
     )
