@@ -44,14 +44,28 @@ class CustomerRepository:
         )
         return list(self.db.scalars(stmt).all()), int(total)
 
-    def get_by_id(self, tenant_id: UUID, customer_id: UUID) -> Customer | None:
-        return self.db.scalars(
-            select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.customer_id == customer_id,
-                Customer.is_deleted.is_(False),
-            )
-        ).first()
+    def get_by_id(
+        self,
+        tenant_id: UUID,
+        customer_id: UUID,
+        *,
+        for_update: bool = False,
+    ) -> Customer | None:
+        """Tenant-scoped customer read (RLS/schema unchanged).
+
+        ``for_update=True`` takes a row-level lock (``SELECT ... FOR UPDATE``) so a
+        read-modify-write sequence is serialised: a concurrent transaction blocks on
+        this row instead of acting on a stale status snapshot (REQ-CRM-028 / C1).
+        Default stays a plain read so existing callers are unaffected.
+        """
+        stmt = select(Customer).where(
+            Customer.tenant_id == tenant_id,
+            Customer.customer_id == customer_id,
+            Customer.is_deleted.is_(False),
+        )
+        if for_update:
+            stmt = stmt.with_for_update()
+        return self.db.scalars(stmt).first()
 
     def next_sequence(self, tenant_id: UUID, year: int) -> int:
         prefix = f"%-CUS-{year}-%"

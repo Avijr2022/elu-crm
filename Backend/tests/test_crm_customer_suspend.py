@@ -22,6 +22,11 @@ from app.models.crm import Customer, CustomerStatusHistory
 from app.models.pf import AuditEvent, Role, User
 from tests.conftest import platform_admin_select, platform_session
 
+# C4: every test in this module drives the committed application lifespan (DDL +
+# seed) and commits users, password changes and customers, so the whole module is
+# gated behind the ``db_write`` marker and skipped unless the target DB is disposable.
+pytestmark = pytest.mark.db_write
+
 USER_PASSWORD = "Req028Smoke!234"
 
 SUSPEND_REASON = "CREDIT_RISK"

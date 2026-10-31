@@ -214,6 +214,12 @@ def test_revoke_is_scoped_to_a_single_tenant():
         if other_tenant is None:
             pytest.skip("COMU001 tenant not present in this database")
 
+        # Hermetic prerequisite: COMU001 is seeded with only a SALES_EXECUTIVE role
+        # (``seed._ensure_community_demo_tenant``), so a fresh database has no
+        # TENANT_ADMIN to grant. Provision the system roles inside this rolled-back
+        # transaction instead of relying on state left by earlier modules or by a
+        # long-lived development database.
+        seed_module.provision_tenant_roles(db, other_tenant.tenant_id)
         _force_grant(db, other_tenant.tenant_id, "TENANT_ADMIN")
         assert "TENANT_ADMIN" in _hold_suspend(db, other_tenant.tenant_id)
 
@@ -308,6 +314,7 @@ def _auth(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+@pytest.mark.db_write  # C4: commits users + customers, so disposable DB only
 def test_finance_suspension_still_works_end_to_end(
     client: TestClient, admin_token: str, finance_token: str
 ):

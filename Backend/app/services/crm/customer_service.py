@@ -355,8 +355,14 @@ class CustomerService:
 
         Tenant isolation comes from ``repo.get_by_id(tenant_id, customer_id)``: another
         tenant's customer is indistinguishable from a missing one (BR-CRM-054).
+
+        Concurrency (C1): the read takes a row lock (``for_update=True``), so two
+        simultaneous suspend requests for the same customer cannot both act on an
+        ACTIVE snapshot. The second one blocks until the first commits, then observes
+        SUSPENDED and gets the existing 409 - one history row, one audit event and a
+        single ``version_no`` increment.
         """
-        row = self.repo.get_by_id(tenant_id, customer_id)
+        row = self.repo.get_by_id(tenant_id, customer_id, for_update=True)
         if row is None:
             raise NotFoundError("Customer not found", req_id="REQ-CRM-028")
         if row.status == "SUSPENDED":
