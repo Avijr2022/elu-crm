@@ -519,6 +519,7 @@ PERMISSIONS = [
     ("customer.read", "View customer", "CRM"),
     ("customer.create", "Create customer", "CRM"),
     ("customer.update", "Update customer", "CRM"),
+    ("customer.suspend", "Suspend customer", "CRM"),
     ("activity.read", "View activity", "CRM"),
     ("activity.create", "Create activity", "CRM"),
     ("opportunity.read", "View opportunity", "CRM"),
@@ -1007,6 +1008,397 @@ CRM_SALES_MANAGER_PERMS = CRM_SALES_EXEC_PERMS + (
 )
 
 
+# BR-CRM-047 / REQ-CRM-028: ``customer.suspend`` is Finance-User-only. It is excluded
+# from the generic whole-catalogue grant to TENANT_ADMIN / PLATFORM_ADMIN and granted
+# explicitly to FINANCE_USER. ``app.core.rbac.require_customer_suspend`` additionally
+# enforces the Finance role at runtime (defence in depth).
+FINANCE_ONLY_PERMISSIONS: tuple[str, ...] = ("customer.suspend",)
+
+
+def _exclude_finance_only(perm_codes: tuple[str, ...]) -> tuple[str, ...]:
+    """Drop the Finance-only grains from a generic grant tuple (BR-CRM-047)."""
+    return tuple(code for code in perm_codes if code not in FINANCE_ONLY_PERMISSIONS)
+
+
+def _revoke_permission_from_other_roles(
+    db: Session,
+    tenant_id,
+    permission_code: str,
+    keep_role_codes: tuple[str, ...],
+) -> int:
+    """Delete RolePermission rows for ONE permission in ONE tenant.
+
+    Every grant held by a role in ``keep_role_codes`` is preserved, and the deletion is
+    scoped to ``permission_code`` *and* ``tenant_id`` so no other grant and no other
+    tenant is affected. Used to heal tenants provisioned before ``customer.suspend``
+    became Finance-User-only (BR-CRM-047). Returns the number of rows deleted.
+
+    FAIL-CLOSED: when ``keep_role_codes`` is non-empty but NONE of those roles exist in
+    the tenant, nothing is deleted and ``0`` is returned. Without this guard the
+    ``notin_`` filter would be skipped and every holder of the permission would be
+    removed, leaving the tenant unable to perform the guarded operation at all. An
+    empty ``keep_role_codes`` still means "revoke from every role" (unchanged).
+    """
+    perm = db.scalars(
+        select(Permission).where(Permission.permission_code == permission_code)
+    ).first()
+    if perm is None:
+        return 0
+    tenant_role_ids = list(
+        db.scalars(select(Role.role_id).where(Role.tenant_id == tenant_id)).all()
+    )
+    if not tenant_role_ids:
+        return 0
+    keep_role_ids = list(
+        db.scalars(
+            select(Role.role_id).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code.in_(keep_role_codes),
+            )
+        ).all()
+    )
+    # M4: named keepers that do not resolve must not turn into "revoke everything".
+    if keep_role_codes and not keep_role_ids:
+        return 0
+    stmt = delete(RolePermission).where(
+        RolePermission.permission_id == perm.permission_id,
+        RolePermission.role_id.in_(tenant_role_ids),
+    )
+    if keep_role_ids:
+        stmt = stmt.where(RolePermission.role_id.notin_(keep_role_ids))
+    result = db.execute(stmt)
+    db.flush()
+    return int(result.rowcount or 0)
+
+
+FINANCE_SUSPEND_ROLE_CODE = "FINANCE_USER"
+
+
+def _role_codes_holding(db: Session, tenant_id, permission_code: str) -> set[str]:
+    """Return the role codes in ``tenant_id`` that currently hold ``permission_code``."""
+    rows = db.execute(
+        select(Role.role_code)
+        .join(RolePermission, RolePermission.role_id == Role.role_id)
+        .join(Permission, Permission.permission_id == RolePermission.permission_id)
+        .where(
+            Role.tenant_id == tenant_id,
+            Permission.permission_code == permission_code,
+        )
+    ).all()
+    return {row[0] for row in rows}
+
+
+#: Only provisioned tenants in these lifecycle states are eligible for the
+#: ``customer.suspend`` correction. Every other state is reported and skipped.
+SYNC_ELIGIBLE_TENANT_STATUSES: frozenset[str] = frozenset({"ACTIVE", "TRIAL"})
+
+SKIP_REASON_FINANCE_ROLE_MISSING = "finance_role_missing"
+SKIP_REASON_SOFT_DELETED = "soft_deleted"
+SKIP_REASON_TENANT_INACTIVE = "tenant_inactive"
+SKIP_REASON_NOT_PROVISIONED = "not_provisioned"
+
+
+def _tenant_status_skip_reason(status: str | None) -> str:
+    """Skip reason for a tenant whose lifecycle state is not eligible."""
+    return f"status_{(status or 'unknown').lower()}"
+
+
+def _finance_role_present(db: Session, tenant_id) -> bool:
+    """True when the tenant owns a live ``FINANCE_USER`` role.
+
+    Read-only probe: the role is NEVER created here (no tenant provisioning happens
+    in this module) and a soft-deleted role does not count as present.
+    """
+    return (
+        db.scalars(
+            select(Role.role_id).where(
+                Role.tenant_id == tenant_id,
+                Role.role_code == FINANCE_SUSPEND_ROLE_CODE,
+                Role.is_deleted.is_(False),
+            )
+        ).first()
+        is not None
+    )
+
+
+def _finance_only_skipped_result(
+    tenant_id,
+    skip_reason: str,
+    *,
+    finance_role_present: bool = False,
+) -> dict:
+    """Structured "nothing was touched" summary for an ineligible tenant."""
+    return {
+        "tenant_id": str(tenant_id),
+        "permission_created": False,
+        "finance_role_present": finance_role_present,
+        "granted": 0,
+        "revoked": 0,
+        "finance_holds": False,
+        "extra_holders": [],
+        "ok": False,
+        "skipped": True,
+        "skip_reason": skip_reason,
+    }
+
+
+def _tenant_sync_skip_reason(
+    *,
+    status: str | None,
+    is_active: bool | None,
+    is_deleted: bool | None,
+    activation_date,
+    activated_on,
+    finance_role_present: bool,
+) -> str | None:
+    """Return why a tenant must be skipped, or ``None`` when it is eligible.
+
+    Shared by the dry run and the apply path so both use identical rules. Order is
+    significant: soft-delete and inactive flags win over the lifecycle status, and a
+    non-eligible status wins over the (less informative) missing-role reason.
+    """
+    if is_deleted:
+        return SKIP_REASON_SOFT_DELETED
+    if is_active is False:
+        return SKIP_REASON_TENANT_INACTIVE
+    if status not in SYNC_ELIGIBLE_TENANT_STATUSES:
+        return _tenant_status_skip_reason(status)
+    if activation_date is None and activated_on is None:
+        return SKIP_REASON_NOT_PROVISIONED
+    if not finance_role_present:
+        return SKIP_REASON_FINANCE_ROLE_MISSING
+    return None
+
+
+def sync_crm_finance_only_matrix(db: Session, tenant_id) -> dict:
+    """Make ``customer.suspend`` FINANCE_USER-only for ONE tenant (BR-CRM-047).
+
+    Idempotent and tenant-scoped. Reuses the existing seed helpers so no unrelated
+    grant is disturbed:
+
+      1. skip the tenant entirely when it has no live ``FINANCE_USER`` role;
+      2. create the catalogue row if this tenant's catalogue predates it;
+      3. grant it to FINANCE_USER (``_grant_role_permissions``);
+      4. revoke it from every other role in the tenant
+         (``_revoke_permission_from_other_roles``, scoped to one permission).
+
+    Returns a summary dict (see the ``ok`` key for the post-condition, and
+    ``skipped`` / ``skip_reason`` for a tenant that was deliberately left alone).
+    """
+    permission_code = FINANCE_ONLY_PERMISSIONS[0]
+    # BR-CRM-047: without the keeper role there is nobody to hold the grain, so
+    # granting is a no-op (``_grant_role_permissions`` returns early) and revoking
+    # would strip EVERY holder, leaving the tenant unable to suspend anyone at all.
+    # The catalogue row is not created either - it could never be granted here.
+    if not _finance_role_present(db, tenant_id):
+        return _finance_only_skipped_result(
+            tenant_id,
+            SKIP_REASON_FINANCE_ROLE_MISSING,
+            finance_role_present=False,
+        )
+
+    created = False
+    if (
+        db.scalars(
+            select(Permission).where(Permission.permission_code == permission_code)
+        ).first()
+        is None
+    ):
+        db.add(
+            Permission(
+                permission_code=permission_code,
+                permission_name="Suspend customer",
+                module_code="CRM",
+            )
+        )
+        db.flush()
+        created = True
+
+    before = _role_codes_holding(db, tenant_id, permission_code)
+    _grant_role_permissions(
+        db, tenant_id, FINANCE_SUSPEND_ROLE_CODE, FINANCE_ONLY_PERMISSIONS
+    )
+    revoked = _revoke_permission_from_other_roles(
+        db, tenant_id, permission_code, (FINANCE_SUSPEND_ROLE_CODE,)
+    )
+    after = _role_codes_holding(db, tenant_id, permission_code)
+    extra = sorted(after - {FINANCE_SUSPEND_ROLE_CODE})
+
+    return {
+        "tenant_id": str(tenant_id),
+        "permission_created": created,
+        "finance_role_present": True,
+        "granted": len(after - before),
+        "revoked": revoked,
+        "finance_holds": FINANCE_SUSPEND_ROLE_CODE in after,
+        "extra_holders": extra,
+        "ok": (not extra) and (FINANCE_SUSPEND_ROLE_CODE in after),
+        "skipped": False,
+        "skip_reason": None,
+    }
+
+
+def sync_finance_only_permissions(
+    db: Session,
+    *,
+    tenant_codes: tuple[str, ...] | None = None,
+    apply: bool = False,
+) -> dict:
+    """All-tenants correction: ``customer.suspend`` held by FINANCE_USER only.
+
+    This is the all-tenants synchronization point. ``seed_platform`` only re-seeds the
+    platform tenant (EIIP001) and the Community demo tenant (COMU001), so a tenant that
+    predates a catalogue change is never healed by startup seeding alone.
+
+    ELIGIBILITY (identical for dry run and apply): a tenant is processed only when it
+    is not soft-deleted, not inactive, in an ``ACTIVE`` / ``TRIAL`` lifecycle state,
+    provisioned (activation evidence present) and owns a live ``FINANCE_USER`` role.
+    Every other tenant is reported once under ``skip_reasons`` and is never written to.
+
+    ``apply=False`` (the default) is a DRY RUN: it reports what would change and writes
+    nothing - and it never counts a skipped tenant as needing a change. ``apply=True``
+    performs the writes in the caller's transaction; the caller owns the commit.
+    Idempotent - a second run reports zero changes.
+    """
+    permission_code = FINANCE_ONLY_PERMISSIONS[0]
+    stmt = (
+        select(
+            Tenant.tenant_id,
+            Tenant.tenant_code,
+            Tenant.status,
+            Tenant.is_active,
+            Tenant.is_deleted,
+            Tenant.activation_date,
+            Tenant.activated_on,
+        )
+        .order_by(Tenant.tenant_code)
+    )
+    if tenant_codes:
+        stmt = stmt.where(Tenant.tenant_code.in_(tenant_codes))
+    rows = list(db.execute(stmt).all())
+
+    tenant_ids = [row[0] for row in rows]
+    finance_tenant_ids: set = set()
+    if tenant_ids:
+        finance_tenant_ids = set(
+            db.scalars(
+                select(Role.tenant_id)
+                .where(
+                    Role.role_code == FINANCE_SUSPEND_ROLE_CODE,
+                    Role.tenant_id.in_(tenant_ids),
+                    Role.is_deleted.is_(False),
+                )
+                .distinct()
+            ).all()
+        )
+
+    # One grouped read instead of one query per tenant; dry run only, since the apply
+    # path reads the post-condition from the per-tenant summary.
+    holders_by_tenant: dict = {}
+    if rows and not apply:
+        for holder_tenant_id, role_code in db.execute(
+            select(Role.tenant_id, Role.role_code)
+            .join(RolePermission, RolePermission.role_id == Role.role_id)
+            .join(Permission, Permission.permission_id == RolePermission.permission_id)
+            .where(
+                Permission.permission_code == permission_code,
+                Role.tenant_id.in_(tenant_ids),
+            )
+        ).all():
+            holders_by_tenant.setdefault(holder_tenant_id, set()).add(role_code)
+
+    results: list[dict] = []
+    changed = 0
+    eligible = 0
+    skipped = 0
+    skip_reasons: dict[str, int] = {}
+
+    for (
+        tenant_id,
+        tenant_code,
+        status,
+        is_active,
+        is_deleted,
+        activation_date,
+        activated_on,
+    ) in rows:
+        has_finance_role = tenant_id in finance_tenant_ids
+        skip_reason = _tenant_sync_skip_reason(
+            status=status,
+            is_active=is_active,
+            is_deleted=is_deleted,
+            activation_date=activation_date,
+            activated_on=activated_on,
+            finance_role_present=has_finance_role,
+        )
+
+        summary: dict | None = None
+        if skip_reason is None and apply:
+            summary = sync_crm_finance_only_matrix(db, tenant_id)
+            # Defensive: the matrix re-checks the keeper role. If it changed since the
+            # eligibility read, report the tenant as skipped rather than as changed.
+            if summary["skipped"]:
+                skip_reason = summary["skip_reason"]
+
+        if skip_reason is not None:
+            skipped += 1
+            skip_reasons[skip_reason] = skip_reasons.get(skip_reason, 0) + 1
+            entry = _finance_only_skipped_result(
+                tenant_id,
+                skip_reason,
+                finance_role_present=has_finance_role,
+            )
+            entry["tenant_code"] = tenant_code
+            entry["status"] = status
+            entry["needs_change"] = False
+            results.append(entry)
+            continue
+
+        eligible += 1
+
+        if apply and summary is not None:
+            summary["tenant_code"] = tenant_code
+            summary["status"] = status
+            summary["needs_change"] = bool(
+                summary["granted"]
+                or summary["revoked"]
+                or summary["permission_created"]
+            )
+            if summary["needs_change"]:
+                changed += 1
+            results.append(summary)
+            continue
+
+        holders = holders_by_tenant.get(tenant_id, set())
+        extra = sorted(holders - {FINANCE_SUSPEND_ROLE_CODE})
+        needs_change = bool(extra) or (FINANCE_SUSPEND_ROLE_CODE not in holders)
+        if needs_change:
+            changed += 1
+        results.append(
+            {
+                "tenant_id": str(tenant_id),
+                "tenant_code": tenant_code,
+                "status": status,
+                "holders": sorted(holders),
+                "extra_holders": extra,
+                "needs_change": needs_change,
+                "skipped": False,
+                "skip_reason": None,
+                "ok": holders == {FINANCE_SUSPEND_ROLE_CODE},
+            }
+        )
+
+    return {
+        "apply": apply,
+        "tenants_scanned": len(rows),
+        "tenants_eligible": eligible,
+        "tenants_changed": changed,
+        "tenants_skipped": skipped,
+        "skip_reasons": skip_reasons,
+        "results": results,
+    }
+
+
 def _grant_role_permissions(
     db: Session, tenant_id, role_code: str, perm_codes: tuple[str, ...]
 ) -> None:
@@ -1067,11 +1459,13 @@ def provision_tenant_roles(db: Session, tenant_id) -> None:
             )
     db.flush()
 
-    all_codes = tuple(code for code, _, _ in PERMISSIONS)
+    all_codes = _exclude_finance_only(tuple(code for code, _, _ in PERMISSIONS))
     for role_code in ("TENANT_ADMIN", "PLATFORM_ADMIN"):
         _grant_role_permissions(db, tenant_id, role_code, all_codes)
     _grant_role_permissions(db, tenant_id, "SALES_EXECUTIVE", CRM_SALES_EXEC_PERMS)
     _grant_role_permissions(db, tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
+    # BR-CRM-047: Finance User is the only role granted ``customer.suspend``.
+    _grant_role_permissions(db, tenant_id, "FINANCE_USER", FINANCE_ONLY_PERMISSIONS)
     # PF-004 organization grants per BFS-PF-004 §12 (HD-01 correction).
     _sync_org_permission_matrix(db, tenant_id)
     # PF-005 branch grants per BFS-PF-005 §12 (groundwork; no runtime grain enforcement).
@@ -1125,15 +1519,29 @@ def _upgrade_crm_permissions(db: Session, tenant: Tenant) -> None:
                 )
             )
     db.flush()
-    crm_perm_codes = tuple(
-        code
-        for code, _, _ in PERMISSIONS
-        if code.split(".", 1)[0] in {"lead", "customer", "activity", "opportunity"}
+    crm_perm_codes = _exclude_finance_only(
+        tuple(
+            code
+            for code, _, _ in PERMISSIONS
+            if code.split(".", 1)[0] in {"lead", "customer", "activity", "opportunity"}
+        )
     )
     _grant_role_permissions(db, tenant.tenant_id, "SALES_EXECUTIVE", CRM_SALES_EXEC_PERMS)
     _grant_role_permissions(db, tenant.tenant_id, "SALES_MANAGER", CRM_SALES_MANAGER_PERMS)
+    # BR-CRM-047: Finance User is the only role granted ``customer.suspend``.
+    _grant_role_permissions(
+        db, tenant.tenant_id, "FINANCE_USER", FINANCE_ONLY_PERMISSIONS
+    )
     for role_code in ("PLATFORM_ADMIN", "TENANT_ADMIN"):
         _grant_role_permissions(db, tenant.tenant_id, role_code, crm_perm_codes)
+    # Heal tenants provisioned before ``customer.suspend`` became Finance-only: revoke it
+    # from every other role in THIS tenant. Scoped to this one permission and this one
+    # tenant, so no unrelated grant is affected. Never revoke when the keeper role is
+    # absent - that would leave the tenant with no holder of the grain at all.
+    if _finance_role_present(db, tenant.tenant_id):
+        _revoke_permission_from_other_roles(
+            db, tenant.tenant_id, "customer.suspend", ("FINANCE_USER",)
+        )
 
 
 def _upgrade_rbac_permissions(db: Session, tenant: Tenant) -> None:
@@ -1227,6 +1635,10 @@ def _sync_pf_module_matrices(db: Session, tenant_id) -> None:
         _sync_business_unit_permission_matrix(db, tenant_id)
     _sync_user_permission_matrix(db, tenant_id)
     _sync_settings_permission_matrix(db, tenant_id)
+    # BR-CRM-047 / REQ-CRM-028: every tenant that is synchronised also gets
+    # ``customer.suspend`` corrected to FINANCE_USER-only, so COMU001 (the only other
+    # tenant seeded at startup) is healed without a separate backfill.
+    sync_crm_finance_only_matrix(db, tenant_id)
 
 
 def _ensure_community_demo_tenant(db: Session, editions: dict[str, Edition]) -> None:

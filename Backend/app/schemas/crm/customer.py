@@ -114,6 +114,33 @@ class CustomerUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class CustomerSuspendRequest(BaseModel):
+    """REQ-CRM-028 / BR-CRM-055: suspension requires a reason code and a comment.
+
+    Both are mandatory and must contain non-whitespace content; ``min_length=1`` alone
+    would accept a blank string, so the validators strip first and then reject.
+    """
+
+    reason_code: str = Field(min_length=1, max_length=50)
+    comment: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("reason_code")
+    @classmethod
+    def normalize_reason_code(cls, value: str) -> str:
+        normalized = (value or "").strip()
+        if not normalized:
+            raise ValueError("reason_code must not be blank (BR-CRM-055)")
+        return normalized.upper()
+
+    @field_validator("comment")
+    @classmethod
+    def normalize_comment(cls, value: str) -> str:
+        normalized = (value or "").strip()
+        if not normalized:
+            raise ValueError("comment must not be blank (BR-CRM-055)")
+        return normalized
+
+
 class CustomerResponse(BaseModel):
     customer_id: UUID
     tenant_id: UUID

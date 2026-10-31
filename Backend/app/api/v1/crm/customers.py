@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import CurrentUser, get_current_user
 from app.core.edition_gating import CRM_OPPORTUNITY, require_feature
 from app.core.exceptions import AppError, http_error_from_app
-from app.core.rbac import require_permission
+from app.core.rbac import require_customer_suspend, require_permission
 from app.db.session import get_db
 from app.schemas.crm.customer_duplicate import (
     CustomerDuplicateCheckRequest,
@@ -21,6 +21,7 @@ from app.schemas.crm.customer import (
     CustomerCreate,
     CustomerListResponse,
     CustomerResponse,
+    CustomerSuspendRequest,
     CustomerUpdate,
 )
 from app.schemas.crm.opportunity import OpportunityListResponse
@@ -105,6 +106,26 @@ def patch_customer(
     require_permission(current, "customer.update")
     try:
         return CustomerService(db).update_customer(current.tenant_id, customer_id, payload)
+    except AppError as exc:
+        raise http_error_from_app(exc) from exc
+
+
+@router.post(
+    "/{customer_id}/suspend",
+    response_model=CustomerResponse,
+    summary="Suspend customer for credit risk (REQ-CRM-028 / BR-CRM-047/049/055)",
+)
+def suspend_customer(
+    customer_id: UUID,
+    payload: CustomerSuspendRequest,
+    current: Annotated[CurrentUser, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+) -> CustomerResponse:
+    require_customer_suspend(current)
+    try:
+        return CustomerService(db).suspend_customer(
+            current.tenant_id, customer_id, payload, current.user_id
+        )
     except AppError as exc:
         raise http_error_from_app(exc) from exc
 

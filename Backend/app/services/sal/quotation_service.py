@@ -175,6 +175,18 @@ class QuotationService:
                 status=existing.status,
                 message=f"Sales order {existing.so_number} already exists for this quotation",
             )
+        # BR-CRM-049: block a NEW sales order for a suspended customer. This sits AFTER
+        # the idempotent early-return above on purpose - re-converting an
+        # already-converted quotation must keep returning the existing sales order.
+        if quote.customer_id is not None:
+            customer = self.customers.get_by_id(tenant_id, quote.customer_id)
+            if customer is not None and customer.status == "SUSPENDED":
+                raise AppError(
+                    "VALIDATION_ERROR",
+                    "Customer is suspended - new sales orders are blocked (BR-CRM-049)",
+                    422,
+                    req_id="REQ-CRM-028",
+                )
         row = SalesOrder(
             sales_order_id=uuid4(),
             tenant_id=tenant_id,
@@ -378,8 +390,17 @@ class QuotationService:
                 raise NotFoundError("Opportunity not found", req_id="REQ-CRM-002")
             customer_id = customer_id or opp.customer_id
         if customer_id:
-            if self.customers.get_by_id(tenant_id, customer_id) is None:
+            customer = self.customers.get_by_id(tenant_id, customer_id)
+            if customer is None:
                 raise NotFoundError("Customer not found", req_id="REQ-CRM-003")
+            # BR-CRM-049: suspended customers cannot have NEW quotations.
+            if customer.status == "SUSPENDED":
+                raise AppError(
+                    "VALIDATION_ERROR",
+                    "Customer is suspended - new quotations are blocked (BR-CRM-049)",
+                    422,
+                    req_id="REQ-CRM-028",
+                )
 
         row = Quotation(
             quotation_id=uuid4(),

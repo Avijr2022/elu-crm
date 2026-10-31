@@ -154,6 +154,24 @@ class SalesOrderService:
                 422,
                 req_id="REQ-SAL-009",
             )
+        # BR-CRM-049: a DRAFT order for a suspended customer cannot be confirmed.
+        # Existing CONFIRMED orders, payments and projects are deliberately untouched.
+        if row.customer_id is not None:
+            customer_status = self.db.scalar(
+                select(Customer.status).where(
+                    Customer.tenant_id == tenant_id,
+                    Customer.customer_id == row.customer_id,
+                    Customer.is_deleted.is_(False),
+                )
+            )
+            if customer_status == "SUSPENDED":
+                raise AppError(
+                    "VALIDATION_ERROR",
+                    "Customer is suspended - draft sales orders cannot be confirmed "
+                    "(BR-CRM-049)",
+                    422,
+                    req_id="REQ-CRM-028",
+                )
         row.status = "CONFIRMED"
         row.confirmed_on = datetime.now(timezone.utc)
         linked = 0

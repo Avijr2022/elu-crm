@@ -31,6 +31,26 @@ def require_permission(current: CurrentUser, code: str) -> None:
         raise ForbiddenError(f"Permission '{code}' required", req_id="REQ-CRM-RBAC")
 
 
+# BR-CRM-047: credit-classification and suspension are Finance User only.
+CUSTOMER_SUSPEND_ROLES = frozenset({"FINANCE_USER"})
+
+
+def require_customer_suspend(current: CurrentUser) -> None:
+    """REQ-CRM-028 / BR-CRM-047: suspension needs ``customer.suspend`` AND Finance User.
+
+    The explicit role gate is deliberate. Generic tenant provisioning hands the whole
+    permission catalogue to TENANT_ADMIN / PLATFORM_ADMIN, so requiring the permission
+    alone would not make suspension Finance-only. Mirrors the existing convention in
+    ``organization_service`` / ``user_service`` (explicit role gate over a grain).
+    """
+    require_permission(current, "customer.suspend")
+    if current.role_code not in CUSTOMER_SUSPEND_ROLES:
+        raise ForbiddenError(
+            "Customer suspension is Finance User only (BR-CRM-047)",
+            req_id="REQ-CRM-028",
+        )
+
+
 def require_sales(current: CurrentUser) -> None:
     if current.role_code not in SALES_ROLES:
         raise ForbiddenError("Sales role required", req_id="REQ-CRM-RBAC")

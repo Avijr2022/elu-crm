@@ -1,11 +1,19 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from app.core.exceptions import AppError, NotFoundError, ValidationAppError
-from app.models.crm import Customer, CustomerAddress, CustomerContact, CustomerTaxRegistration, Lead, Opportunity
+from app.core.exceptions import AppError, ForbiddenError, NotFoundError, ValidationAppError
+from app.models.crm import (
+    Customer,
+    CustomerAddress,
+    CustomerContact,
+    CustomerStatusHistory,
+    CustomerTaxRegistration,
+    Lead,
+    Opportunity,
+)
 from app.models.pf import Tenant
 from app.repositories.crm.customer_contact_repository import (
     CustomerAddressRepository,
@@ -26,6 +34,7 @@ from app.schemas.crm.customer_duplicate import (
 )
 from app.repositories.crm.lead_repository import LeadRepository
 from app.repositories.pf.user_repository import TenantRepository
+from app.services.pf.audit_service import write_audit_event
 from app.schemas.crm.customer import (
     CustomerAddressCreate,
     CustomerAddressResponse,
@@ -34,6 +43,7 @@ from app.schemas.crm.customer import (
     CustomerCreate,
     CustomerListResponse,
     CustomerResponse,
+    CustomerSuspendRequest,
     CustomerUpdate,
 )
 
@@ -311,12 +321,100 @@ class CustomerService:
             row.trade_name = data["trade_name"]
         if "status" in data and data["status"]:
             new_status = data["status"].upper()
+            # REQ-CRM-028 / BR-CRM-047: suspension is a Finance-only lifecycle
+            # operation with a mandatory reason. The generic PATCH must not be able to
+            # ENTER SUSPENDED (that would bypass the ``customer.suspend`` grain and the
+            # Finance role gate) nor LEAVE it - release is REQ-CRM-029 and is
+            # deliberately not implemented here, so the state is sticky until it is.
+            if new_status == "SUSPENDED" or row.status == "SUSPENDED":
+                raise ForbiddenError(
+                    "Customer suspension/release is Finance User only - use POST "
+                    "/api/v1/crm/customers/{customer_id}/suspend (BR-CRM-047)",
+                    req_id="REQ-CRM-028",
+                )
             if new_status == "ACTIVE" and row.status != "ACTIVE":
                 self._validate_active_prerequisites(tenant_id, customer_id)
             row.status = new_status
         if "notes" in data:
             row.notes = data["notes"]
         return self._to_response(self.repo.save(row), include_children=True)
+
+    def suspend_customer(
+        self,
+        tenant_id: UUID,
+        customer_id: UUID,
+        payload: CustomerSuspendRequest,
+        actor_id: UUID,
+    ) -> CustomerResponse:
+        """REQ-CRM-028 / BR-CRM-047/049/055: ACTIVE -> SUSPENDED, fully atomic.
+
+        The status update, the ``crm.customer_status_history`` row and the
+        ``customer.suspended`` audit event are staged in ONE transaction and committed
+        together. Any failure rolls all three back, so a SUSPENDED customer can never
+        exist without its history row and audit trail (Requirement 5).
+
+        Tenant isolation comes from ``repo.get_by_id(tenant_id, customer_id)``: another
+        tenant's customer is indistinguishable from a missing one (BR-CRM-054).
+        """
+        row = self.repo.get_by_id(tenant_id, customer_id)
+        if row is None:
+            raise NotFoundError("Customer not found", req_id="REQ-CRM-028")
+        if row.status == "SUSPENDED":
+            raise AppError(
+                "CONFLICT", "Customer is already suspended", 409, req_id="REQ-CRM-028"
+            )
+        if row.status != "ACTIVE":
+            raise ValidationAppError(
+                f"Only ACTIVE customers can be suspended (current status {row.status})",
+                req_id="REQ-CRM-028",
+            )
+
+        reason_code = payload.reason_code
+        comment = payload.comment
+        try:
+            row.status = "SUSPENDED"
+            row.modified_on = datetime.now(timezone.utc)
+            row.version_no = int(row.version_no or 1) + 1
+            self.db.add(row)
+
+            self.db.add(
+                CustomerStatusHistory(
+                    customer_status_history_id=uuid4(),
+                    tenant_id=tenant_id,
+                    customer_id=customer_id,
+                    from_status="ACTIVE",
+                    to_status="SUSPENDED",
+                    # BR-CRM-055: both the reason code and the comment are retained.
+                    # The table has a single ``reason`` column, so the code is
+                    # preserved as a structured prefix and the full pair is also
+                    # carried in the audit payload.
+                    reason=f"[{reason_code}] {comment}",
+                    actor_id=actor_id,
+                )
+            )
+
+            write_audit_event(
+                self.db,
+                event_type="customer.suspended",
+                event_category="CRM",
+                entity_type="customer",
+                entity_id=customer_id,
+                actor_id=actor_id,
+                tenant_id=tenant_id,
+                payload={
+                    "from_status": "ACTIVE",
+                    "to_status": "SUSPENDED",
+                    "reason_code": reason_code,
+                    "comment": comment,
+                },
+            )
+            self.db.commit()
+            self.db.refresh(row)
+        except Exception:
+            self.db.rollback()
+            raise
+
+        return self._to_response(row, include_children=True)
 
     def convert_from_lead(
         self, tenant_id: UUID, owner_id: UUID, lead_id: UUID
