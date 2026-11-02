@@ -153,6 +153,8 @@ class QuotationService:
         tenant_id: UUID,
         quotation_id: UUID,
         permissions: frozenset[str],
+        *,
+        actor_id: UUID | None = None,
     ) -> SalesOrderConvertResponse:
         if "quotation.update" not in permissions:
             raise ForbiddenError("Missing permission 'quotation.update'", req_id="REQ-SAL-RBAC")
@@ -181,6 +183,30 @@ class QuotationService:
         if quote.customer_id is not None:
             customer = self.customers.get_by_id(tenant_id, quote.customer_id)
             if customer is not None and customer.status == "SUSPENDED":
+                write_audit_event(
+                    self.db,
+                    event_type="customer.suspension.blocked",
+                    event_category="CRM",
+                    entity_type="customer",
+                    entity_id=quote.customer_id,
+                    actor_id=actor_id,
+                    tenant_id=tenant_id,
+                    payload={
+                        "operation": "quotation.convert_to_sales_order",
+                        "customer_id": str(quote.customer_id),
+                        "customer_status": "SUSPENDED",
+                        "quotation_id": str(quotation_id),
+                        "rule": "BR-CRM-049",
+                    },
+                )
+                # EFS-CRM §4.3.5: the blocked attempt must remain auditable. The event
+                # is committed BEFORE the rejection because ``get_db`` never commits -
+                # an uncommitted row would be discarded with the rollback that follows
+                # the raise (same pattern as
+                # ``auth_service._register_failed_attempt``). Nothing else is pending
+                # in this session here: this branch has only read the quotation, the
+                # existing sales order and the customer.
+                self.db.commit()
                 raise AppError(
                     "VALIDATION_ERROR",
                     "Customer is suspended - new sales orders are blocked (BR-CRM-049)",
@@ -395,6 +421,29 @@ class QuotationService:
                 raise NotFoundError("Customer not found", req_id="REQ-CRM-003")
             # BR-CRM-049: suspended customers cannot have NEW quotations.
             if customer.status == "SUSPENDED":
+                write_audit_event(
+                    self.db,
+                    event_type="customer.suspension.blocked",
+                    event_category="CRM",
+                    entity_type="customer",
+                    entity_id=customer_id,
+                    # ``owner_id`` is the caller here - the route passes
+                    # ``current.user_id``.
+                    actor_id=owner_id,
+                    tenant_id=tenant_id,
+                    payload={
+                        "operation": "quotation.create",
+                        "customer_id": str(customer_id),
+                        "customer_status": "SUSPENDED",
+                        "rule": "BR-CRM-049",
+                        "opportunity_id": (
+                            str(opportunity_id) if opportunity_id else None
+                        ),
+                    },
+                )
+                # Committed before the rejection so the audit row survives; see the
+                # matching note in ``convert_to_sales_order``.
+                self.db.commit()
                 raise AppError(
                     "VALIDATION_ERROR",
                     "Customer is suspended - new quotations are blocked (BR-CRM-049)",

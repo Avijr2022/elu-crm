@@ -70,7 +70,10 @@ def confirm_sales_order(
     require_feature(db, current.tenant_id, SAL_QUOTE)
     try:
         return SalesOrderService(db).confirm_sales_order(
-            current.tenant_id, sales_order_id, current.permissions
+            current.tenant_id,
+            sales_order_id,
+            current.permissions,
+            actor_id=current.user_id,
         )
     except AppError as exc:
         raise http_error_from_app(exc) from exc

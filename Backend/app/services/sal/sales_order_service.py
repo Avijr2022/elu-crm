@@ -23,6 +23,7 @@ from app.schemas.sal.sales_order import (
     SalesOrderPaymentStubResponse,
     SalesOrderResponse,
 )
+from app.services.pf.audit_service import write_audit_event
 
 
 class SalesOrderService:
@@ -141,6 +142,8 @@ class SalesOrderService:
         tenant_id: UUID,
         sales_order_id: UUID,
         permissions: frozenset[str],
+        *,
+        actor_id: UUID | None = None,
     ) -> SalesOrderConfirmResponse:
         if "quotation.update" not in permissions:
             raise ForbiddenError("Missing permission 'quotation.update'", req_id="REQ-SAL-RBAC")
@@ -165,6 +168,28 @@ class SalesOrderService:
                 )
             )
             if customer_status == "SUSPENDED":
+                write_audit_event(
+                    self.db,
+                    event_type="customer.suspension.blocked",
+                    event_category="CRM",
+                    entity_type="customer",
+                    entity_id=row.customer_id,
+                    actor_id=actor_id,
+                    tenant_id=tenant_id,
+                    payload={
+                        "operation": "sales_order.confirm",
+                        "customer_id": str(row.customer_id),
+                        "customer_status": "SUSPENDED",
+                        "sales_order_id": str(sales_order_id),
+                        "so_number": row.so_number,
+                        "rule": "BR-CRM-049",
+                    },
+                )
+                # EFS-CRM §4.3.5: committed before the rejection so the audit row
+                # survives (``get_db`` never commits). At this point the session holds
+                # only reads - the DRAFT order is mutated further down - so the commit
+                # publishes the audit event alone.
+                self.db.commit()
                 raise AppError(
                     "VALIDATION_ERROR",
                     "Customer is suspended - draft sales orders cannot be confirmed "

@@ -8,6 +8,7 @@ bypass prevention.
 REQ-CRM-029 (release suspension / reactivate) is deliberately NOT implemented.
 """
 
+import json
 import uuid
 from uuid import UUID
 
@@ -238,6 +239,47 @@ def _status_of(cid: str) -> str:
         return db.scalars(
             select(Customer.status).where(Customer.customer_id == UUID(cid))
         ).first()
+
+
+# ------------------------------------------------- M-1 blocked-attempt audit
+
+BLOCKED_EVENT = "customer.suspension.blocked"
+
+
+def _blocked_events(cid: str):
+    """Persisted ``customer.suspension.blocked`` rows for one customer."""
+    return _audit_events(cid, event_type=BLOCKED_EVENT)
+
+
+def _tenant_id_of(cid: str) -> str:
+    with platform_session() as db:
+        tenant_id = db.scalars(
+            select(Customer.tenant_id).where(Customer.customer_id == UUID(cid))
+        ).first()
+    return str(tenant_id)
+
+
+def _platform_admin_id() -> str:
+    with platform_session() as db:
+        admin = db.scalars(platform_admin_select()).first()
+        assert admin is not None
+        return str(admin.user_id)
+
+
+def _assert_blocked_event(event, *, cid: str, operation: str) -> dict:
+    """Assert the M-1 envelope/ownership and return the decoded payload."""
+    assert event.event_type == BLOCKED_EVENT
+    assert event.event_category == "CRM"
+    assert event.entity_type == "customer"
+    assert str(event.entity_id) == cid
+    assert str(event.tenant_id) == _tenant_id_of(cid), "event escaped its tenant"
+    assert str(event.actor_id) == _platform_admin_id(), "actor is not the caller"
+    payload = json.loads(event.payload_json)
+    assert payload["operation"] == operation
+    assert payload["customer_id"] == cid
+    assert payload["customer_status"] == "SUSPENDED"
+    assert payload["rule"] == "BR-CRM-049"
+    return payload
 
 
 # --------------------------------------------------------------------- authz
@@ -511,7 +553,10 @@ def test_suspend_unknown_customer_is_404(
 
 
 def test_new_quotation_blocked_for_suspended_customer(
-    client: TestClient, admin_token: str, finance: tuple[str, str]
+    client: TestClient,
+    admin_token: str,
+    finance: tuple[str, str],
+    community_token: str,
 ):
     """BR-CRM-049: suspended customers cannot have new quotations."""
     token, _ = finance
@@ -525,6 +570,28 @@ def test_new_quotation_blocked_for_suspended_customer(
     )
     assert resp.status_code == 422, resp.text
     assert "BR-CRM-049" in resp.text
+
+    # M-1 / EFS-CRM §4.3.5: exactly one blocked-attempt event survives the rejection.
+    events = _blocked_events(cid)
+    assert len(events) == 1, events
+    payload = _assert_blocked_event(events[0], cid=cid, operation="quotation.create")
+    assert payload["opportunity_id"] is None
+
+    # Tenant isolation: another tenant's customer is a 404 and is never audited.
+    foreign = client.post(
+        "/api/v1/crm/customers",
+        headers=_auth(community_token),
+        json={"legal_name": f"Foreign Cust {uuid.uuid4().hex[:8]}"},
+    )
+    assert foreign.status_code == 201, foreign.text
+    foreign_cid = foreign.json()["customer_id"]
+    foreign_resp = client.post(
+        "/api/v1/sal/quotations",
+        headers=_auth(admin_token),
+        json={"customer_id": foreign_cid},
+    )
+    assert foreign_resp.status_code == 404, foreign_resp.text
+    assert _blocked_events(foreign_cid) == []
 
 
 def test_sales_order_conversion_blocked_for_suspended_customer(
@@ -541,6 +608,13 @@ def test_sales_order_conversion_blocked_for_suspended_customer(
     )
     assert resp.status_code == 422, resp.text
     assert "BR-CRM-049" in resp.text
+
+    events = _blocked_events(cid)
+    assert len(events) == 1, events
+    payload = _assert_blocked_event(
+        events[0], cid=cid, operation="quotation.convert_to_sales_order"
+    )
+    assert payload["quotation_id"] == qid
 
 
 def test_draft_sales_order_confirm_blocked_for_suspended_customer(
@@ -563,6 +637,14 @@ def test_draft_sales_order_confirm_blocked_for_suspended_customer(
     )
     assert resp.status_code == 422, resp.text
     assert "BR-CRM-049" in resp.text
+
+    events = _blocked_events(cid)
+    assert len(events) == 1, events
+    payload = _assert_blocked_event(
+        events[0], cid=cid, operation="sales_order.confirm"
+    )
+    assert payload["sales_order_id"] == so_id
+    assert payload["so_number"]
 
 
 def test_idempotent_conversion_is_preserved_after_suspension(
@@ -588,6 +670,9 @@ def test_idempotent_conversion_is_preserved_after_suspension(
     assert again.status_code == 201, again.text
     assert again.json()["sales_order_id"] == so_id
     assert "already exists" in again.json()["message"]
+
+    # M-1: the successful conversion and the idempotent re-conversion are not blocks.
+    assert _blocked_events(cid) == []
 
 
 def test_ongoing_sales_order_and_payments_are_not_blocked(

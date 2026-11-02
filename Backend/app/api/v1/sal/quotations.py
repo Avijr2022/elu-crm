@@ -113,7 +113,10 @@ def convert_quotation_to_sales_order(
     require_feature(db, current.tenant_id, SAL_QUOTE)
     try:
         return QuotationService(db).convert_to_sales_order(
-            current.tenant_id, quotation_id, current.permissions
+            current.tenant_id,
+            quotation_id,
+            current.permissions,
+            actor_id=current.user_id,
         )
     except AppError as exc:
         raise http_error_from_app(exc) from exc
