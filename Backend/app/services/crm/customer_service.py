@@ -311,7 +311,19 @@ class CustomerService:
     def update_customer(
         self, tenant_id: UUID, customer_id: UUID, payload: CustomerUpdate
     ) -> CustomerResponse:
-        row = self.repo.get_by_id(tenant_id, customer_id)
+        """PATCH a customer under the same row lock as ``suspend_customer``.
+
+        H-1: the row is read with ``for_update=True`` so the generic PATCH is
+        serialised against a concurrent suspension. Without the lock a PATCH that had
+        read an ACTIVE snapshot before the suspension committed would write that stale
+        status back afterwards, silently reverting SUSPENDED and leaving the status
+        history row and ``customer.suspended`` audit event describing a state that no
+        longer held. The lock is taken before any validation or mutation and is held
+        until ``repo.save()`` commits (or the session closes and rolls back), so a
+        PATCH that starts while a suspension is in flight waits, then observes
+        SUSPENDED and is rejected by the existing 403 guard below.
+        """
+        row = self.repo.get_by_id(tenant_id, customer_id, for_update=True)
         if row is None:
             raise NotFoundError("Customer not found", req_id="REQ-CRM-003")
         data = payload.model_dump(exclude_unset=True)
