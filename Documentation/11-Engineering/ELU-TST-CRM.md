@@ -12,6 +12,7 @@
 |---------|------|--------|--------|
 | 1.0 | 2026-08-06 | EIIP / QA | CRM test pack + mandatory isolation suite |
 | 1.1 | 2026-10-09 | EIIP / Engineering | Record TC-CRM-003-03 (REQ-CRM-027 duplicate-check) in §1 |
+| 1.2 | 2026-11-02 | EIIP / Engineering | Record TC-CRM-003-04 (REQ-CRM-028 customer suspension and BR-CRM-049 blocking) in §1; reconcile the ad-hoc TC-CRM-020 probe row |
 
 ---
 
@@ -25,9 +26,12 @@
 | TC-CRM-004 | — | Invalid status transition | 422 |
 | TC-CRM-010 | — | Opportunity create as Community | 403 EDITION_FORBIDDEN |
 | TC-CRM-011 | — | Close won without quotation (no exception) | 422 per BR-CRM-027 |
-| TC-CRM-020 | — | Suspend customer blocks new quotation path | 422/403 when SAL called |
+| TC-CRM-020 | — | *(superseded by TC-CRM-003-04; retained as historical evidence)* Suspend customer blocks new quotation path | 422/403 when SAL called |
 | TC-CRM-030 | — | Activity linked to other-tenant lead id | 404 |
 | TC-CRM-003-03 | REQ-CRM-027 | Duplicate-check pre-create: duplicate GSTIN blocks, duplicate name warns, unsupported/missing `tax_type` with a tax number is rejected | 200 `TAX_ID`/`BLOCK` masked; 200 `WARNING`; 422 BR-CRM-045 |
+| TC-CRM-003-04 | REQ-CRM-028 | Customer suspension (ACTIVE -> SUSPENDED only, Finance User only, mandatory reason code and comment) and BR-CRM-049 blocking of new SAL transactions — new quotation, quotation-to-order conversion and DRAFT sales-order confirmation; generic PATCH can neither enter nor leave SUSPENDED; each blocked SAL attempt records `customer.suspension.blocked` | 200 SUSPENDED with one `crm.customer_status_history` row and one `customer.suspended` audit event; 409 when already suspended; 422 when not ACTIVE or when the reason is blank; 403 for a non-Finance caller; 404 for an unknown or other-tenant customer; SAL paths 422 BR-CRM-049 with exactly one persisted `customer.suspension.blocked` event; idempotent re-conversion still returns the existing sales order |
+
+TC-CRM-003-04 is exercised by `Backend/tests/test_crm_customer_suspend.py` (suspension lifecycle, RBAC, tenant isolation, SAL blocking, blocked-attempt audit) and `Backend/tests/test_crm_customer_suspend_patch_concurrency.py` (PATCH-vs-suspension serialisation).
 
 Full RTM rows live in **V1-PF-CRM**; QA expands 1:1 before UAT.
 
