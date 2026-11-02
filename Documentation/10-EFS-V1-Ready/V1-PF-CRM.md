@@ -1120,6 +1120,7 @@ stateDiagram-v2
 | REQ-CRM-034 | Enforce single-level parent/child account hierarchy | Medium | BR-CRM-048 |
 | REQ-CRM-035 | Lock `customer_id` on opportunity after quotation issued | High | BR-CRM-051 |
 | REQ-CRM-036 | Export customer register with PII masking per permission | Medium | BR-CRM-053 |
+| REQ-CRM-049 | Maintain customer credit classification: per-tenant `customer_credit_class` lookup (code, name) assigned to the customer via `credit_class_id`, Finance User write only | TBD | BR-CRM-047 |
 
 ### V1.0 — Requirements Traceability Matrix (RTM)
 
@@ -1128,7 +1129,7 @@ stateDiagram-v2
 | REQ-CRM-025 | WF-CRM-003 | `customer`, `customer_contact` | `POST /api/v1/crm/customers` | UI-CRM-CUS-002 Customer Create | TC-CRM-003-01 |
 | REQ-CRM-026 | WF-CRM-003 | `customer`, `customer_status_history` | `POST /api/v1/crm/customers/{id}/activate` | UI-CRM-CUS-004 Customer Detail | TC-CRM-003-02 |
 | REQ-CRM-027 | WF-CRM-003 | `customer`, `customer_tax_registration` | `POST /api/v1/crm/customers/duplicate-check` | UI-CRM-CUS-002 Customer Create | TC-CRM-003-03 |
-| REQ-CRM-028 | WF-CRM-003 | `customer`, `customer_credit_class` | `POST /api/v1/crm/customers/{id}/suspend` | UI-CRM-CUS-009 Suspend Dialog | TC-CRM-003-04 |
+| REQ-CRM-028 | WF-CRM-003 | `customer`, `customer_status_history` | `POST /api/v1/crm/customers/{id}/suspend` | UI-CRM-CUS-009 Suspend Dialog | TC-CRM-003-04 |
 | REQ-CRM-029 | WF-CRM-003 | `customer` | `PATCH /api/v1/crm/customers/{id}/status` | UI-CRM-CUS-004 Customer Detail | TC-CRM-003-05 |
 | REQ-CRM-030 | WF-CRM-003 | `customer`, `customer_relationship` | `POST /api/v1/crm/customers/{id}/merge` | UI-CRM-CUS-010 Merge Preview | TC-CRM-003-06 |
 | REQ-CRM-031 | WF-CRM-003 | `customer`, `opportunity`, `activity` | `GET /api/v1/crm/customers/{id}/360` | UI-CRM-CUS-005 Customer 360 | TC-CRM-003-07 |
@@ -1137,6 +1138,11 @@ stateDiagram-v2
 | REQ-CRM-034 | WF-CRM-003 | `customer_relationship` | `PUT /api/v1/crm/customers/{id}` | UI-CRM-CUS-003 Customer Edit | TC-CRM-003-10 |
 | REQ-CRM-035 | WF-CRM-003 | `opportunity` | (enforced on SAL-001 link) | — | TC-CRM-003-11 |
 | REQ-CRM-036 | WF-CRM-003 | `customer` | `GET /api/v1/crm/customers/export` | UI-CRM-CUS-001 Customer List | TC-CRM-003-12 |
+| REQ-CRM-049 | WF-CRM-003 | `customer`, `customer_credit_class` | (not implemented) | UI-CRM-CUS-004 Customer Detail | TC-CRM-003-13 |
+
+**REQ-CRM-049 traceability (approved scope, not implemented):** BFS `ELU-BFS-CRM` §16 acceptance criterion **`AC-CRM-CUS-006`** (Sales Executive editing `credit_classification` returns 403) and BR-CRM-047 (L1119), with the `customer_credit_class` lookup declared in the BFS database-impact table (L1145); EFS `EFS-CRM` §4.3.1 related tables and §4.3.7 Database Impact (`customer_credit_class` — READ/UPDATE, Finance only); DDD `ELU-DDD-CRM` §4.1 (`credit_class_id`) and §4.2 (`customer_credit_class`). Acceptance test **TC-CRM-003-13** (documented, **not executed**). `customer_credit_class` now appears on this requirement only — it was removed from the REQ-CRM-028 row above. *Note: `EFS-CRM` §4.3.14 still numbers these acceptance criteria differently; that divergence is left unchanged and is recorded as an open governance issue in `ELU-MSL-002` row 5.05.*
+
+**REQ-CRM-049 identifier allocation (approved exception, 2026-11-02):** WF-CRM-003's original requirement block is **`REQ-CRM-025`–`REQ-CRM-036`**; `REQ-CRM-049` is appended to that workflow as an **out-of-block allocation authorised by the product owner**, not as a renumbering of any existing requirement. **Forward allocation rule:** the next CRM requirement is **`REQ-CRM-050`**; any future `WF-CRM-005` must start at `050` and must not claim `049`. **Priority:** recorded as **`TBD`** — no priority has been assigned by the product owner and none is inferred here.
 
 ### V1.0 — State Transition Diagram
 
