@@ -13,6 +13,7 @@ from app.schemas.crm.customer_duplicate import (
     CustomerDuplicateCheckRequest,
     CustomerDuplicateCheckResponse,
 )
+from app.schemas.errors import ErrorResponse
 from app.schemas.crm.customer import (
     CustomerAddressCreate,
     CustomerAddressResponse,
@@ -114,6 +115,26 @@ def patch_customer(
     "/{customer_id}/suspend",
     response_model=CustomerResponse,
     summary="Suspend customer for credit risk (REQ-CRM-028 / BR-CRM-047/049/055)",
+    responses={
+        status.HTTP_403_FORBIDDEN: {
+            "model": ErrorResponse,
+            "description": (
+                "Caller is not a Finance User or lacks the 'customer.suspend' "
+                "permission (BR-CRM-047)."
+            ),
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": (
+                "Customer does not exist, or belongs to another tenant "
+                "(BR-CRM-054)."
+            ),
+        },
+        status.HTTP_409_CONFLICT: {
+            "model": ErrorResponse,
+            "description": "Customer is already suspended.",
+        },
+    },
 )
 def suspend_customer(
     customer_id: UUID,
