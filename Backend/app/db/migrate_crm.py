@@ -18,6 +18,7 @@ _CRM_SCRIPTS = (
     "007_crm_activity_outcome.sql",
     "008_crm_customer_tax_registration.sql",
     "009_crm_customer_status_history.sql",
+    "010_crm_tenant_composite_fks.sql",
 )
 
 
