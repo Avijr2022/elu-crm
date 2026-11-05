@@ -18,6 +18,8 @@ from app.main import app
 from app.models.pf import Branch, BranchAddress, Organization, Role, Tenant, User
 from tests.conftest import platform_admin_select, platform_session
 
+pytestmark = pytest.mark.db_write
+
 
 @pytest.fixture(scope="module")
 def client():
