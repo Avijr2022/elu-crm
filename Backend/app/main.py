@@ -86,8 +86,12 @@ async def lifespan(_: FastAPI):
         seed_platform(db)
         # PF-009 Batch 1: mirror the transitional single role into core.user_role.
         backfill_user_role(db)
-        clear_rls_context(db)
     finally:
+        # Always undo the bootstrap RLS binding: if a migration or the seed raises,
+        # ``set_app_role_enabled(False)``/``bind_rls_context(platform=True)`` must not
+        # leak into later sessions (role enabled flag lives in a ContextVar, so a
+        # leaked ``False`` would let request sessions skip ``SET LOCAL ROLE elu_app``).
+        clear_rls_context(db)
         db.close()
     yield
 
