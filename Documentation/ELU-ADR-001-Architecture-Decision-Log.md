@@ -87,6 +87,7 @@ Every new decision must use this structure:
 | ADR-014 | Docker + Azure / Linux VPS hosting model | 2026-07-30 | Accepted |
 | ADR-015 | Dual tenant isolation: repository filters + PostgreSQL RLS | 2026-08-06 | Accepted |
 | ADR-016 | PF-003A implements ADR-015 (elu_app role + session GUCs) | 2026-08-06 | Accepted |
+| ADR-018 | PLATFORM_ADMIN CRM permission policy | PENDING (date to be supplied before acceptance) | Proposed |
 
 ---
 
@@ -635,6 +636,122 @@ Close CON §3 / ADR-015 P0 without redesigning baselined PF-001…003 business m
 - PF-004 blocked until PF-003A RELEASE APPROVED.  
 - TD-CRIT-01 / TD-CRIT-02 closed on release.  
 - Does not reverse ADR-015; implements it.
+
+---
+
+### ADR-018 — PLATFORM_ADMIN CRM Permission Policy (PROPOSED — PENDING PRODUCT-OWNER DECISION)
+
+| Field | Value |
+|-------|-------|
+| **Decision ID** | ADR-018 |
+| **Date** | **PENDING** — record prepared 2026-11-12. The actual decision date must be supplied before acceptance and is deliberately not inferred. |
+| **Status** | **Proposed** — draft; pending product-owner decision. Not Accepted; authorises no implementation. |
+| **Deciders** | **PENDING** — product owner not supplied (not invented); human Architecture Review required per §5. |
+| **Related Documents** | ADR-015, ADR-016, ELU-BFS-CRM, EFS-CRM, V1-PF-CRM, ELU-BFS-CPS, ELU-BFS-PF, ELU-SEC-001, ELU-DOC-001, ELU-AI-001, Cursor_Rules |
+
+**Status of this record**
+This is a **PROPOSED** governance record. It selects **no** option, authorises **no** implementation, and invents **no** authorizer, approval date, requirement ID or expiry date. Per §5 and the accepted-ADR immutability rule (`Documentation/Cursor_Rules.md:8`), only a human Architecture Review may move it to `Accepted`.
+
+**Context**
+
+1. PLATFORM_ADMIN holds **49 permissions, 14 of them CRM**. The 49-grain figure is **derived from seed code and corroborated once by a runtime `/auth/me` response (49 permissions)**; per-tenant runtime grant state remains **UNVERIFIED**. Derivation: 68-code catalogue (`Backend/app/db/seed.py:465-533`; CRM block `:512-530` = 15 codes) → provisioning grants the whole catalogue minus `customer.suspend` (`seed.py:1462-1464`; `FINANCE_ONLY_PERMISSIONS` `:1015`) → six PF matrices revoke unapproved PF grains (`seed.py:57, 79, 191, 259, 277-284, 388-393`). No CRM matrix exists, so the **14** CRM grains survive: `lead.create/read/update/convert/qualify/disqualify`, `customer.read/create/update`, `activity.read/create`, `opportunity.read/update/approve`.
+2. The same 14 are re-granted on every startup: `_upgrade_crm_permissions` rebuilds them at `seed.py:1522-1527` and grants them to `PLATFORM_ADMIN`/`TENANT_ADMIN` at `seed.py:1535-1536`. Any revocation must also change this healing path or it is undone at next boot.
+3. All four CRM CRUD matrices contradict the grant, stating Platform Admin = `✘ | ✔ (audit) | ✘ | ✘ | ✘` over `Create | Read | Update | Approve | Delete` — `Documentation/10-EFS-V1-Ready/V1-PF-CRM.md:812` (leads), `:1020` (opportunities), `:1230` (customers), `:1443` (activities); headers `:807, :1015, :1225, :1438`. Duplicated verbatim at `ProjectStartupfiles/ELU-EFS-001-Enterprise-Functional-Specification.md:2437, 2968, 3457, 3952`.
+4. `Read ✔ (audit)` is undefined. The parenthetical is the only qualifier; no legend exists in any document (8 occurrences, all the identical cell). Candidate readings: (i) audit-trail only, (ii) audited business-record read.
+5. Neither requirement baseline grants anything either way: `ELU-BFS-CRM.md` contains zero "Platform Admin" matches, and `EFS-CRM.md:103-115` (Ownership Matrix) gives Platform Admin no CRM role — its only appearance is "Escalation Owner" for Tenant Admin.
+6. Platform policy leans restrictive: `ELU-BFS-CPS.md:879` (BR-CPS-086 "Platform Admin cannot read tenant business audit PII"); `ELU-BFS-PF-Platform-Foundation.md:2896` (cross-tenant audit viewed "in a separate platform audit store"); `ELU-ADR-001` ADR-015/ADR-016 (platform bypass "audited at API layer"); `ELU-SEC-001-Threat-Model.md:56,66` (T-13, audited `platform_context`).
+7. No CRM read is audited today: the only CRM audit call is `customer.suspended` (`Backend/app/services/crm/customer_service.py:414-431`); no audit-read API exists (`Backend/app/api/v1/router.py:28-51`); `write_audit_event` only stages the row (`db.add(event)` at `Backend/app/services/pf/audit_service.py:40`, no `commit()` in `:16-46`); `audit_event` has no `request_id` column (`Backend/app/models/pf/entities.py:227-262`).
+8. Isolation reality: the current application-level tenant boundary is the repository filter (26 `tenant_id ==` predicates across `Backend/app/repositories/crm/*.py`). `Backend/app/core/deps.py:55-58` binds `app.platform_context=true` for PLATFORM_ADMIN, bypassing the RLS policy at the database layer. Database-enforced isolation for platform-admin sessions must therefore be independently verified and tested; nothing in this record asserts that it is currently effective.
+9. Role-level side doors exist — seven lookup mutation gates and an approval-role set (below).
+
+**CRM permission surface enforced by routes**
+
+40 operations across 26 paths (40 route decorators in `Backend/app/api/v1/crm/{leads,opportunities,customers,activities,lookups}.py`):
+
+| Grant | Operations enabled | Evidence |
+|---|---|---|
+| `lead.read` | 2 GETs | `leads.py:29, 61` |
+| `lead.create` | create | `leads.py:48` |
+| `lead.update` | PUT, PATCH, DELETE | `leads.py:75, 89, 160` |
+| `lead.convert` / `lead.qualify` / `lead.disqualify` | transitions | `leads.py:102, 131, 145` |
+| `opportunity.read` | list, detail, stages list | `opportunities.py:60, 96`; `lookups.py:153` |
+| `opportunity.update` | create, PUT, PATCH, stage, DELETE, stage admin | `opportunities.py:81, 110, 130, 150, 165`; `lookups.py:172, 187, 203` |
+| `opportunity.approve` | close-won via PATCH (`can_close_won`) | `opportunities.py:116, 136`; `rbac.py:67-70` |
+| `customer.read` | list, detail | `customers.py:44, 93` |
+| `customer.create` | create, duplicate-check (read-shaped) | `customers.py:63, 80` |
+| `customer.update` | PATCH, contacts, addresses | `customers.py:107, 187, 205` |
+| `activity.read` | activities, timeline, `/crm/lookups`, activity-types, activity-outcomes | `activities.py:25, 47`; `lookups.py:37, 50, 101` |
+| `activity.create` | log activity + lookup mutations | `activities.py:62`; `lookups.py:69, 85, 122, 138` |
+| `customer.suspend` | suspend (also requires FINANCE_USER) | `customers.py:145`; `rbac.py:36-48` |
+
+Seven lookup mutation role gates (`Backend/app/services/crm/lookup_service.py:112, 140, 178, 209, 243, 277, 300`) admit only roles `("TENANT_ADMIN", "PLATFORM_ADMIN", "SALES_MANAGER")` — PLATFORM_ADMIN is admitted by role name above and beyond any grain; all seven are CRM-only.
+
+Approval-role set: `SALES_MANAGER_ROLES = {"SALES_MANAGER", "TENANT_ADMIN", "PLATFORM_ADMIN"}` (`Backend/app/core/rbac.py:13-15`). Consumers: `can_close_won` (`:67-70`, used at `opportunities.py:116, 136`) and `can_view_pipeline` (`:73-77`, used at `opportunities.py:39`). `require_sales` (`rbac.py:54-57`) and `require_sales_manager` (`:59-64`) have no call sites or imports anywhere in `Backend/app/`, as is `SALES_ROLES` (`:10-12`), used only by the dead `require_sales`. Removing PLATFORM_ADMIN from these sets therefore changes CRM only (pipeline visibility and close-won), with no non-CRM effect.
+
+**Reason**
+An Accepted ADR (ADR-015/ADR-016) mandates audited platform-context access that has never been implemented, while the four EFS matrices and the seeded grants disagree about what Platform Admin may do in CRM. The deviation is ungoverned and untested, and the platform tenant's authority over CRM data is an artefact of generic whole-catalogue seeding rather than a recorded decision.
+
+**Alternatives Considered**
+
+| Alternative | Definition | Security | Tests / demo | Seed or matrix changes | Audit | Requirement wording |
+|---|---|---|---|---|---|---|
+| A — Audit-trail only | No CRM business-record reads; no CRM mutations; only a separately specified, audited cross-tenant audit-trail capability | Strictest; consistent with BR-CPS-086 and EFS-CRM's no-role matrix; removes the `platform_context` path for CRM data | **42 files reference `platform_admin_select` (95 occurrences): 41 test modules plus `conftest.py`** (total fixture usage, not a CRM-specific subset); CRM suites use the platform admin as the author (`tests/isolation/test_crm_tenant_isolation.py:33-51`, `tests/test_l2c_crm_slice.py:26-42`); `tests/test_crm_customer_suspend_grants.py:147` asserts PLATFORM_ADMIN holds `customer.read`; EIIP001 demo loses CRM | New `CRM_PERMISSION_MATRIX` with an empty platform tuple, wired into `seed.py:1467-1477`, `:934-946`, `:1630-1641`; healing path `seed.py:1522-1527, 1535-1536`; remove PLATFORM_ADMIN from the seven lookup role gates and from `SALES_MANAGER_ROLES` | Platform audit-trail read surface does not exist (`router.py:28-51`) and would have to be built, with tenant-independent retention | Audit-trail capability has **no requirement ID**; a new requirement would be needed (not allocated) |
+| B — Tenant-scoped audited read | CRM reads within the JWT-bound tenant only; every qualifying read audited; no create/update/approve/convert/qualify/disqualify/delete | Repository filtering is the current application-level boundary; **audit logging provides accountability and detection, not access prevention**; database-enforced isolation must be independently verified and tested | Read paths stay green (incl. `tests/isolation/test_crm_platform_admin_isolation.py`); writer paths (`test_l2c_crm_slice.py`, `test_crm_close_won_activity.py`, isolation author fixtures) and the duplicate-check call must migrate to `TENANT_ADMIN` | Matrix with the four read grains; revoke the 10 mutation grains; fix `seed.py:1522-1527, 1535-1536`; remove PLATFORM_ADMIN from the seven lookup role gates | Router-level dependency that no-ops unless `platform_context`; must write and **commit** (writer only stages, `audit_service.py:40`) and carry `request.state.request_id` (`app/middleware/request_id.py:10-14`); needs tenant-attribution and fail-open/fail-closed decisions | Requires a formal requirement change: matrix cell wording plus a new audit obligation (ID not allocated) |
+| C — Explicit governed exception | Retain current CRM access; document an approved exception to all four matrices with scope, authorizer, audit obligation and review/expiry | Weakest; converts accidental drift into governed risk; residual exposure includes customer/opportunity mutation, lead conversion and close-won via the role set | Zero breakage; EIIP001 workflows unchanged | None | If adopted: existing commits make integration less invasive, but audit-event creation, transaction consistency (event and mutation committing or rolling back together) and failure behaviour still require implementation and testing | Requires an explicit superseding decision record; matrix cells may remain byte-identical |
+
+**Option A — expected route impact (post-implementation, not measured).** The expected result is that all 40 CRM operations across 26 paths return 403; every route currently carries a grain gate. This is a prediction subject to regression verification **after** the permission matrix, the startup healing path (`seed.py:1522-1527, 1535-1536`) and the role-based exceptions (`lookup_service.py:112,140,178,209,243,277,300`; `rbac.py:13-15`) are changed. Unaffected by design (verified): authentication (`auth.py`); platform tenant/subscription/edition APIs (role-based `require_platform_admin`, e.g. `services/pf/tenant_service.py:494`, `subscription_service.py:745`, `edition_service.py:498`); PF organization/branch/user/settings routes (`seed.py:57, 79, 277-284, 388-393`); SAL/FIN/PRJ routes (`router.py:43-50`). There is no audit-trail API to exempt; any future audit-trail requirement, authorization model and retention are **UNVERIFIED**.
+
+**Option B — boundary exceptions that must be stated in any implementation.**
+
+1. `GET /crm/opportunities/pipeline` is conditional: `can_view_pipeline` requires `opportunity.read` **and** (`opportunity.approve` **or** role in `SALES_MANAGER_ROLES`) — `rbac.py:73-77`, called at `opportunities.py:39`. B revokes `opportunity.approve`, so pipeline access survives only while PLATFORM_ADMIN remains in `SALES_MANAGER_ROLES`; if D5 removes it, pipeline becomes 403.
+2. `POST /crm/customers/duplicate-check` is read-shaped but gated by `customer.create` (`customers.py:80`), so it is **expected to return 403** under B's four read grains although it writes nothing. This is a derived prediction from the gate, **not an executed test result**.
+3. Opportunity endpoints additionally require the `CRM_OPPORTUNITY` edition feature (`opportunities.py:29`; `customers.py:162`). The runtime feature state of the platform tenant is **UNVERIFIED**.
+
+**Option C — exception scope must be complete.** Any approved exception must explicitly cover all three privilege surfaces: (1) all **14** seeded CRM permission grains (`seed.py:1462-1464`; healed at `:1522-1527, 1535-1536`); (2) all **seven** CRM lookup role gates (`lookup_service.py:112, 140, 178, 209, 243, 277, 300`); (3) PLATFORM_ADMIN's inclusion in `SALES_MANAGER_ROLES` (`rbac.py:13-15`). Describing the exception as covering only the 14 grains would leave two undocumented privileges outside governance.
+
+**Final Decision**
+**PENDING — NOT DECIDED.** No option is selected by this record. Selection requires the product owner to resolve D1–D5 and to supply the fields in D6–D8. Per §5 this record cannot move to `Accepted` without human Architecture Review, and per §7 no agent may change its Status or Final Decision. No application-feature implementation may begin until human approval after `ELU-GOV-VAL-001` (`Documentation/Cursor_Rules.md:15`).
+
+**Decisions required (D1–D8)**
+
+| ID | Decision required | Owner |
+|---|---|---|
+| D1 (was Q1) | What does `Read ✔ (audit)` mean — audit-trail only, audited business-record read, or other? | Product Owner (+ Architecture) |
+| D2 (was Q2) | Are the four EFS CRM CRUD matrices authoritative over the implementation? | Product Owner / BA |
+| D3 (was Q3) | Is PLATFORM_ADMIN intended to have CRM business-record access (none / read / read+write)? | Product Owner |
+| D4 (was Q4a) | Are the seven lookup-mutation role gates (`lookup_service.py:112,140,178,209,243,277,300`) intentional? | Product Owner / Architecture |
+| D5 (was Q4b) | Is PLATFORM_ADMIN's inclusion in `SALES_MANAGER_ROLES` (`rbac.py:13-15`) intentional? | Product Owner / Architecture |
+| D6 | Option selection: A, B or C — not selected by this record | Product Owner |
+| D7 | Named authorizer and actual decision date — not supplied, not inferred | Product Owner |
+| D8 | Requirement ID for the audit obligation (only if A or B) — not allocated | Product Owner / PMO |
+
+**Impact**
+- Undecided (status quo): the seeded 14 CRM grains, the seven role gates and the `SALES_MANAGER_ROLES` membership stand ungoverned against four EFS matrices; the "audited platform context" obligation of ADR-015/ADR-016 is unmet; no test pins either behaviour; the only effective tenant boundary for platform-admin CRM reads is the application repository filter.
+- A or B: requires changes to both the provisioning path (`seed.py:1462-1464`) and the healing path (`seed.py:1522-1527, 1535-1536`), plus test-fixture migration and a new audit requirement; expected 403/read behaviour must be confirmed by regression after those changes.
+- C: no code change; requires a reviewable, time-bound exception covering all three privilege surfaces above (note: `core.role_permission` has no validity columns, so "expiry" is a review obligation, not an enforced control).
+
+**Risks**
+- Selecting no option preserves a contradiction between seeded grants and four approved-looking matrices.
+- Options A and B touch a startup healing path that re-grants on every boot; a partial change would silently revert.
+- Removing PLATFORM_ADMIN from `SALES_MANAGER_ROLES` also withdraws pipeline visibility and close-won semantics, which is a behaviour change beyond permission counts.
+- Audit logging is accountability only; treating it as a substitute for database-enforced isolation would misstate the control.
+- Any change to the four matrix cells must also consider the four duplicated copies in `ProjectStartupfiles/ELU-EFS-001-Enterprise-Functional-Specification.md`.
+
+**Consequences / Follow-ups**
+1. Register the outcome in §3 and set Status per §5 once decided; resolve the separate PMO follow-ups F-1 and F-2 below.
+2. Record the selected option, named authorizer and decision date — none are invented in this record.
+3. If A or B is selected, allocate a requirement ID for the audit obligation and specify the audit-trail surface (currently non-existent, `router.py:28-51`).
+4. Implement the matrix + healing-path change and the regression tests enumerated per option; verify actual route responses after implementation rather than assuming them.
+5. If C is selected, record scope over all 14 grains, all seven role gates and the `SALES_MANAGER_ROLES` membership, plus audit obligation, review and expiry conditions.
+6. Independently verify and test database-level tenant isolation for platform-admin sessions — audit logging cannot substitute for it.
+7. Confirm the runtime `CRM_OPPORTUNITY` edition state for each tenant that relies on CRM opportunity routes (currently UNVERIFIED).
+
+**Separate PMO follow-ups (not part of this decision)**
+
+| ID | Finding | Evidence |
+|---|---|---|
+| F-1 | ADR-017 exists only as a standalone file and is **not registered** in this log's §3 index or version history | `Documentation/ADR-017-PF011-Specification-Reconciliation.md:1-8`; this log contains no `ADR-017` reference |
+| F-2 | Version drift: `ELU-DOC-001` registers `ELU-ADR-001` at v1.2 while this document's header states v1.3 | `Documentation/ELU-DOC-001-Documentation-Master-Index.md:124` vs header `**Version:** 1.3` |
 
 ---
 
